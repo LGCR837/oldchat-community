@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/color_background"
+    android:padding="16dp">
+
+    <ImageView
+        android:id="@+id/ivEditCover"
+        android:layout_width="match_parent"
+        android:layout_height="180dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null" />
+
+    <TextView
+        android:id="@+id/btnPickCover"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="更换背景"
+        android:textColor="@color/color_button_text"
+        android:background="@drawable/flat_button_accent_bg" />
+
+    <EditText
+        android:id="@+id/etSignature"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="个性签名"
+        android:textColor="@color/color_text_primary" />
+
+    <TextView
+        android:id="@+id/btnSaveSpace"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:text="保存"
+        android:textColor="@color/color_button_text"
+        android:background="@drawable/flat_button_bg" />
+
+</LinearLayout>

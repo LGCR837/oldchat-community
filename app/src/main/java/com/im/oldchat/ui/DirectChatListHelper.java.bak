@@ -1,0 +1,510 @@
+package com.im.oldchat.ui;
+
+import android.content.Context;
+import android.view.View;
+import android.widget.AbsListView;
+import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.support.v7.widget.RecyclerView;
+import com.im.oldchat.R;
+import com.im.oldchat.api.HttpUtil;
+import com.im.oldchat.models.MessageHistoryCache;
+import com.im.oldchat.models.Message;
+import com.im.oldchat.models.RecentChatCache;
+import com.im.oldchat.util.MyUidStore;
+import com.im.oldchat.util.NetworkStateManager;
+import org.json.JSONObject;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+
+public class DirectChatListHelper {
+    private static final int PAGE_LIMIT = 20;
+
+    private final Context context;
+    private final RecyclerView lvMessages;
+    private final MessageAdapter adapter;
+    private final List<Message> messageList;
+    private final HashSet<String> messageIds;
+    private final TextView btnLoadMore;
+    private final TextView btnNewMessage;
+    private final ProgressBar loadingBar;
+    private final String friendUID;
+    private final String friendName;
+    private final String friendAvatar;
+    private String myUID;
+    private TextView btnJumpToUnread;
+
+    private boolean isLoadingMore = false;
+    private boolean hasMore = true;
+    private int newMessageCount = 0;
+    private int currentOffset = 0;
+    private int initialUnreadCount = 0;
+    private boolean pendingJumpToUnread = false;
+    private String pendingJumpToken = null;
+    private int cacheLoadSeq = 0;
+
+    public DirectChatListHelper(Context context, RecyclerView lvMessages, MessageAdapter adapter,
+                                List<Message> messageList, HashSet<String> messageIds,
+                                TextView btnLoadMore, TextView btnNewMessage, ProgressBar loadingBar,
+                                String friendUID, String friendName, String friendAvatar,
+                                String myUID) {
+        this.context = context;
+        this.lvMessages = lvMessages;
+        this.adapter = adapter;
+        this.messageList = messageList;
+        this.messageIds = messageIds;
+        this.btnLoadMore = btnLoadMore;
+        this.btnNewMessage = btnNewMessage;
+        this.loadingBar = loadingBar;
+        this.friendUID = friendUID;
+        this.friendName = friendName;
+        this.friendAvatar = friendAvatar;
+        this.myUID = myUID;
+    }
+
+    public void setMyUID(String myUID) {
+        this.myUID = myUID;
+    }
+
+    public void setJumpToUnreadButton(TextView btnJumpToUnread) {
+        this.btnJumpToUnread = btnJumpToUnread;
+    }
+
+    public void setInitialUnreadCount(int count) {
+        if (count <= 8) {
+            this.initialUnreadCount = 0;
+            if (btnJumpToUnread != null) {
+                btnJumpToUnread.setVisibility(View.GONE);
+            }
+            return;
+        }
+        this.initialUnreadCount = count;
+        if (btnJumpToUnread != null) {
+            btnJumpToUnread.setText(count + " 条未读");
+            btnJumpToUnread.setVisibility(View.VISIBLE);
+        }
+    }
+
+    public void jumpToEarliestUnread(String token) {
+        if (initialUnreadCount <= 0) {
+            return;
+        }
+        int totalMessages = messageList.size();
+        int earliestUnreadPos = totalMessages - initialUnreadCount;
+        if (earliestUnreadPos < 0) {
+            earliestUnreadPos = 0;
+        }
+        pendingJumpToken = token;
+        if (earliestUnreadPos == 0 && hasMore && !isLoadingMore) {
+            pendingJumpToUnread = true;
+            long before = getOldestTimestamp();
+            loadMessages(token, true, before, false);
+        } else {
+            scrollToPosition(earliestUnreadPos);
+            hideJumpToUnreadButton();
+        }
+    }
+
+    private void scrollToPosition(int position) {
+        if (position < 0 || position >= messageList.size()) {
+            return;
+        }
+        lvMessages.scrollToPosition(position);
+    }
+
+    private void smoothScrollToBottom() {
+        if (messageList.isEmpty()) {
+            return;
+        }
+        lvMessages.smoothScrollToPosition(messageList.size() - 1);
+    }
+
+    public void hideJumpToUnreadButton() {
+        initialUnreadCount = 0;
+        pendingJumpToUnread = false;
+        pendingJumpToken = null;
+        if (btnJumpToUnread != null) {
+            btnJumpToUnread.setVisibility(View.GONE);
+        }
+    }
+
+    private void onLoadMoreCompleteForJump() {
+        if (!pendingJumpToUnread) {
+            return;
+        }
+        int totalMessages = messageList.size();
+        int earliestUnreadPos = totalMessages - initialUnreadCount;
+        if (earliestUnreadPos < 0) {
+            earliestUnreadPos = 0;
+        }
+        if (earliestUnreadPos == 0 && hasMore && !isLoadingMore && pendingJumpToken != null && !pendingJumpToken.isEmpty()) {
+            long before = getOldestTimestamp();
+            loadMessages(pendingJumpToken, true, before, false);
+            return;
+        }
+        scrollToPosition(earliestUnreadPos);
+        hideJumpToUnreadButton();
+    }
+
+    public boolean canLoadMore() {
+        return !isLoadingMore && hasMore;
+    }
+
+    public long getOldestTimestamp() {
+        if (messageList.isEmpty()) {
+            return 0;
+        }
+        return messageList.get(0).created_at;
+    }
+
+    public void loadMessages(String token, boolean append, long before, boolean silent) {
+        loadMessages(token, append, before, silent, false);
+    }
+
+    public void loadMessages(String token, boolean append, long before, boolean silent, boolean keepPosition) {
+        final boolean appendFinal = append;
+        final boolean silentFinal = silent;
+        final boolean keepPositionFinal = keepPosition;
+        final String tokenFinal = token;
+        // 如果是首次加载（非加载更多），先从缓存加载显示，提高响应速度
+        if (!appendFinal && !keepPositionFinal) {
+            loadFromCacheAsync();
+        }
+
+        if (!NetworkStateManager.getInstance().isServerAvailable() || token == null || token.isEmpty()) {
+            setLoading(false);
+            return;
+        }
+        if (appendFinal) {
+            isLoadingMore = true;
+            lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_DISABLED);
+        } else {
+            // 如果是刷新最新消息，重置offset
+            currentOffset = 0;
+        }
+        setLoading(true);
+        StringBuilder path = new StringBuilder("/direct/messages/v2?with_uid=");
+        path.append(friendUID);
+        path.append("&limit=").append(PAGE_LIMIT);
+        if (appendFinal) {
+            path.append("&offset=").append(currentOffset);
+        } else {
+            // 如果不是加载更多历史，而是刷新，我们始终从0开始拉取最新的
+            // 注意：这里假设服务器v2接口是按时间倒序返回最新的N条
+        }
+        
+        final int firstVisible = lvMessages.getFirstVisiblePosition();
+        final View firstView = lvMessages.getChildAt(0);
+        final int firstTop = firstView == null ? 0 : firstView.getTop();
+        
+        HttpUtil.get(path.toString(), tokenFinal, new HttpUtil.Callback() {
+            @Override
+            public void onSuccess(String response) {
+                try {
+                    List<Message> incoming = DirectMessageParser.parse(response);
+                    // 接口返回通常是倒序（最新的在最前），转为正序（旧到新）方便处理
+                    Collections.reverse(incoming);
+                    int newIncomingCount = 0;
+                    if (!appendFinal && keepPositionFinal && !incoming.isEmpty()) {
+                        HashSet<String> existingIds = new HashSet<>(messageIds);
+                        for (Message msg : incoming) {
+                            if (msg.id == null || existingIds.contains(msg.id)) {
+                                continue;
+                            }
+                            if (msg.from_uid == null || !MyUidStore.isMyUid(context, msg.from_uid, myUID)) {
+                                newIncomingCount++;
+                            }
+                        }
+                    }
+                    
+                    if (appendFinal) {
+                        DirectMessageMergeResult mergeResult = DirectMessageMerger.mergeAppend(
+                                messageList, messageIds, incoming, currentOffset, PAGE_LIMIT);
+                        currentOffset = mergeResult.currentOffset;
+                        hasMore = mergeResult.hasMore;
+                        if (!hasMore && btnLoadMore != null) {
+                            btnLoadMore.setEnabled(false);
+                            btnLoadMore.setText(R.string.no_more_messages);
+                        }
+                    } else {
+                        DirectMessageMergeResult mergeResult = DirectMessageMerger.mergeRefresh(
+                                messageList, messageIds, incoming, PAGE_LIMIT, hasMore);
+                        currentOffset = mergeResult.currentOffset;
+                        hasMore = mergeResult.hasMore;
+                        if (mergeResult.gapReset && btnLoadMore != null) {
+                            btnLoadMore.setEnabled(true);
+                            btnLoadMore.setText(R.string.load_more_messages);
+                        }
+                    }
+
+                    updateRecentFromMessages(incoming, appendFinal);
+                    ChatMessageUtil.applyMessageStatus(context, messageList, myUID);
+                    adapter.notifyDataSetChanged();
+                    MessageHistoryCache.saveDirectMessages(context, friendUID, messageList);
+                    
+                    if (appendFinal) {
+                        lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_DISABLED);
+                        lvMessages.setSelectionFromTop(firstVisible + incoming.size(), firstTop); // 近似定位
+                    } else {
+                        if (!messageList.isEmpty()) {
+                            if (keepPositionFinal) {
+                                int targetPos = Math.min(firstVisible, messageList.size() - 1);
+                                lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_DISABLED);
+                                lvMessages.setSelectionFromTop(targetPos, firstTop);
+                            } else {
+                                lvMessages.setSelection(messageList.size() - 1);
+                                lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+                                markRead(tokenFinal);
+                            }
+                        }
+                    }
+                    if (!appendFinal && keepPositionFinal && newIncomingCount > 0) {
+                        newMessageCount += newIncomingCount;
+                        showNewMessageBubble();
+                    }
+                } catch (Exception e) {
+                    if (!silentFinal) {
+                        Toast.makeText(context, "加载消息失败", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                setLoading(false);
+                isLoadingMore = false;
+                if (appendFinal) {
+                    onLoadMoreCompleteForJump();
+                }
+            }
+
+            @Override
+            public void onError(int code, String error) {
+                // 加载失败时，因为已经在开头加载了缓存，所以不需要在这里loadFromCache
+                setLoading(false);
+                isLoadingMore = false;
+                pendingJumpToUnread = false;
+                if (HttpUtil.shouldSuppressAuthToast(code, error)) {
+                    return;
+                }
+                if (code == 404) {
+                    Toast.makeText(context, "该用户不存在，可能已更改UID", Toast.LENGTH_LONG).show();
+                    RecentChatCache.removeChat(context, friendUID);
+                    if (context instanceof ChatActivity) {
+                        ((ChatActivity) context).finish();
+                    }
+                    return;
+                }
+                if (!silentFinal) {
+                    Toast.makeText(context, "同步失败: " + code, Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
+    public Message parseMessageFromResponse(String response) {
+        try {
+            JSONObject obj = new JSONObject(response);
+            Message msg = new Message();
+            String id = obj.optString("id", null);
+            msg.id = (id != null && !id.isEmpty()) ? id : null;
+            msg.thread_id = obj.optString("thread_id", null);
+            msg.from_uid = obj.optString("from_uid", myUID);
+            msg.body = obj.optString("body", "");
+            msg.msg_type = obj.optString("msg_type", "text");
+            msg.media_url = obj.optString("media_url", "");
+            msg.thumb_url = obj.optString("thumb_url", "");
+            msg.duration_ms = obj.optInt("duration_ms", 0);
+            long createdAt = obj.optLong("created_at", 0);
+            msg.created_at = ChatMessageUtil.sanitizeTimestamp(createdAt);
+            msg.status = ChatMessageUtil.parseStatus(obj);
+            return msg;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public void appendMessage(Message msg, boolean forceScroll, String token) {
+        if (msg == null) {
+            return;
+        }
+        boolean atBottom = forceScroll || isAtBottom();
+        if (msg.id != null && messageIds.contains(msg.id)) {
+            return;
+        }
+        messageList.add(msg);
+        if (msg.id != null) {
+            messageIds.add(msg.id);
+        }
+        ChatMessageUtil.applyMessageStatus(context, messageList, myUID);
+        adapter.notifyDataSetChanged();
+        MessageHistoryCache.saveDirectMessages(context, friendUID, messageList);
+        updateRecentFromMessage(msg, atBottom);
+        if (atBottom) {
+            lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+            scrollToBottom();
+            if (msg.from_uid != null && !MyUidStore.isMyUid(context, msg.from_uid, myUID)) {
+                markRead(token);
+            }
+        } else if (msg.from_uid != null && !MyUidStore.isMyUid(context, msg.from_uid, myUID)) {
+            lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_DISABLED);
+            onNewMessageReceived();
+        }
+    }
+
+    public void markRead(String token) {
+        if (friendUID == null || friendUID.isEmpty()) {
+            return;
+        }
+        RecentChatCache.clearUnread(context, friendUID);
+        try {
+            JSONObject json = new JSONObject();
+            json.put("with_uid", friendUID);
+            HttpUtil.post("/direct/read", json, token, new HttpUtil.Callback() {
+                @Override
+                public void onSuccess(String response) {
+                }
+
+                @Override
+                public void onError(int code, String error) {
+                }
+            });
+        } catch (Exception e) {
+        }
+    }
+
+    public void onNewMessageReceived() {
+        if (!isAtBottom()) {
+            newMessageCount++;
+            showNewMessageBubble();
+        }
+    }
+
+    public void onUserScroll(boolean atBottom) {
+        if (atBottom) {
+            lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+            hideNewMessageBubbleInternal();
+            if (initialUnreadCount == 0) {
+                hideJumpToUnreadButton();
+            }
+        } else {
+            lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_DISABLED);
+        }
+    }
+
+    public void scrollToBottom() {
+        hideNewMessageBubble();
+        if (!messageList.isEmpty()) {
+            lvMessages.scrollToPosition(messageList.size() - 1);
+        }
+    }
+
+    public void hideNewMessageBubble() {
+        hideNewMessageBubbleInternal();
+    }
+
+    private void showNewMessageBubble() {
+        if (btnNewMessage != null) {
+            btnNewMessage.setText(newMessageCount + " 条新消息");
+            btnNewMessage.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideNewMessageBubbleInternal() {
+        newMessageCount = 0;
+        if (btnNewMessage != null) {
+            btnNewMessage.setVisibility(View.GONE);
+        }
+    }
+
+    public boolean isAtBottom() {
+        if (messageList.isEmpty()) {
+            return true;
+        }
+        int lastVisible = lvMessages.getLastVisiblePosition();
+        int total = lvMessages.getCount();
+        return lastVisible >= total - 2;
+    }
+
+    private void updateRecentChat(String lastMessage) {
+        if (friendUID == null || friendUID.isEmpty()) {
+            return;
+        }
+        String name = friendName != null ? friendName : friendUID;
+        RecentChatCache.updateRecentChat(context, friendUID, name, friendAvatar, lastMessage);
+    }
+
+    private void updateRecentFromMessages(List<Message> incoming, boolean append) {
+        if (append || incoming.isEmpty()) {
+            return;
+        }
+        Message newest = incoming.get(incoming.size() - 1);
+        updateRecentChat(ChatMessageUtil.previewForMessage(newest));
+    }
+
+    private void updateRecentFromMessage(Message msg, boolean atBottom) {
+        if (msg == null || friendUID == null || friendUID.isEmpty()) {
+            return;
+        }
+        String preview = ChatMessageUtil.previewForMessage(msg);
+        if (msg.from_uid != null && MyUidStore.isMyUid(context, msg.from_uid, myUID)) {
+            RecentChatCache.updateRecentChatOutgoing(context, friendUID, friendName, friendAvatar,
+                    preview, msg.created_at);
+            return;
+        }
+        int unreadDelta = atBottom ? 0 : 1;
+        RecentChatCache.updateRecentChatIncoming(context, friendUID, friendName, friendAvatar,
+                preview, msg.created_at, unreadDelta);
+    }
+
+    private void loadFromCacheAsync() {
+        final int seq = ++cacheLoadSeq;
+        final Context appContext = context != null ? context.getApplicationContext() : null;
+        new android.os.AsyncTask<Void, Void, List<Message>>() {
+            @Override
+            protected List<Message> doInBackground(Void... voids) {
+                if (appContext == null) {
+                    return null;
+                }
+                return MessageHistoryCache.getDirectMessages(appContext, friendUID);
+            }
+
+            @Override
+            protected void onPostExecute(List<Message> cached) {
+                if (seq != cacheLoadSeq) {
+                    return;
+                }
+                if (cached == null || cached.isEmpty()) {
+                    return;
+                }
+                if (!messageList.isEmpty()) {
+                    return;
+                }
+                hasMore = true;
+                messageList.clear();
+                messageIds.clear();
+                messageList.addAll(cached);
+                currentOffset = messageList.size();
+                for (Message msg : cached) {
+                    if (msg.id != null) {
+                        messageIds.add(msg.id);
+                    }
+                }
+                ChatMessageUtil.applyMessageStatus(context, messageList, myUID);
+                adapter.notifyDataSetChanged();
+                lvMessages.setSelection(messageList.size() - 1);
+                lvMessages.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+                if (btnLoadMore != null) {
+                    btnLoadMore.setEnabled(true);
+                    btnLoadMore.setText(R.string.load_more_messages);
+                }
+                updateRecentFromMessages(cached, false);
+            }
+        }.execute();
+    }
+
+    private void setLoading(boolean loading) {
+        if (loadingBar != null) {
+            loadingBar.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+    }
+}

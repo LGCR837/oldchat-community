@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/color_surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp">
+
+        <com.im.oldchat.ui.widget.FontAwesomeTextView
+            android:id="@+id/btnRedPacketOpenBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:contentDescription="@null"
+            android:padding="6dp"
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:text="&#xf060;"
+            android:textColor="@color/color_text_primary"
+            android:textSize="16sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="@string/red_packet_open"
+            android:textColor="@color/color_text_primary"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingLeft="16dp"
+        android:paddingTop="20dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_red_packet_open_card"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:paddingLeft="18dp"
+            android:paddingTop="20dp"
+            android:paddingRight="18dp"
+            android:paddingBottom="18dp">
+
+            <android.support.v7.widget.AppCompatImageView
+                android:id="@+id/ivRedPacketOpenIcon"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:background="@drawable/bg_red_packet_icon_circle"
+                android:contentDescription="@null"
+                android:padding="14dp"
+                android:scaleType="centerCrop"
+                app:srcCompat="@drawable/ic_red_packet" />
+
+            <TextView
+                android:id="@+id/tvRedPacketOpenTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:ellipsize="end"
+                android:gravity="center"
+                android:maxLines="2"
+                android:textColor="@color/color_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvRedPacketOpenStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+
+            <TextView
+                android:id="@+id/tvRedPacketOpenHint"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="&#x70B9;&#x51FB;&#x5F00;&#x542F;&#x9886;&#x53D6;&#x7EA2;&#x5305;"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btnOpenRedPacket"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_red_packet_open_primary"
+                android:gravity="center"
+                android:text="@string/red_packet_open"
+                android:textColor="@color/color_on_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <ProgressBar
+                android:id="@+id/pbRedPacketOpen"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_marginTop="12dp"
+                android:indeterminate="true"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvRedPacketResult"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="@color/color_text_primary"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/btnRedPacketDetail"
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_red_packet_open_outline"
+                android:gravity="center"
+                android:text="@string/red_packet_detail_title"
+                android:textColor="@color/color_text_primary"
+                android:textSize="14sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

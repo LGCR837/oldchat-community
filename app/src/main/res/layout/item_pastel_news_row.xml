@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.im.oldchat.ui.widget.TiltFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="6dp"
+    android:background="@drawable/bg_pastel_chat_row"
+    android:clickable="true"
+    android:focusable="true"
+    android:paddingLeft="12dp"
+    android:paddingTop="10dp"
+    android:paddingRight="12dp"
+    android:paddingBottom="10dp">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="58dp">
+
+        <FrameLayout
+            android:id="@+id/flPastelAvatar"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true">
+
+            <com.im.oldchat.ui.widget.RoundedImageView
+                android:id="@+id/ivPastelAvatar"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@null"
+                android:scaleType="centerCrop"
+                app:cornerRadius="0dp"
+                app:srcCompat="@drawable/ic_avatar_placeholder" />
+
+            <View
+                android:id="@+id/vPastelOnlineDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_gravity="bottom|right"
+                android:layout_marginRight="2dp"
+                android:layout_marginBottom="2dp"
+                android:background="@drawable/bg_offline_dot"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/flPastelAvatar"
+            android:layout_toLeftOf="@id/rightMeta"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="8dp"
+            android:layout_centerVertical="true"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvPastelTitle"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textColor="@color/home_row_title_text"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvPastelAt"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:background="@drawable/bg_pastel_pill_red"
+                    android:includeFontPadding="false"
+                    android:paddingLeft="6dp"
+                    android:paddingRight="6dp"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="2dp"
+                    android:text="@"
+                    android:textColor="@android:color/white"
+                    android:textSize="10sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvPastelSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/home_row_subtitle_text"
+                android:textSize="12sp" />
+
+            <View
+                android:id="@+id/vPastelPreviewBar"
+                android:layout_width="64dp"
+                android:layout_height="2dp"
+                android:layout_marginTop="7dp"
+                android:background="@drawable/bg_pastel_preview_bar" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rightMeta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:gravity="right"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvPastelTag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right"
+                android:background="@drawable/bg_pastel_pill_teal"
+                android:includeFontPadding="false"
+                android:paddingLeft="6dp"
+                android:paddingRight="6dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:textColor="@color/home_row_tag_text"
+                android:textSize="9sp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvPastelTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:background="@drawable/bg_pastel_pill_yellow"
+                android:tag="square_mono"
+                android:includeFontPadding="false"
+                android:paddingLeft="6dp"
+                android:paddingRight="6dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:textColor="@color/home_row_time_text"
+                android:textSize="9sp" />
+
+            <TextView
+                android:id="@+id/tvPastelUnread"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:background="@drawable/bg_pastel_pill_red"
+                android:tag="square_mono"
+                android:includeFontPadding="false"
+                android:paddingLeft="7dp"
+                android:paddingRight="7dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:textColor="@android:color/white"
+                android:textSize="9sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </RelativeLayout>
+</com.im.oldchat.ui.widget.TiltFrameLayout>

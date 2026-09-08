@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_background"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/color_surface"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="12dp">
+
+            <ImageView
+                android:id="@+id/btnCacheBack"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="6dp"
+                android:tint="@color/color_text_primary"
+                app:srcCompat="@drawable/ic_nav_back" />
+
+            <TextView
+                android:id="@+id/tvCacheTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:text="&#x7F13;&#x5B58;&#x7BA1;&#x7406;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="18sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingTop="10dp"
+            android:paddingRight="16dp"
+            android:paddingBottom="10dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x7F13;&#x5B58;&#x603B;&#x8BA1;"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/tvCacheTotalSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 B"
+                android:textColor="@color/color_text_primary"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowImageCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x56FE;&#x7247;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvImageCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearImageCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowVoiceCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x8BED;&#x97F3;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvVoiceCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearVoiceCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowChatCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x804A;&#x5929;&#x8BB0;&#x5F55;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvChatCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearChatCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowFriendCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x597D;&#x53CB;&#x5217;&#x8868;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvFriendCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearFriendCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowGroupCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x7FA4;&#x5217;&#x8868;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvGroupCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearGroupCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowMomentCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x52A8;&#x6001;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvMomentCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearMomentCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowRecentCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x6700;&#x8FD1;&#x4F1A;&#x8BDD;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvRecentCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearRecentCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowUserCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x7528;&#x6237;&#x540D;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvUserCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearUserCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowAvatarMetaCache"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_seamless_row"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="&#x5934;&#x50CF;&#x6620;&#x5C04;&#x7F13;&#x5B58;"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+            <TextView
+                android:id="@+id/tvAvatarMetaCacheSize"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="12dp"
+                android:text="0 B"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp" />
+            <TextView
+                android:id="@+id/btnClearAvatarMetaCache"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/flat_button_bg"
+                android:paddingLeft="12dp"
+                android:paddingTop="6dp"
+                android:paddingRight="12dp"
+                android:paddingBottom="6dp"
+                android:text="&#x6E05;&#x7406;"
+                android:textColor="@color/color_text_primary" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="16dp"
+            android:background="@color/color_background" />
+    </LinearLayout>
+</ScrollView>

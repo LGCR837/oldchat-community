@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingLeft="14dp"
+    android:paddingTop="4dp"
+    android:paddingRight="14dp">
+
+    <!-- 精选专栏 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="精选专栏"
+        android:textColor="@color/music_plaza_text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/layoutMusicPlazaHero"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_list_item_surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvMusicPlazaFeaturedTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxLines="2"
+                android:text="今日主打歌曲"
+                android:textColor="@color/music_plaza_text_primary"
+                android:textSize="21sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvMusicPlazaFeaturedSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="7dp"
+                android:maxLines="2"
+                android:text="广场精选"
+                android:textColor="@color/music_plaza_text_secondary"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btnMusicPlazaFeaturedPlay"
+                android:layout_width="84dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_music_plaza_play_button"
+                android:gravity="center"
+                android:text="立即播放"
+                android:textColor="@color/music_plaza_button_text"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/ivMusicPlazaFeaturedCover"
+            android:layout_width="92dp"
+            android:layout_height="92dp"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/bg_music_plaza_cover_frame"
+            android:contentDescription="@null"
+            android:padding="2dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_avatar_placeholder" />
+    </LinearLayout>
+
+    <!-- 热门推荐 CoverFlow -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="热门推荐"
+        android:textColor="@color/music_plaza_text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="380dp"
+        android:layout_marginTop="6dp">
+
+        <com.im.oldchat.ui.widget.CoverFlowView
+            android:id="@+id/coverflowMusicPlaza"
+            android:layout_width="match_parent"
+            android:layout_height="380dp" />
+
+        <!-- 左切换按钮：点击切换一张，长按连续切换 -->
+        <TextView
+            android:id="@+id/btnCoverflowPrev"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_gravity="center_vertical|start"
+            android:layout_marginLeft="6dp"
+            android:background="@drawable/bg_music_player_control_surface"
+            android:gravity="center"
+            android:text="◀"
+            android:textColor="@color/music_plaza_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <!-- 右切换按钮：点击切换一张，长按连续切换 -->
+        <TextView
+            android:id="@+id/btnCoverflowNext"
+            android:layout_width="52dp"
+            android:layout_height="52dp"
+            android:layout_gravity="center_vertical|end"
+            android:layout_marginRight="6dp"
+            android:background="@drawable/bg_music_player_control_surface"
+            android:gravity="center"
+            android:text="▶"
+            android:textColor="@color/music_plaza_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvMusicPlazaCoverflowEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_list_item_surface"
+        android:gravity="center"
+        android:padding="14dp"
+        android:text="暂无热门推荐"
+        android:textColor="@color/music_plaza_text_secondary"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+    <!-- 歌曲二级入口 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/btnMusicPlazaEntryRecommend"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_list_item_surface"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="推荐歌曲"
+                android:textColor="@color/music_plaza_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="精选 >"
+                android:textColor="@color/music_plaza_text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnMusicPlazaEntryRanking"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_list_item_surface"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="热门排行"
+                android:textColor="@color/music_plaza_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="榜单 >"
+                android:textColor="@color/music_plaza_text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/btnMusicPlazaEntryAll"
+            android:layout_width="0dp"
+            android:layout_height="72dp"
+            android:layout_marginLeft="10dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_list_item_surface"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="全部歌曲"
+                android:textColor="@color/music_plaza_text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="曲库 >"
+                android:textColor="@color/music_plaza_text_secondary"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 我的歌单 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="我的歌单"
+            android:textColor="@color/music_plaza_text_primary"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnMusicPlazaCreatePlaylist"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:background="@drawable/bg_music_plaza_play_button"
+            android:gravity="center"
+            android:minWidth="80dp"
+            android:paddingLeft="14dp"
+            android:paddingRight="14dp"
+            android:text="+ 新建"
+            android:textColor="@color/music_plaza_button_text"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:overScrollMode="never"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/layoutMusicPlazaPlaylists"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingBottom="4dp" />
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/tvMusicPlazaPlaylistsEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_list_item_surface"
+        android:gravity="center"
+        android:padding="14dp"
+        android:text="暂无歌单，点右上角新建"
+        android:textColor="@color/music_plaza_text_secondary"
+        android:textSize="11sp"
+        android:visibility="gone" />
+
+</LinearLayout>

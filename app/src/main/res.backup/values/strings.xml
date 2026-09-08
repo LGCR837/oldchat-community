@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="navigation_drawer_open">打开导航栏</string>
+    <string name="navigation_drawer_close">关闭导航栏</string>
+    <string name="nav_header_title">旧聊</string>
+    <string name="nav_header_subtitle">欢迎回来</string>
+    <string name="nav_header_desc">导航页眉</string>
+    <string name="action_settings">设置</string>
+    <string name="menu_home">首页</string>
+    <string name="menu_gallery">相册</string>
+    <string name="menu_slideshow">幻灯片</string>
+    <string name="app_name">旧聊</string>
+
+    <!-- Login & Register -->
+    <string name="login_title">登录旧聊</string>
+    <string name="register_title">注册新账号</string>
+    <string name="username_hint">用户名</string>
+    <string name="nickname_hint">昵称（可选）</string>
+    <string name="email_hint">邮箱地址</string>
+    <string name="password_hint">密码</string>
+    <string name="login_button">登录</string>
+    <string name="register_button">注册</string>
+    <string name="no_account_hint">没有账号？点击注册</string>
+    <string name="captcha_hint">图形验证码</string>
+    <string name="email_code_hint">邮箱验证码</string>
+    <string name="send_email_code">发送验证码</string>
+
+    <!-- Messages & Errors -->
+    <string name="error_required">用户名和密码不能为空</string>
+    <string name="register_success">注册成功</string>
+    <string name="register_failed">注册失败: %1$d</string>
+    <string name="error_conflict">该用户名已被占用</string>
+    <string name="error_invalid_email">邮箱格式不正确</string>
+    <string name="error_invalid_username">用户名仅支持小写字母、数字、下划线，长度3-24</string>
+    <string name="error_password_too_short">密码至少8位</string>
+    <string name="error_invalid_captcha">图形验证码错误</string>
+    <string name="error_invalid_email_code">邮箱验证码错误</string>
+    <string name="login_success">登录成功</string>
+    <string name="login_failed">登录失败，请检查用户名或密码</string>
+    <string name="network_error">网络错误: %1$s</string>
+    <string name="error_unknown">未知错误</string>
+    
+    <!-- Chat -->
+    <string name="add_friend">添加好友</string>
+    <string name="friend_username_hint">好友UID</string>
+    <string name="friend_uid_hint">好友UID（如 USR-AB12）</string>
+    <string name="friend_request_send">发送申请</string>
+    <string name="join_group_title">加入群聊</string>
+    <string name="group_id_hint">群号（如 GRP-AB12）</string>
+    <string name="join_group_action">申请加入</string>
+    <string name="send_message">发送</string>
+    <string name="friend_request_empty">请输入好友UID</string>
+    <string name="friend_request_sent">好友申请已发送</string>
+    <string name="friend_request_not_found">未找到该用户</string>
+    <string name="friend_request_conflict">已发送申请或已是好友</string>
+    <string name="friend_request_failed">好友申请失败</string>
+    <string name="group_id_empty">请输入群号</string>
+    <string name="group_joined">已加入群聊</string>
+    <string name="group_join_pending">已提交申请，等待审核</string>
+    <string name="group_join_failed">加入群聊失败</string>
+    <string name="group_not_found">未找到该群</string>
+    <string name="friend_list_load_failed">加载好友列表失败</string>
+    <string name="friend_request_accept_success">已接受好友申请</string>
+    <string name="friend_request_accept_failed">接受好友申请失败</string>
+    <string name="friend_request_tap_to_accept">点击接受</string>
+    <string name="message_send_failed">发送失败，请稍后重试</string>
+    <string name="message_ws_failed">连接异常，改用普通发送</string>
+    <string name="message_status_sent">已发送</string>
+    <string name="load_more_messages">下载更多</string>
+    <string name="no_more_messages">没有更多了</string>
+</resources>

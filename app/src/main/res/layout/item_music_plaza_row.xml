@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_list_item_surface"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingLeft="12dp"
+    android:paddingTop="10dp"
+    android:paddingRight="12dp"
+    android:paddingBottom="10dp">
+
+    <FrameLayout
+        android:layout_width="54dp"
+        android:layout_height="54dp"
+        android:background="@drawable/bg_music_plaza_cover_frame"
+        android:padding="2dp">
+
+        <ImageView
+            android:id="@+id/ivMusicRowCover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_music_player_cover_inner_themed"
+            android:contentDescription="@null"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_avatar_placeholder" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvMusicRowName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="歌曲名称"
+            android:textColor="@color/music_plaza_text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvMusicRowOwner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="上传者"
+            android:textColor="@color/music_plaza_text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvMusicRowStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="赞 0 · 评论 0"
+            android:textColor="@color/music_plaza_text_secondary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvMusicRowDuration"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:layout_marginLeft="8dp"
+        android:background="@drawable/bg_music_plaza_stat_chip"
+        android:gravity="center"
+        android:minWidth="48dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:text="--:--"
+        android:textColor="@color/music_plaza_meta_text"
+        android:textSize="10sp" />
+
+    <TextView
+        android:id="@+id/btnMusicRowMore"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:layout_marginLeft="10dp"
+        android:background="@drawable/bg_profile_item"
+        android:gravity="center"
+        android:text="···"
+        android:textColor="@color/music_plaza_text_primary"
+        android:textSize="14sp"
+        android:textStyle="bold" />
+
+</LinearLayout>
