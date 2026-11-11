@@ -43,7 +43,7 @@ keyPassword=你的密码
 ```bash
 cd server
 ./build_amd64.sh          # 默认 linux/amd64；GOOS/GOARCH 可覆盖
-./run_server.sh           # 本地启动（默认 :8080，SQLite）
+./run_server.sh           # 本地启动（默认 :8082，SQLite）
 ```
 
 首次运行前用 `schema.sql` 初始化数据库，或直接启动由服务自动建表。
@@ -52,7 +52,7 @@ cd server
 
 | 变量 | 说明 |
 |---|---|
-| `PORT` | 监听端口（默认 8080） |
+| `PORT` | 监听端口（默认 8082） |
 | `DATABASE_URL` | SQLite 路径（默认 `server/metrochat.db`） |
 | `JWT_SECRET` | JWT 签名密钥（≥32 字符，未设置时自动生成并持久化） |
 | `OSS_ENABLED` / `OSS_ACCESS_KEY_ID` / `OSS_ACCESS_KEY_SECRET` / `OSS_BUCKET_NAME` | 阿里云 OSS 对象存储（未配置时 OSS 功能自动关闭） |
