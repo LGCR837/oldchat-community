@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Base64;
 
-import com.im.oldchat.util.ServerBaseUrlManager;
-
 public final class VibeConfigStore {
     private static final String PREFS = "cip_vibe_config";
     private VibeConfigStore() { }
@@ -15,7 +13,8 @@ public final class VibeConfigStore {
         Config config = new Config();
         config.managed = prefs.getBoolean("use_oldchat", true);
         if (config.managed) {
-            String base = ServerBaseUrlManager.getCurrentBaseUrl();
+            // 自建 AI 网关挂在 API 根地址下（/v1/ai/...），不能用站点根地址拼。
+            String base = com.im.oldchat.api.HttpUtil.getApiBase();
             while (base.endsWith("/")) base = base.substring(0, base.length() - 1);
             config.baseUrl = base + "/ai/chat/completions";
             config.modelId = "deepseek-v4-flash";
