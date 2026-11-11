@@ -1,0 +1,12 @@
+# 系统与编辑器
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+
+# 运行时数据库与日志（各子目录另有自己的规则）
+*.db
+*.db-shm
+*.db-wal
