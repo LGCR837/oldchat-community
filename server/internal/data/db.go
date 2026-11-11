@@ -413,6 +413,18 @@ func ensureMessageColumns(db *sqlx.DB) {
 	_ = addColumnIfMissing(db, "group_members", "announcement_read_at", "DATETIME NULL")
 	_ = addColumnIfMissing(db, "group_members", "last_read_at", "DATETIME NULL")
 	_ = addColumnIfMissing(db, "friends", "remark_name", "TEXT NOT NULL DEFAULT ''")
+	// 官方数据迁移：占位账号与幂等键。
+	_ = addColumnIfMissing(db, "users", "official_uid", "TEXT NOT NULL DEFAULT ''")
+	_ = addColumnIfMissing(db, "users", "is_shadow", "INTEGER NOT NULL DEFAULT 0")
+	_ = addColumnIfMissing(db, "users", "claimed_at", "DATETIME NULL")
+	_ = addColumnIfMissing(db, "direct_messages", "official_msg_id", "TEXT NOT NULL DEFAULT ''")
+	_ = addColumnIfMissing(db, "group_messages", "official_msg_id", "TEXT NOT NULL DEFAULT ''")
+	_ = addColumnIfMissing(db, "groups", "official_group_id", "TEXT NOT NULL DEFAULT ''")
+	_ = addColumnIfMissing(db, "groups", "imported", "INTEGER NOT NULL DEFAULT 0")
+	_, _ = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_official_uid ON users (official_uid) WHERE official_uid != ''`)
+	_, _ = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_direct_msg_official ON direct_messages (official_msg_id) WHERE official_msg_id != ''`)
+	_, _ = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_group_msg_official ON group_messages (official_msg_id) WHERE official_msg_id != ''`)
+	_, _ = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_groups_official ON groups (official_group_id) WHERE official_group_id != ''`)
 	// 覆盖复合游标 WHERE/ORDER BY，避免深页 OFFSET 扫描和额外临时排序。
 	_, _ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_direct_msg_thread_cursor ON direct_messages (thread_id, created_at DESC, id DESC)`)
 	_, _ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_direct_threads_user_a ON direct_threads (user_a_id, id)`)
@@ -455,6 +467,32 @@ CREATE TABLE IF NOT EXISTS ai_token_quotas (
 	_, _ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_ai_token_quotas_updated ON ai_token_quotas (updated_at)`)
 	// 将旧版 1 亿免费默认额度迁移为 500 万；其他自定义额度保持不变。
 	_, _ = db.Exec(`UPDATE ai_token_quotas SET token_limit = 5000000, updated_at = CURRENT_TIMESTAMP WHERE token_limit = 100000000`)
+	// 官方数据迁移任务与过程日志：进度页按 10 秒轮询读取。
+	_, _ = db.Exec(`
+CREATE TABLE IF NOT EXISTS import_jobs (
+    id VARCHAR(32) PRIMARY KEY,
+    user_id VARCHAR(32) NOT NULL,
+    official_uid TEXT NOT NULL DEFAULT '',
+    source_host TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'queued',
+    stage TEXT NOT NULL DEFAULT '',
+    percent INTEGER NOT NULL DEFAULT 0,
+    stats TEXT NOT NULL DEFAULT '{}',
+    error TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at DATETIME NULL
+)`)
+	_, _ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_import_jobs_user ON import_jobs (user_id, created_at DESC)`)
+	_, _ = db.Exec(`
+CREATE TABLE IF NOT EXISTS import_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id VARCHAR(32) NOT NULL,
+    level TEXT NOT NULL DEFAULT 'info',
+    stage TEXT NOT NULL DEFAULT '',
+    message TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)`)
+	_, _ = db.Exec(`CREATE INDEX IF NOT EXISTS idx_import_events_job ON import_events (job_id, id)`)
 	// Bug report table is also ensured here so schema migrations can safely run
 	// during OpenDB (before http layer bootstraps stores).
 	_, _ = db.Exec(`
@@ -1177,4 +1215,3 @@ func IsSQLiteBusy(err error) bool {
 	s := strings.ToLower(err.Error())
 	return strings.Contains(s, "busy") || strings.Contains(s, "locked")
 }
-

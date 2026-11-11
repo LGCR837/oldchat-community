@@ -14,6 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
     signature TEXT NOT NULL DEFAULT '',
     cover_url VARCHAR(512) NOT NULL DEFAULT '',
     password_hash TEXT NOT NULL,
+    official_uid TEXT NOT NULL DEFAULT '',
+    is_shadow INTEGER NOT NULL DEFAULT 0,
+    claimed_at DATETIME NULL,
     token_version INTEGER NOT NULL DEFAULT 0,
     coin_balance INTEGER NOT NULL DEFAULT 10,
     reputation_score INTEGER NOT NULL DEFAULT 110,
@@ -79,6 +82,7 @@ CREATE TABLE IF NOT EXISTS direct_messages (
     id VARCHAR(32) PRIMARY KEY,
     thread_id VARCHAR(32) NOT NULL REFERENCES direct_threads(id) ON DELETE CASCADE,
     sender_id VARCHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    official_msg_id TEXT NOT NULL DEFAULT '',
     body TEXT NOT NULL,
     msg_type TEXT NOT NULL DEFAULT 'text',
     media_url TEXT NOT NULL DEFAULT '',
@@ -103,6 +107,8 @@ ON direct_messages (burned_at, burn_start_at, burn_after_seconds);
 
 CREATE TABLE IF NOT EXISTS groups (
     id VARCHAR(32) PRIMARY KEY,
+    official_group_id TEXT NOT NULL DEFAULT '',
+    imported INTEGER NOT NULL DEFAULT 0,
     name VARCHAR(64) NOT NULL,
     avatar_url VARCHAR(512) NOT NULL DEFAULT '',
     owner_id VARCHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -157,6 +163,7 @@ CREATE TABLE IF NOT EXISTS group_messages (
     id VARCHAR(32) PRIMARY KEY,
     group_id VARCHAR(32) NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
     sender_id VARCHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    official_msg_id TEXT NOT NULL DEFAULT '',
     group_seq INTEGER NULL,
     body TEXT NOT NULL,
     msg_type TEXT NOT NULL DEFAULT 'text',
@@ -389,3 +396,36 @@ CREATE TABLE IF NOT EXISTS bot_permits (
 CREATE INDEX IF NOT EXISTS idx_bot_permits_user ON bot_permits(user_id);
 CREATE INDEX IF NOT EXISTS idx_bot_permits_status ON bot_permits(status);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_bot_permits_token ON bot_permits(token_hash) WHERE token_hash <> '';
+
+-- 官方数据迁移：任务与过程日志
+CREATE TABLE IF NOT EXISTS import_jobs (
+    id VARCHAR(32) PRIMARY KEY,
+    user_id VARCHAR(32) NOT NULL,
+    official_uid TEXT NOT NULL DEFAULT '',
+    source_host TEXT NOT NULL DEFAULT '',
+    status TEXT NOT NULL DEFAULT 'queued',
+    stage TEXT NOT NULL DEFAULT '',
+    percent INTEGER NOT NULL DEFAULT 0,
+    stats TEXT NOT NULL DEFAULT '{}',
+    error TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at DATETIME NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_import_jobs_user ON import_jobs (user_id, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS import_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    job_id VARCHAR(32) NOT NULL,
+    level TEXT NOT NULL DEFAULT 'info',
+    stage TEXT NOT NULL DEFAULT '',
+    message TEXT NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_import_events_job ON import_events (job_id, id);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_official_uid ON users (official_uid) WHERE official_uid != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_direct_msg_official ON direct_messages (official_msg_id) WHERE official_msg_id != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_group_msg_official ON group_messages (official_msg_id) WHERE official_msg_id != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_groups_official ON groups (official_group_id) WHERE official_group_id != '';

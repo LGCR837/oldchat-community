@@ -16,6 +16,7 @@ import (
 	"metrochat/internal/auth"
 	"metrochat/internal/config"
 	"metrochat/internal/data"
+	"metrochat/internal/migrate"
 	"metrochat/internal/oss"
 	"metrochat/internal/ratelimit"
 	"metrochat/internal/secure"
@@ -86,6 +87,7 @@ type API struct {
 	idLimiter           *ratelimit.Limiter
 	adminLoginLimiter   *ratelimit.Limiter
 	systemStatusLimiter *ratelimit.Limiter
+	migrate             *migrate.Service
 	webAppDir           string
 	luaAppDir           string
 	typing              *typingStore
@@ -208,11 +210,16 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 		// 管理后台登录与系统状态查询：同一 IP 每 3 秒最多一次，不允许突发。
 		adminLoginLimiter:   ratelimit.NewLimiter(1.0/3.0, 1),
 		systemStatusLimiter: ratelimit.NewLimiter(1.0/3.0, 1),
-		webAppDir:           resolveWebAppDir(),
-		luaAppDir:           resolveLuaAppDir(),
-		typing:              newTypingStore(),
-		tokenVersionCache:   make(map[string]tokenVersionEntry),
-		banStatusCache:      make(map[string]banStatusEntry),
+		migrate: migrate.NewService(db, migrate.Options{
+			SourceHost:         cfg.MigrateSourceHost,
+			IncludeGroups:      cfg.MigrateIncludeGroups,
+			MaxMessagesPerChat: cfg.MigrateMaxMessagesPerChat,
+		}),
+		webAppDir:         resolveWebAppDir(),
+		luaAppDir:         resolveLuaAppDir(),
+		typing:            newTypingStore(),
+		tokenVersionCache: make(map[string]tokenVersionEntry),
+		banStatusCache:    make(map[string]banStatusEntry),
 	}
 	api.events = newEventsService(api.pts, api.wsHub)
 	api.readThrottle = make(map[string]int64)
@@ -329,6 +336,11 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	r.Get("/", api.handleLanding)
 	r.Get("/landing", api.handleLanding)
 	r.Get("/register", api.handleRegisterPage)
+	if cfg.MigrateEnabled {
+		r.Get("/migrate", api.handleMigratePage)
+		r.Post("/migrate/start", api.handleMigrateStart)
+		r.Get("/migrate/status", api.handleMigrateStatus)
+	}
 	r.Get("/terms", api.handleTermsPage)
 	r.Get("/agreement", api.handleTermsPage)
 	r.Get("/privacy", api.handleTermsPage)

@@ -64,7 +64,7 @@ const appRegisterHTML = `
         <button type="submit" class="btn-primary" id="btnRegister">注 册</button>
       </form>
       <p class="auth-error" id="registerError"></p>
-      <p class="auth-footer"><a href="/app/">返回登录</a> · <a href="/forgot-password">忘记密码？</a></p>
+      <p class="auth-footer"><a href="/app/">返回登录</a> · <a href="/forgot-password">忘记密码？</a> · <a href="/migrate">从旧服务器迁移</a></p>
     </div>
   </div>
 

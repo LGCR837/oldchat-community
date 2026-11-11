@@ -74,6 +74,17 @@ type Config struct {
 	// EmailVerify 是否强制邮箱验证码。社区版默认关闭：填邮箱即可注册，
 	// 代价是无法自助找回密码。
 	EmailVerify bool
+	// MigrateEnabled 控制网页版迁移入口 /migrate 是否开放。
+	MigrateEnabled bool
+	// MigrateSourceHost 是迁移时被代理登录的旧服务器地址（含协议，不含 /v1）。
+	MigrateSourceHost string
+	// MigrateAllowClaim 允许接管已存在私聊数据的占位账号：
+	// 别人先迁移过与他的聊天记录，他后注册时可以直接认领这条占位账号。
+	MigrateAllowClaim bool
+	// MigrateIncludeGroups 是否把群聊与群消息一并导入。
+	MigrateIncludeGroups bool
+	// MigrateMaxMessagesPerChat 单个会话最多导入多少条，0 表示不限。
+	MigrateMaxMessagesPerChat int
 }
 
 // CaptchaModeOff / Pow / Geetest / Turnstile 是 CaptchaMode 的合法取值。
@@ -154,6 +165,13 @@ func Load() (Config, error) {
 	cfg.GeetestKey = strings.TrimSpace(getEnv("GEETEST_KEY", ""))
 	// 邮箱验证默认关闭：社区版没有稳定的 SMTP，注册只校验邮箱格式。
 	cfg.EmailVerify = parseBoolEnv("EMAIL_VERIFY", false)
+	// 官方数据迁移默认开启：入口在 /migrate，默认指向官方旧服务器。
+	cfg.MigrateEnabled = parseBoolEnv("MIGRATE_ENABLED", true)
+	cfg.MigrateSourceHost = strings.TrimRight(strings.TrimSpace(getEnv("MIGRATE_SOURCE_HOST", "https://oc.mcl0.dpdns.org")), "/")
+	// 小圈子默认相信用户：允许直接认领已含私聊数据的占位账号。
+	cfg.MigrateAllowClaim = parseBoolEnv("MIGRATE_ALLOW_CLAIM", true)
+	cfg.MigrateIncludeGroups = parseBoolEnv("MIGRATE_INCLUDE_GROUPS", true)
+	cfg.MigrateMaxMessagesPerChat = getIntEnv("MIGRATE_MAX_MESSAGES_PER_CHAT", 0)
 
 	settingsPath := getEnv("SETTINGS_JSON", "settings.json")
 	settings, settingsOk := loadSettingsFromJSON(settingsPath)
@@ -247,6 +265,23 @@ func Load() (Config, error) {
 			cfg.MusicDownloadConcurrency = *settings.MusicDownloadConcurrency
 		}
 		cfg.DownloadSources = cleanDownloadSources(settings.DownloadSources)
+		if settings.MigrateEnabled != nil && !envIsSet("MIGRATE_ENABLED") {
+			cfg.MigrateEnabled = *settings.MigrateEnabled
+		}
+		if !envIsSet("MIGRATE_SOURCE_HOST") {
+			if v := strings.TrimRight(strings.TrimSpace(settings.MigrateSourceHost), "/"); v != "" {
+				cfg.MigrateSourceHost = v
+			}
+		}
+		if settings.MigrateAllowClaim != nil && !envIsSet("MIGRATE_ALLOW_CLAIM") {
+			cfg.MigrateAllowClaim = *settings.MigrateAllowClaim
+		}
+		if settings.MigrateIncludeGroups != nil && !envIsSet("MIGRATE_INCLUDE_GROUPS") {
+			cfg.MigrateIncludeGroups = *settings.MigrateIncludeGroups
+		}
+		if settings.MigrateMaxMessagesPerChat > 0 && !envIsSet("MIGRATE_MAX_MESSAGES_PER_CHAT") {
+			cfg.MigrateMaxMessagesPerChat = settings.MigrateMaxMessagesPerChat
+		}
 	}
 
 	// 未单独配置文件域名时跟随公开访问域名，保证媒体地址指向源服务器自身。
@@ -556,6 +591,11 @@ type settingsFile struct {
 	GeetestID                 string   `json:"geetest_id"`
 	GeetestKey                string   `json:"geetest_key"`
 	EmailVerify               *bool    `json:"email_verify"`
+	MigrateEnabled            *bool    `json:"migrate_enabled"`
+	MigrateSourceHost         string   `json:"migrate_source_host"`
+	MigrateAllowClaim         *bool    `json:"migrate_allow_claim"`
+	MigrateIncludeGroups      *bool    `json:"migrate_include_groups"`
+	MigrateMaxMessagesPerChat int      `json:"migrate_max_messages_per_chat"`
 	Port                      string   `json:"port"`
 	OAuthIssuer               string   `json:"oauth_issuer"`
 	PublicBaseURL             string   `json:"public_base_url"`

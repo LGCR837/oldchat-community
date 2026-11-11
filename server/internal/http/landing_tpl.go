@@ -149,6 +149,7 @@ const appLandingHTML = `<!doctype html>
       <ul class="sidebar-list">
         <li><a href="/">官网主页</a></li>
         <li><a href="/register" class="highlight">注册账号</a></li>
+        <li><a href="/migrate">从旧服务器迁移</a></li>
         <li><a href="/update/">下载客户端</a></li>
         <li><a href="/routes.md">路由清单</a></li>
       </ul>
