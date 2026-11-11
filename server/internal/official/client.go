@@ -27,13 +27,16 @@ type Client struct {
 }
 
 type Profile struct {
-	UID         string `json:"uid"`
-	Ncuid       string `json:"ncuid"`
-	Username    string `json:"username"`
-	DisplayName string `json:"display_name"`
-	AvatarURL   string `json:"avatar_url"`
-	Signature   string `json:"signature"`
-	CoverURL    string `json:"cover_url"`
+	UID             string `json:"uid"`
+	Ncuid           string `json:"ncuid"`
+	Username        string `json:"username"`
+	DisplayName     string `json:"display_name"`
+	UserTitle       string `json:"user_title"`
+	AvatarURL       string `json:"avatar_url"`
+	Signature       string `json:"signature"`
+	CoverURL        string `json:"cover_url"`
+	CoinBalance     *int   `json:"coin_balance"`
+	ReputationScore *int   `json:"reputation_score"`
 }
 
 type Friend struct {
@@ -42,6 +45,7 @@ type Friend struct {
 	Username    string `json:"username"`
 	DisplayName string `json:"display_name"`
 	RemarkName  string `json:"remark_name"`
+	UserTitle   string `json:"user_title"`
 	AvatarURL   string `json:"avatar_url"`
 }
 

@@ -45,8 +45,8 @@ type ShadowProfile struct {
 	OfficialUID string
 	Username    string
 	DisplayName string
+	UserTitle   string
 	AvatarURL   string
-	Signature   string
 }
 
 // UserIDByOfficialUID 找到已绑定该官方 UID 的账号（含已认领的真实账号）。
@@ -108,10 +108,10 @@ func (s *Store) UpsertShadowUser(ctx context.Context, p ShadowProfile) (id strin
 		displayName = "旧聊用户 " + p.OfficialUID
 	}
 	_, err = s.db.ExecContext(ctx, `
-INSERT INTO users (id, uid, ncuid, email, username, display_name, avatar_url, signature, cover_url, password_hash, token_version, coin_balance, reputation_score, official_uid, is_shadow)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', '!shadow', 0, 0, 100, ?, 1)`,
+INSERT INTO users (id, uid, ncuid, email, username, display_name, user_title, avatar_url, signature, cover_url, password_hash, token_version, coin_balance, reputation_score, official_uid, is_shadow)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, '', '', '!shadow', 0, 0, 100, ?, 1)`,
 		id, uid, uid, "import+"+sanitizeUID(p.OfficialUID)+"@shadow.invalid", username, displayName,
-		strings.TrimSpace(p.AvatarURL), strings.TrimSpace(p.Signature), p.OfficialUID)
+		strings.TrimSpace(p.UserTitle), strings.TrimSpace(p.AvatarURL), p.OfficialUID)
 	if err != nil {
 		return "", false, err
 	}
@@ -149,6 +149,115 @@ UPDATE users SET
     token_version = token_version + 1
 WHERE id = ?`, email, username, passwordHash, displayName, userID)
 	return err
+}
+
+// OfficialProfile 是从旧站读到的本人资料，空字段表示旧站没给。
+type OfficialProfile struct {
+	UID             string
+	Ncuid           string
+	Username        string
+	DisplayName     string
+	UserTitle       string
+	Signature       string
+	AvatarURL       string
+	CoverURL        string
+	CoinBalance     *int
+	ReputationScore *int
+}
+
+// ApplyOfficialProfile 用旧站资料覆盖社区账号，返回已写入与因唯一键冲突跳过的字段。
+// 昵称、称号、签名、头像、封面、金币、声望都按旧站覆盖，UID 与用户名冲突时保留本地值。
+func (s *Store) ApplyOfficialProfile(ctx context.Context, userID string, p OfficialProfile) (applied, skipped []string, err error) {
+	sets := make([]string, 0, 10)
+	args := make([]any, 0, 11)
+	add := func(field, column string, value any) {
+		sets = append(sets, column+" = ?")
+		args = append(args, value)
+		applied = append(applied, field)
+	}
+
+	if v := strings.TrimSpace(p.DisplayName); v != "" {
+		add("昵称", "display_name", v)
+	}
+	if v := strings.TrimSpace(p.UserTitle); v != "" {
+		add("称号", "user_title", v)
+	}
+	if v := strings.TrimSpace(p.Signature); v != "" {
+		add("签名", "signature", v)
+	}
+	if v := strings.TrimSpace(p.AvatarURL); v != "" {
+		add("头像", "avatar_url", v)
+	}
+	if v := strings.TrimSpace(p.CoverURL); v != "" {
+		add("封面", "cover_url", v)
+	}
+	if p.CoinBalance != nil {
+		add("金币", "coin_balance", *p.CoinBalance)
+	}
+	if p.ReputationScore != nil {
+		add("声望", "reputation_score", *p.ReputationScore)
+	}
+	if v := strings.TrimSpace(p.Ncuid); v != "" {
+		add("旧聊号", "ncuid", v)
+	}
+	for _, item := range []struct {
+		field  string
+		column string
+		value  string
+	}{
+		{"用户名", "username", p.Username},
+		{"账号 ID", "uid", p.UID},
+	} {
+		v := strings.TrimSpace(item.value)
+		if v == "" {
+			continue
+		}
+		taken, e := s.fieldTakenByOther(ctx, item.column, v, userID)
+		if e != nil {
+			return applied, skipped, e
+		}
+		if taken {
+			skipped = append(skipped, item.field)
+			continue
+		}
+		add(item.field, item.column, v)
+	}
+	if len(sets) == 0 {
+		return applied, skipped, nil
+	}
+	sets = append(sets, "updated_at = CURRENT_TIMESTAMP")
+	args = append(args, userID)
+	_, err = s.db.ExecContext(ctx, `UPDATE users SET `+strings.Join(sets, ", ")+` WHERE id = ?`, args...)
+	return applied, skipped, err
+}
+
+// EnrichShadowUser 给已存在的占位账号补资料并换掉旧的媒体地址。
+// 只动 is_shadow = 1 的行，已认领的真账号不受影响。
+func (s *Store) EnrichShadowUser(ctx context.Context, officialUID, avatarURL, userTitle string) error {
+	sets := make([]string, 0, 3)
+	args := make([]any, 0, 4)
+	if v := strings.TrimSpace(avatarURL); v != "" {
+		sets = append(sets, "avatar_url = ?")
+		args = append(args, v)
+	}
+	if v := strings.TrimSpace(userTitle); v != "" {
+		sets = append(sets, "user_title = ?")
+		args = append(args, v)
+	}
+	if len(sets) == 0 {
+		return nil
+	}
+	args = append(args, officialUID)
+	_, err := s.db.ExecContext(ctx, `UPDATE users SET `+strings.Join(sets, ", ")+` WHERE official_uid = ? AND is_shadow = 1`, args...)
+	return err
+}
+
+func (s *Store) fieldTakenByOther(ctx context.Context, column, value, exceptID string) (bool, error) {
+	var n int
+	if err := s.db.GetContext(ctx, &n, `SELECT COUNT(1) FROM users WHERE `+column+` = ? AND id <> ?`, value, exceptID); err != nil {
+		return false, err
+	}
+	return n > 0, nil
 }
 
 func (s *Store) EnsureThread(ctx context.Context, userA, userB string) (string, error) {

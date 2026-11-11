@@ -267,7 +267,9 @@ const appMigrateHTML = `<!doctype html>
         add('群聊', 'groups', ' 个');
         add('群消息', 'group_messages', ' 条');
         add('占位账号', 'shadow_users', ' 个');
-        add('待下载媒体', 'media_skipped', ' 条');
+        add('图片', 'media_files', ' 张');
+        add('图片失败', 'media_failed', ' 张');
+        add('消息内媒体未下载', 'media_skipped', ' 条');
         return items.join('');
       }
 

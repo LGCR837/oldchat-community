@@ -51,12 +51,29 @@ func newFakeOfficial(t *testing.T, directCalls *int) *httptest.Server {
 	})
 	mux.HandleFunc("/v1/me", func(w http.ResponseWriter, r *http.Request) {
 		requireAuth(t, w, r)
-		writeTestJSON(w, map[string]interface{}{"uid": "1001", "display_name": "我"})
+		writeTestJSON(w, map[string]interface{}{
+			"uid":              "1001",
+			"ncuid":            "NC1001",
+			"username":         "laowang_official",
+			"display_name":     "我",
+			"user_title":       "老司机",
+			"signature":        "旧站的签名",
+			"avatar_url":       "https://ocf.oss-cn-shanghai.aliyuncs.com/avatars/me.png",
+			"cover_url":        "https://ocf.oss-cn-shanghai.aliyuncs.com/covers/me.png",
+			"coin_balance":     1234,
+			"reputation_score": 150,
+		})
+	})
+	// 旧站 uploads 目录里的图片副本：OSS 停流后媒体只能从这里取。
+	mux.HandleFunc("/v1/uploads/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Content-Length", "1200")
+		_, _ = w.Write([]byte(strings.Repeat("p", 1200)))
 	})
 	mux.HandleFunc("/v1/friends", func(w http.ResponseWriter, r *http.Request) {
 		requireAuth(t, w, r)
 		writeTestJSON(w, map[string]interface{}{"friends": []map[string]interface{}{
-			{"uid": "2002", "display_name": "老王", "remark_name": "王哥"},
+			{"uid": "2002", "display_name": "老王", "remark_name": "王哥", "user_title": "邻居", "avatar_url": "https://ocf.oss-cn-shanghai.aliyuncs.com/avatars/2002.png"},
 			{"uid": "3003", "display_name": "小李"},
 		}})
 	})
@@ -81,7 +98,7 @@ func newFakeOfficial(t *testing.T, directCalls *int) *httptest.Server {
 	mux.HandleFunc("/v1/groups/list", func(w http.ResponseWriter, r *http.Request) {
 		requireAuth(t, w, r)
 		writeTestJSON(w, map[string]interface{}{"groups": []map[string]interface{}{
-			{"group_id": "GP-0001", "name": "老友群", "role": 1},
+			{"group_id": "GP-0001", "name": "老友群", "role": 1, "avatar_url": "/oss/avatars/group1.png"},
 		}})
 	})
 	mux.HandleFunc("/v1/groups/messages", func(w http.ResponseWriter, r *http.Request) {
@@ -195,6 +212,80 @@ func TestRunImportsFriendsDirectAndGroups(t *testing.T) {
 	}
 	if len(events) < 5 {
 		t.Fatalf("过程日志过少：%d", len(events))
+	}
+}
+
+func TestRunMigratesProfileAndImages(t *testing.T) {
+	db := newTestDB(t)
+	userID := seedLocalUser(t, db)
+	directCalls := 0
+	srv := newFakeOfficial(t, &directCalls)
+	uploadDir := t.TempDir()
+
+	svc := NewService(db, Options{SourceHost: srv.URL, UploadDir: uploadDir, IncludeGroups: true})
+	job, err := svc.Store().CreateJob(context.Background(), userID, "1001", srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Run(context.Background(), job.ID, Credentials{Username: "me", Password: "good-pass"}); err != nil {
+		t.Fatalf("迁移失败: %v", err)
+	}
+
+	var me struct {
+		UID             string `db:"uid"`
+		Ncuid           string `db:"ncuid"`
+		Username        string `db:"username"`
+		DisplayName     string `db:"display_name"`
+		UserTitle       string `db:"user_title"`
+		Signature       string `db:"signature"`
+		AvatarURL       string `db:"avatar_url"`
+		CoverURL        string `db:"cover_url"`
+		CoinBalance     int    `db:"coin_balance"`
+		ReputationScore int    `db:"reputation_score"`
+	}
+	if err := db.Get(&me, `SELECT uid, ncuid, username, display_name, user_title, signature, avatar_url, cover_url, coin_balance, reputation_score FROM users WHERE id = ?`, userID); err != nil {
+		t.Fatal(err)
+	}
+	if me.DisplayName != "我" || me.UserTitle != "老司机" || me.Signature != "旧站的签名" {
+		t.Fatalf("资料未迁移：%+v", me)
+	}
+	if me.CoinBalance != 1234 || me.ReputationScore != 150 {
+		t.Fatalf("金币或声望未迁移：金币 %d 声望 %d", me.CoinBalance, me.ReputationScore)
+	}
+	if me.UID != "1001" || me.Ncuid != "NC1001" || me.Username != "laowang_official" {
+		t.Fatalf("账号标识未迁移：%+v", me)
+	}
+	if !strings.HasPrefix(me.AvatarURL, "/v1/uploads/avatars/") {
+		t.Fatalf("头像应换成本地地址，实际 %q", me.AvatarURL)
+	}
+	if !strings.HasPrefix(me.CoverURL, "/v1/uploads/covers/") {
+		t.Fatalf("封面应换成本地地址，实际 %q", me.CoverURL)
+	}
+	for _, rel := range []string{me.AvatarURL, me.CoverURL} {
+		path := filepath.Join(uploadDir, strings.TrimPrefix(rel, "/v1/uploads/"))
+		info, err := os.Stat(path)
+		if err != nil || info.Size() != 1200 {
+			t.Fatalf("本地图片缺失或大小不符：%s err=%v", rel, err)
+		}
+	}
+
+	var friend struct {
+		AvatarURL string `db:"avatar_url"`
+		UserTitle string `db:"user_title"`
+	}
+	if err := db.Get(&friend, `SELECT avatar_url, user_title FROM users WHERE official_uid = '2002'`); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(friend.AvatarURL, "/v1/uploads/avatars/") || friend.UserTitle != "邻居" {
+		t.Fatalf("好友资料未迁移：%+v", friend)
+	}
+
+	var groupAvatar string
+	if err := db.Get(&groupAvatar, `SELECT avatar_url FROM groups WHERE official_group_id = 'GP-0001'`); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(groupAvatar, "/v1/uploads/avatars/") {
+		t.Fatalf("群头像应换成本地地址，实际 %q", groupAvatar)
 	}
 }
 

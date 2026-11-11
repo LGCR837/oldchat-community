@@ -14,6 +14,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	"metrochat/internal/media"
 	"metrochat/internal/official"
 )
 
@@ -33,6 +34,7 @@ const (
 
 type Options struct {
 	SourceHost         string
+	UploadDir          string
 	IncludeGroups      bool
 	MaxMessagesPerChat int
 }
@@ -45,18 +47,23 @@ type Credentials struct {
 type Service struct {
 	store     *Store
 	opts      Options
+	media     *media.Fetcher
 	mu        sync.Mutex
 	running   map[string]struct{}
 	newClient func(base string) *official.Client
 }
 
 func NewService(db *sqlx.DB, opts Options) *Service {
-	return &Service{
+	svc := &Service{
 		store:     NewStore(db),
 		opts:      opts,
 		running:   make(map[string]struct{}),
 		newClient: official.New,
 	}
+	if strings.TrimSpace(opts.UploadDir) != "" {
+		svc.media = media.NewFetcher(opts.UploadDir, opts.SourceHost)
+	}
+	return svc
 }
 
 func (s *Service) Store() *Store { return s.store }
@@ -113,12 +120,36 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 	}
 	s.store.AddEvent(ctx, jobID, "ok", "登录", fmt.Sprintf("登录成功：%s（%s）", displayNameOf(profile), officialUID))
 
-	// 阶段 1：本人资料。
+	// 阶段 1：本人资料，先落资料再迁内容。
 	s.store.UpdateProgress(ctx, jobID, "读取账号资料", 5, stats)
 	if me, err := client.Me(ctx); err == nil {
 		profile = me
 	}
-	s.store.AddEvent(ctx, jobID, "ok", "账号资料", fmt.Sprintf("已读取资料：昵称 %s，旧聊 ID %s，社区账号沿用当前昵称", displayNameOf(profile), officialUID))
+	s.store.AddEvent(ctx, jobID, "ok", "账号资料", fmt.Sprintf("已读取资料：昵称 %s，旧聊 ID %s", displayNameOf(profile), officialUID))
+
+	s.store.UpdateProgress(ctx, jobID, "迁移账号资料", 8, stats)
+	images := make(map[string]string)
+	avatarURL := s.pullImage(ctx, jobID, "账号头像", profile.AvatarURL, "avatars", stats, images)
+	coverURL := s.pullImage(ctx, jobID, "账号封面", profile.CoverURL, "covers", stats, images)
+	applied, skipped, err := s.store.ApplyOfficialProfile(ctx, job.UserID, OfficialProfile{
+		UID:             profile.UID,
+		Ncuid:           profile.Ncuid,
+		Username:        profile.Username,
+		DisplayName:     profile.DisplayName,
+		UserTitle:       profile.UserTitle,
+		Signature:       profile.Signature,
+		AvatarURL:       avatarURL,
+		CoverURL:        coverURL,
+		CoinBalance:     profile.CoinBalance,
+		ReputationScore: profile.ReputationScore,
+	})
+	if err != nil {
+		return fail("迁移账号资料", err)
+	}
+	s.store.AddEvent(ctx, jobID, "ok", "账号资料", fmt.Sprintf("已写入 %s，金币 %s", strings.Join(applied, "、"), coinText(profile.CoinBalance)))
+	if len(skipped) > 0 {
+		s.store.AddEvent(ctx, jobID, "warn", "账号资料", fmt.Sprintf("%s 在社区版已被占用，保留本地值", strings.Join(skipped, "、")))
+	}
 
 	// 阶段 2：好友列表，先为对方建占位账号。
 	s.store.UpdateProgress(ctx, jobID, "迁移好友列表", 10, stats)
@@ -138,11 +169,14 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 		if uid == "" {
 			continue
 		}
+		friendName := firstNonEmpty(f.RemarkName, f.DisplayName, f.Username, uid)
+		friendAvatar := s.pullImage(ctx, jobID, "好友 "+friendName+" 的头像", f.AvatarURL, "avatars", stats, images)
 		id, wasCreated, err := s.store.UpsertShadowUser(ctx, ShadowProfile{
 			OfficialUID: uid,
 			Username:    f.Username,
 			DisplayName: f.DisplayName,
-			AvatarURL:   f.AvatarURL,
+			UserTitle:   f.UserTitle,
+			AvatarURL:   friendAvatar,
 		})
 		if err != nil {
 			s.store.AddEvent(ctx, jobID, "warn", "好友", fmt.Sprintf("跳过 %s：%v", firstNonEmpty(f.DisplayName, uid), err))
@@ -150,6 +184,12 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 		}
 		if id == job.UserID {
 			continue
+		}
+		if !wasCreated && friendAvatar != "" {
+			// 老占位账号可能还挂着 OSS 地址，换成刚下到本地的副本。
+			if err := s.store.EnrichShadowUser(ctx, uid, friendAvatar, f.UserTitle); err != nil {
+				s.store.AddEvent(ctx, jobID, "warn", "好友", fmt.Sprintf("%s 资料更新失败：%v", friendName, err))
+			}
 		}
 		if err := s.store.AddFriendPair(ctx, job.UserID, id, f.RemarkName); err != nil {
 			s.store.AddEvent(ctx, jobID, "warn", "好友", fmt.Sprintf("好友关系建立失败 %s：%v", firstNonEmpty(f.DisplayName, uid), err))
@@ -205,7 +245,8 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 				if ctx.Err() != nil {
 					return fail("迁移群聊", ctx.Err())
 				}
-				groupID, _, err := s.store.EnsureImportedGroup(ctx, g.GroupID, g.Name, g.AvatarURL, job.UserID)
+				groupAvatar := s.pullImage(ctx, jobID, "群 "+g.Name+" 的头像", g.AvatarURL, "avatars", stats, images)
+				groupID, _, err := s.store.EnsureImportedGroup(ctx, g.GroupID, g.Name, groupAvatar, job.UserID)
 				if err != nil {
 					s.store.AddEvent(ctx, jobID, "warn", "群聊", fmt.Sprintf("群 %s 创建失败：%v", g.Name, err))
 					continue
@@ -234,8 +275,8 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 	s.store.UpdateProgress(ctx, jobID, "迁移完成", 100, stats)
 	s.store.SetStatus(ctx, jobID, StatusDone, "迁移完成", "")
 	s.store.AddEvent(ctx, jobID, "ok", "完成", fmt.Sprintf(
-		"全部完成：好友 %d，私聊消息 %d，群 %d，群消息 %d",
-		stats["friends"], stats["direct_messages"], stats["groups"], stats["group_messages"]))
+		"全部完成：好友 %d，私聊消息 %d，群 %d，群消息 %d，图片 %d 张",
+		stats["friends"], stats["direct_messages"], stats["groups"], stats["group_messages"], stats["media_files"]))
 	return nil
 }
 
@@ -359,6 +400,49 @@ func (s *Service) importGroup(ctx context.Context, client *official.Client, self
 		time.Sleep(pageDelay)
 	}
 	return int(inserted), nil
+}
+
+// pullImage 把旧站图片下到本地，失败时退回原地址，不中断整次迁移。
+func (s *Service) pullImage(ctx context.Context, jobID, label, raw, subdir string, stats map[string]int64, cache map[string]string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if v, ok := cache[raw]; ok {
+		return v
+	}
+	if s.media == nil {
+		return raw
+	}
+	res, err := s.media.Download(ctx, raw, subdir)
+	if err != nil {
+		cache[raw] = raw
+		stats["media_failed"]++
+		s.store.AddEvent(ctx, jobID, "warn", "媒体", fmt.Sprintf("%s 下载失败，暂时保留旧地址：%v", label, err))
+		return raw
+	}
+	cache[raw] = res.URL
+	stats["media_files"]++
+	note := ""
+	if res.Redirected {
+		note = "，已改走旧服务器直连"
+	}
+	s.store.AddEvent(ctx, jobID, "info", "媒体", fmt.Sprintf("%s 已存到本地 %s%s", label, sizeText(res.Bytes), note))
+	return res.URL
+}
+
+func sizeText(n int64) string {
+	if n >= 1<<20 {
+		return fmt.Sprintf("%.1f MB", float64(n)/float64(1<<20))
+	}
+	return fmt.Sprintf("%d KB", (n+1023)/1024)
+}
+
+func coinText(v *int) string {
+	if v == nil {
+		return "未提供"
+	}
+	return strconv.Itoa(*v)
 }
 
 func friendlyError(err error) string {

@@ -212,6 +212,7 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 		systemStatusLimiter: ratelimit.NewLimiter(1.0/3.0, 1),
 		migrate: migrate.NewService(db, migrate.Options{
 			SourceHost:         cfg.MigrateSourceHost,
+			UploadDir:          cfg.UploadDir,
 			IncludeGroups:      cfg.MigrateIncludeGroups,
 			MaxMessagesPerChat: cfg.MigrateMaxMessagesPerChat,
 		}),
