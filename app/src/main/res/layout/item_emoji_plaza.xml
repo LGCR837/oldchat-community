@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="8dp"
+    android:layout_marginRight="8dp"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:padding="10dp"
+    android:background="@drawable/bg_flat_row_selector">
+
+    <ImageView
+        android:id="@+id/ivEmojiPlazaPreview"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:scaleType="centerCrop"
+        android:background="@drawable/bg_search_field"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvEmojiPlazaName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="表情名称"
+            android:textColor="@color/color_text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end" />
+
+        <TextView
+            android:id="@+id/tvEmojiPlazaOwner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="上传者"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="12sp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvEmojiPlazaMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="动图 · 0KB"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="12sp"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <TextView
+            android:id="@+id/btnEmojiPlazaSave"
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:minWidth="58dp"
+            android:gravity="center"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:background="@drawable/flat_button_bg"
+            android:text="保存"
+            android:textColor="@color/color_text_primary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/btnEmojiPlazaDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="6dp"
+            android:minWidth="58dp"
+            android:gravity="center"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:background="@drawable/flat_button_bg"
+            android:text="删除"
+            android:textColor="@color/colorDanger"
+            android:textSize="12sp"
+            android:visibility="gone" />
+    </LinearLayout>
+
+</LinearLayout>

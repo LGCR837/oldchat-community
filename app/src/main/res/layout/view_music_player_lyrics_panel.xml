@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="6dp"
+    android:background="@drawable/bg_music_player_card_elevated"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="歌词"
+                android:textColor="@color/music_player_text_primary"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="支持自动高亮与滚动定位"
+                android:textColor="@color/music_player_text_muted"
+                android:textSize="11sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvMusicPlayerLyricsEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:paddingTop="32dp"
+        android:paddingBottom="32dp"
+        android:text="暂无歌词"
+        android:textColor="@color/music_player_text_secondary"
+        android:textSize="14sp" />
+
+    <ScrollView
+        android:id="@+id/svMusicPlayerLyrics"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginTop="12dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/layoutMusicPlayerLyrics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingBottom="16dp" />
+    </ScrollView>
+</LinearLayout>

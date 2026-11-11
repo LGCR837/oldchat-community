@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/color_background"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@color/color_surface"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingLeft="8dp"
+        android:paddingRight="14dp">
+
+        <ImageView
+            android:id="@+id/btnCipStoreBack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_nav_back"
+            android:tint="@color/color_text_primary" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="6dp"
+            android:layout_weight="1"
+            android:text="小程序商店"
+            android:textColor="@color/color_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <ProgressBar
+            android:id="@+id/pbCipStoreSync"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/btnCipStoreRefresh"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginLeft="6dp"
+            android:padding="6dp"
+            android:tint="@color/color_text_primary"
+            app:srcCompat="@android:drawable/ic_popup_sync" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/color_surface"
+        android:paddingLeft="14dp"
+        android:paddingTop="8dp"
+        android:paddingRight="14dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="官方审核通过的精选 CIP 扩展小程序"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/btnCipStoreUploadWeb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="发布我的小程序 →"
+            android:textColor="@color/color_accent"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:paddingBottom="20dp">
+
+            <LinearLayout
+                android:id="@+id/cipStoreContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+
+            <TextView
+                android:id="@+id/tvCipStoreEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="160dp"
+                android:gravity="center"
+                android:text="商店暂无已上架的小程序\n欢迎在官网提交第一个作品！"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>

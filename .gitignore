@@ -1,0 +1,46 @@
+# Gradle / Android 构建产物
+.gradle/
+build/
+app/build/
+local.properties
+*.apk
+*.aab
+*.hprof
+captures/
+
+# 签名材料（绝不入库）
+keystore/
+keystore.properties
+*.jks
+*.keystore
+
+# 桌面端工程产物（desktop/ 为独立 Gradle 工程）
+desktop/.gradle/
+desktop/build/
+
+# IDE / 工具
+.idea/
+*.iml
+.cxx/
+.externalNativeBuild/
+
+# 资源备份与归档（内容与 res/ 重复，靠 git 历史而非副本保存）
+app/src/main/res.zip
+app/src/main/res.backup/
+app/src/main/res/layout/.backup/
+
+# 服务端运行期产物
+server/metrochat.db
+server/metrochat.db.*
+server/server_linux_*
+server/server
+server/uploads/
+server/update/
+server/*.key
+server_packaged/
+
+# 日志与临时文件
+*.log
+.DS_Store
+Thumbs.db
+__pycache__/

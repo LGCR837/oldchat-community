@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/color_background"
+    android:orientation="horizontal"
+    android:paddingLeft="16dp"
+    android:paddingRight="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/tvSectionTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="13sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvBadge"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:layout_marginLeft="6dp"
+        android:background="@drawable/badge_red_dot"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="9sp"
+        android:visibility="gone" />
+</LinearLayout>

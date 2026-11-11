@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/bg_court_card"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+    <!-- 顶部：案件编号 + 状态胶囊 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/color_text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingTop="3dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="3dp"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- 投票进度文本 -->
+    <TextView
+        android:id="@+id/tvProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="12sp" />
+
+    <!-- 双色投票比例柱 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="6dp"
+        android:background="@color/color_surface_stroke"
+        android:orientation="horizontal">
+
+        <View
+            android:id="@+id/viewVoteBanBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@color/court_ban" />
+
+        <View
+            android:id="@+id/viewVoteKeepBar"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@color/court_keep" />
+    </LinearLayout>
+
+    <!-- 当事人对质条 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.im.oldchat.ui.widget.RoundedImageView
+                android:id="@+id/ivReporterAvatar"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@null"
+                app:srcCompat="@drawable/ic_avatar_placeholder" />
+
+            <TextView
+                android:id="@+id/tvReporterName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="6dp"
+            android:layout_marginRight="6dp"
+            android:text="对质"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="11sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tvDefendantName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="6dp"
+                android:layout_weight="1"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxLines="1"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="12sp" />
+
+            <com.im.oldchat.ui.widget.RoundedImageView
+                android:id="@+id/ivDefendantAvatar"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:contentDescription="@null"
+                app:srcCompat="@drawable/ic_avatar_placeholder" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- 举报内容摘要 -->
+    <TextView
+        android:id="@+id/tvBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:ellipsize="end"
+        android:maxLines="4"
+        android:textColor="@color/color_text_primary"
+        android:textSize="13sp" />
+
+    <LinearLayout
+        android:id="@+id/layoutEvidenceMedia"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:orientation="vertical"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvMeta"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="12sp" />
+
+    <!-- 底部操作按钮 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnDetail"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:background="@drawable/flat_button_bg"
+            android:gravity="center"
+            android:text="查看详情"
+            android:textColor="@color/color_text_primary"
+            android:textSize="13sp" />
+
+        <TextView
+            android:id="@+id/btnStatement"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_marginLeft="8dp"
+            android:layout_weight="1"
+            android:background="@drawable/flat_button_bg"
+            android:gravity="center"
+            android:text="补充观点"
+            android:textColor="@color/color_text_primary"
+            android:textSize="13sp" />
+    </LinearLayout>
+
+</LinearLayout>

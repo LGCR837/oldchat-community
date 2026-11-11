@@ -1,0 +1,228 @@
+package com.im.oldchat.ui;
+
+import android.content.Context;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.util.AttributeSet;
+import android.view.View;
+import android.widget.AbsListView;
+
+import com.im.oldchat.util.UiPerformance;
+
+public class GroupMessageRecyclerView extends RecyclerView {
+    private int transcriptMode = AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL;
+    private View headerView;
+    private AbsListView.OnScrollListener compatScrollListener;
+    private final OnScrollListener bridgeScrollListener = new OnScrollListener() {
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            if (compatScrollListener == null) {
+                return;
+            }
+            compatScrollListener.onScroll(null,
+                    getFirstVisiblePosition(), getChildCount(), getCount());
+        }
+
+        @Override
+        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+            if (compatScrollListener == null) {
+                return;
+            }
+            compatScrollListener.onScrollStateChanged(null,
+                    mapScrollState(newState));
+        }
+    };
+
+    public GroupMessageRecyclerView(Context context) {
+        super(context);
+        init();
+    }
+
+    public GroupMessageRecyclerView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    public GroupMessageRecyclerView(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        init();
+    }
+
+    private void init() {
+        if (!(getLayoutManager() instanceof LinearLayoutManager)) {
+            LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+            layoutManager.setStackFromEnd(true);
+            setLayoutManager(layoutManager);
+        }
+        setHasFixedSize(true);
+        setItemAnimator(null);
+        setItemViewCacheSize(UiPerformance.shouldReduceMotion(getContext()) ? 6 : 12);
+        addOnScrollListener(bridgeScrollListener);
+    }
+
+    public void addHeaderView(View header) {
+        headerView = header;
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = getBridgeAdapter();
+        if (bridgeAdapter != null) {
+            bridgeAdapter.setHeaderView(header);
+        }
+    }
+
+    public int getHeaderViewsCount() {
+        return headerView == null ? 0 : 1;
+    }
+
+    public void setTranscriptMode(int mode) {
+        transcriptMode = mode;
+    }
+
+    public int getTranscriptMode() {
+        return transcriptMode;
+    }
+
+    public void setSelection(int position) {
+        scrollToPositionWithOffset(position, 0);
+    }
+
+    public void setSelectionFromTop(int position, int offset) {
+        scrollToPositionWithOffset(position, offset);
+    }
+
+    public int getFirstVisiblePosition() {
+        LayoutManager layoutManager = getLayoutManager();
+        if (layoutManager instanceof LinearLayoutManager) {
+            int position = ((LinearLayoutManager) layoutManager).findFirstVisibleItemPosition();
+            return position < 0 ? 0 : position;
+        }
+        return 0;
+    }
+
+    public int getLastVisiblePosition() {
+        LayoutManager layoutManager = getLayoutManager();
+        if (layoutManager instanceof LinearLayoutManager) {
+            int position = ((LinearLayoutManager) layoutManager).findLastVisibleItemPosition();
+            return position < 0 ? 0 : position;
+        }
+        return 0;
+    }
+
+    public int getCount() {
+        Adapter adapter = getAdapter();
+        return adapter == null ? 0 : adapter.getItemCount();
+    }
+
+    public void setOnScrollListener(AbsListView.OnScrollListener listener) {
+        compatScrollListener = listener;
+    }
+
+    public void setAdapter(GroupMessageAdapter adapter) {
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = new GroupMessageRecyclerBridgeAdapter(adapter, headerView);
+        bridgeAdapter.setRecyclerView(this);
+        super.setAdapter(bridgeAdapter);
+        if (adapter != null) {
+            adapter.attachRecyclerView(this, bridgeAdapter.getHeaderCount());
+        }
+    }
+
+    void handleLegacyDataChanged() {
+        if (transcriptMode == AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL) {
+            scrollToBottomCompat();
+        }
+    }
+
+    void notifyLegacyItemInserted(int messagePosition) {
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = getBridgeAdapter();
+        if (bridgeAdapter == null || messagePosition < 0) {
+            return;
+        }
+        bridgeAdapter.notifyItemInserted(bridgeAdapter.getHeaderCount() + messagePosition);
+        if (transcriptMode == AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL) {
+            scrollToBottomCompat();
+        }
+    }
+
+    void notifyLegacyItemRangeInserted(int firstMessagePosition, int count) {
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = getBridgeAdapter();
+        if (bridgeAdapter == null || firstMessagePosition < 0 || count <= 0) {
+            return;
+        }
+        bridgeAdapter.notifyMessageRangeInserted(firstMessagePosition, count);
+        if (transcriptMode == AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL) {
+            scrollToBottomCompat();
+        }
+    }
+
+    void notifyLegacyItemChanged(int messagePosition) {
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = getBridgeAdapter();
+        if (bridgeAdapter == null || messagePosition < 0) {
+            return;
+        }
+        bridgeAdapter.notifyItemChanged(bridgeAdapter.getHeaderCount() + messagePosition);
+    }
+
+    void notifyLegacyItemRemoved(int messagePosition) {
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = getBridgeAdapter();
+        if (bridgeAdapter == null || messagePosition < 0) {
+            return;
+        }
+        bridgeAdapter.notifyMessageRemoved(messagePosition);
+    }
+
+    void notifyLegacyVisibleRangeChanged(int firstMessagePosition, int lastMessagePosition) {
+        GroupMessageRecyclerBridgeAdapter bridgeAdapter = getBridgeAdapter();
+        if (bridgeAdapter == null) {
+            return;
+        }
+        bridgeAdapter.notifyVisibleRangeChanged(firstMessagePosition, lastMessagePosition);
+    }
+
+    /**
+     * offset=0 表示“最后一项顶端对齐”，不能用来表示滚到底。
+     * 先定位最后一项，再在布局完成后滚动最大剩余距离，兼容 API 9。
+     */
+    public void scrollToBottomCompat() {
+        final int last = getCount() - 1;
+        if (last < 0) {
+            return;
+        }
+        scrollToPosition(last);
+        post(new Runnable() {
+            @Override
+            public void run() {
+                if (getCount() <= 0 || getScrollState() == RecyclerView.SCROLL_STATE_DRAGGING) {
+                    return;
+                }
+                scrollToPosition(getCount() - 1);
+                scrollBy(0, Integer.MAX_VALUE);
+            }
+        });
+    }
+
+    private GroupMessageRecyclerBridgeAdapter getBridgeAdapter() {
+        Adapter adapter = getAdapter();
+        if (adapter instanceof GroupMessageRecyclerBridgeAdapter) {
+            return (GroupMessageRecyclerBridgeAdapter) adapter;
+        }
+        return null;
+    }
+
+    private void scrollToPositionWithOffset(int position, int offset) {
+        LayoutManager layoutManager = getLayoutManager();
+        if (layoutManager instanceof LinearLayoutManager) {
+            ((LinearLayoutManager) layoutManager).scrollToPositionWithOffset(position, offset);
+        } else {
+            scrollToPosition(position);
+        }
+    }
+
+    private int mapScrollState(int recyclerState) {
+        if (recyclerState == SCROLL_STATE_IDLE) {
+            return AbsListView.OnScrollListener.SCROLL_STATE_IDLE;
+        }
+        if (recyclerState == SCROLL_STATE_DRAGGING) {
+            return AbsListView.OnScrollListener.SCROLL_STATE_TOUCH_SCROLL;
+        }
+        return AbsListView.OnScrollListener.SCROLL_STATE_FLING;
+    }
+
+}

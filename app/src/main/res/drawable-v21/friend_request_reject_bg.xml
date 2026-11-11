@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/color_danger_pressed_overlay">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/colorDanger"/>
+            <size android:width="36dp" android:height="36dp"/>
+        </shape>
+    </item>
+</ripple>

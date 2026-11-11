@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <!-- Android 2.3 兼容版：纯透明，无 layer-list（2.3 不支持 gravity+size 裁剪）。 -->
+    <solid android:color="@android:color/transparent" />
+</shape>

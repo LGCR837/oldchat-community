@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/color_background">
+
+    <!-- 顶部导航栏 -->
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/color_surface"
+        android:paddingLeft="8dp"
+        android:paddingRight="16dp">
+
+        <ImageView
+            android:id="@+id/btnMomentBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:padding="8dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:contentDescription="@null"
+            android:tint="@color/color_text_primary" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="8dp"
+            android:text="发布动态"
+            android:textColor="@color/color_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnPublishMoment"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:gravity="center"
+            android:text="发布"
+            android:textColor="@color/color_on_primary"
+            android:textSize="15sp"
+            android:background="@drawable/bg_primary_button" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout 
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- 输入框 -->
+            <EditText
+                android:id="@+id/etMomentBody"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="分享新鲜事..."
+                android:minHeight="180dp"
+                android:gravity="top"
+                android:background="@null"
+                android:textColor="@color/color_text_primary"
+                android:textSize="16sp"
+                android:lineSpacingMultiplier="1.3" />
+
+            <!-- 图片预览 -->
+            <RelativeLayout 
+                android:id="@+id/rlImagePreview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/ivMomentPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="240dp"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="@null"
+                    android:background="@color/color_background" />
+
+            <ImageView
+                android:id="@+id/btnRemoveImage"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentRight="true"
+                android:layout_margin="8dp"
+                android:padding="6dp"
+                android:src="@android:drawable/ic_menu_close_clear_cancel"
+                android:background="@drawable/moment_action_bg"
+                android:contentDescription="@null"
+                android:tint="@color/color_on_primary" />
+
+            <TextView
+                android:id="@+id/tvMomentImageCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true"
+                android:layout_margin="8dp"
+                android:paddingLeft="6dp"
+                android:paddingRight="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:textColor="@color/color_on_primary"
+                android:textSize="11sp"
+                android:background="@drawable/bg_unread_badge"
+                android:visibility="gone"
+                android:contentDescription="@null" />
+        </RelativeLayout>
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- 底部工具栏 -->
+    <LinearLayout 
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@color/color_surface"
+        android:padding="12dp">
+
+        <LinearLayout 
+            android:id="@+id/btnPickMomentImage"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/moment_action_transparent">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                app:srcCompat="@drawable/ic_image"
+                android:contentDescription="@null"
+                android:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="8dp"
+                android:text="图片"
+                android:textColor="?attr/colorPrimary"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

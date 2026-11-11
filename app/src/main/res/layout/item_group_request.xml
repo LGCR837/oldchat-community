@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:minHeight="56dp"
+    android:orientation="horizontal"
+    android:padding="12dp">
+
+    <com.im.oldchat.ui.widget.RoundedImageView
+        android:id="@+id/ivAvatar"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginRight="12dp"
+        android:contentDescription="@null"
+        android:background="@drawable/bg_avatar_round"
+        android:scaleType="centerCrop"
+        app:cornerRadius="0dp"
+        app:srcCompat="@drawable/ic_avatar_placeholder" />
+
+    <LinearLayout 
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxWidth="140dp"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:textColor="@color/color_text_primary"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tvTitleBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:text="头衔"
+                android:textColor="@color/color_on_primary"
+                android:textSize="10sp"
+                android:includeFontPadding="false"
+                android:background="@drawable/bg_badge_title"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/btnApprove"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="10dp"
+        android:paddingRight="10dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:text="同意"
+        android:textColor="@color/color_text_primary"
+        android:textSize="12sp"
+        android:background="@drawable/flat_button_bg" />
+</LinearLayout>

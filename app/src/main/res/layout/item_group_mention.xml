@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingLeft="12dp"
+    android:paddingRight="12dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:gravity="center_vertical">
+
+    <ImageView
+        android:id="@+id/ivAvatar"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="10dp"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/tvName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/color_text_primary"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tvRoleBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:text="群主"
+                android:textColor="@color/color_on_primary"
+                android:textSize="10sp"
+                android:includeFontPadding="false"
+                android:background="@drawable/bg_badge_owner"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/tvTitleBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="6dp"
+                android:paddingLeft="4dp"
+                android:paddingRight="4dp"
+                android:paddingTop="1dp"
+                android:paddingBottom="1dp"
+                android:text="头衔"
+                android:textColor="@color/color_on_primary"
+                android:textSize="10sp"
+                android:includeFontPadding="false"
+                android:background="@drawable/bg_badge_title"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvUid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="12sp" />
+    </LinearLayout>
+</LinearLayout>
