@@ -1,0 +1,10 @@
+{
+  "id": "welcome",
+  "name": "Lua 示例",
+  "description": "由服务器动态下发的发现页功能",
+  "version": 1,
+  "icon_url": "",
+  "enabled": true,
+  "order": 100,
+  "permissions": ["camera", "network", "storage"]
+}
