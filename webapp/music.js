@@ -85,18 +85,12 @@
     toast._t = setTimeout(function () { el.className = ''; }, 2600);
   }
 
-  /* ---------- 多源回源（对齐安卓 MediaUrlResolver） ----------
-     候选线路优先级：
-     1. ocf.oss-cn-shanghai.aliyuncs.com（阿里云 OSS 直连，华东2 上海）
-     2. 60.205.94.101:8080（60 服务器，反代但保留迁移前资源）
-     3. oc.mcl0.dpdns.org（主域名）
-     4. 当前页面源站
+  /* ---------- 媒体多源回源 ----------
+     社区版不接对象存储，媒体只由源服务器自身提供：默认候选线路为空，
+     最终地址回落到当前页面源站。需要额外线路时，在加载本脚本前设置
+     window.OLDCHAT_MEDIA_ORIGINS = ['https://your-mirror.example']。
      播放失败自动切下一条；线路故障冷却 60 秒；成功恢复优先级。 */
-  var MEDIA_ORIGINS = [
-    'https://ocf.oss-cn-shanghai.aliyuncs.com',
-    'http://60.205.94.101:8080',
-    'https://oc.mcl0.dpdns.org'
-  ];
+  var MEDIA_ORIGINS = Array.isArray(window.OLDCHAT_MEDIA_ORIGINS) ? window.OLDCHAT_MEDIA_ORIGINS.slice() : [];
   var LINE_FAILURE_COOLDOWN_MS = 60 * 1000;
   var failedLines = {}; // origin -> until(ms)
 
@@ -104,16 +98,13 @@
     return window.location.protocol + '//' + window.location.host;
   }
 
-  /** 回源线路（随页面协议动态）：HTTPS 页面跳过 http-only 的 60 线路（避免 Mixed Content 拦截）。 */
+  /** 回源线路：仅使用显式配置的镜像，不做官方 CDN / 对象存储兜底。 */
   function mediaOrigins() {
-    var isHttps = window.location.protocol === 'https:';
     var out = [];
-    // ocf OSS 直连优先（https 页面也用 https）
-    out.push('https://ocf.oss-cn-shanghai.aliyuncs.com');
-    // 60 仅 http，https 页面跳过
-    if (!isHttps) out.push('http://60.205.94.101:8080');
-    // oc 主域 https
-    out.push('https://oc.mcl0.dpdns.org');
+    for (var i = 0; i < MEDIA_ORIGINS.length; i++) {
+      var o = normOrigin(MEDIA_ORIGINS[i]);
+      if (o) out.push(o);
+    }
     return out;
   }
 
