@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="8dp"
+    android:layout_marginTop="5dp"
+    android:layout_marginRight="8dp"
+    android:layout_marginBottom="5dp"
+    android:background="@drawable/bg_music_plaza_card_selector"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="10dp">
+
+    <ImageView
+        android:id="@+id/ivMusicManageCover"
+        android:layout_width="62dp"
+        android:layout_height="62dp"
+        android:background="@drawable/bg_music_plaza_cover_frame"
+        android:contentDescription="@null"
+        android:padding="1dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_avatar_placeholder" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvMusicManageName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="歌曲名称"
+            android:textColor="@color/color_text_primary"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvMusicManageOwner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="上传信息"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvMusicManageMeta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="时长 --:-- · 大小 0KB"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/tvMusicManageStats"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="赞 0 · 评论 0"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/btnMusicManagePlay"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/bg_music_top_chip_primary"
+            android:gravity="center"
+            android:minWidth="56dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="播放"
+            android:textColor="@color/color_on_primary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnMusicManageDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_music_action_delete"
+            android:gravity="center"
+            android:minWidth="56dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="删除"
+            android:textColor="@color/colorDanger"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnMusicManageMore"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginTop="6dp"
+            android:background="@drawable/bg_music_top_chip"
+            android:gravity="center"
+            android:minWidth="56dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:text="更多"
+            android:textColor="@color/color_text_primary"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</LinearLayout>

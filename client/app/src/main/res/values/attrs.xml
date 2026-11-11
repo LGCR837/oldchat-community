@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="buttonCornerRadius" format="dimension" />
+    <attr name="chatBubbleCornerRadius" format="dimension" />
+    <attr name="chatBubbleAvatarCornerRadius" format="dimension" />
+    <!-- Support Library 24 的 AppCompatImageView 兼容 tint 属性。 -->
+    <attr name="tint" format="color|reference" />
+
+    <declare-styleable name="RoundedImageView">
+        <attr name="cornerRadius" format="dimension" />
+        <attr name="tailSide" format="integer" />
+        <attr name="tailSize" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="WaveView">
+        <attr name="waveBackColor" format="color" />
+        <attr name="waveFrontColor" format="color" />
+        <attr name="waveLength" format="dimension" />
+        <attr name="waveBackAmplitude" format="dimension" />
+        <attr name="waveFrontAmplitude" format="dimension" />
+        <attr name="waveBackSpeed" format="dimension" />
+        <attr name="waveFrontSpeed" format="dimension" />
+    </declare-styleable>
+</resources>

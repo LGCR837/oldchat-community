@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_flat_row_selector"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/tvFavoriteType"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="收藏"
+        android:textSize="11sp"
+        android:textColor="@color/color_on_primary"
+        android:background="@drawable/bg_badge_title"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingTop="2dp"
+        android:paddingBottom="2dp" />
+
+    <TextView
+        android:id="@+id/tvFavoriteTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="标题"
+        android:textStyle="bold"
+        android:textColor="@color/color_text_primary"
+        android:textSize="15sp"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/tvFavoriteSubtitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:text="副标题"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="13sp"
+        android:maxLines="2"
+        android:ellipsize="end" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tvFavoriteTime"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="时间"
+            android:textColor="@color/color_text_secondary"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/btnFavoriteOpen"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:gravity="center"
+            android:minWidth="52dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:text="打开"
+            android:textSize="12sp"
+            android:textColor="@color/color_text_primary"
+            android:background="@drawable/flat_button_bg" />
+
+        <TextView
+            android:id="@+id/btnFavoriteDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:layout_marginLeft="8dp"
+            android:gravity="center"
+            android:minWidth="52dp"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:text="移除"
+            android:textSize="12sp"
+            android:textColor="@color/color_text_primary"
+            android:background="@drawable/flat_button_bg" />
+    </LinearLayout>
+
+</LinearLayout>

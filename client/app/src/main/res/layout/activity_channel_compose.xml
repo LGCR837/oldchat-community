@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="vertical" android:background="@color/channel_page_bg">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="56dp" android:gravity="center_vertical" android:paddingLeft="8dp" android:paddingRight="12dp" android:orientation="horizontal" android:background="@color/channel_surface">
+        <ImageView android:id="@+id/btnChannelComposeBack" android:layout_width="48dp" android:layout_height="match_parent" android:padding="12dp" android:scaleType="centerInside" android:src="@drawable/ic_nav_back" android:tint="@color/channel_accent" android:contentDescription="@null" />
+        <TextView android:id="@+id/tvChannelComposeTitle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="发布频道消息" android:textSize="19sp" android:textStyle="bold" android:textColor="@color/channel_text_primary" />
+        <TextView android:id="@+id/btnChannelComposeSend" android:layout_width="60dp" android:layout_height="match_parent" android:gravity="center" android:text="SEND" android:textStyle="bold" android:textColor="@color/channel_accent" />
+    </LinearLayout>
+    <View android:id="@+id/dividerChannelCompose" android:layout_width="match_parent" android:layout_height="1dp" android:background="@color/channel_divider" />
+    <LinearLayout android:id="@+id/channelReplyPreview" android:layout_width="match_parent" android:layout_height="wrap_content" android:padding="12dp" android:background="@color/channel_media_bg" android:orientation="vertical" android:visibility="gone">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="回复" android:textStyle="bold" android:textColor="@color/channel_accent" />
+        <TextView android:id="@+id/tvChannelReplyText" android:layout_width="match_parent" android:layout_height="wrap_content" android:maxLines="2" android:textColor="@color/channel_text_secondary" />
+    </LinearLayout>
+    <EditText android:id="@+id/etChannelPostBody" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:gravity="top|left" android:padding="16dp" android:background="@android:color/transparent" android:hint="Write a message..." android:textSize="17sp" android:textColor="@color/channel_text_primary" android:textColorHint="@color/channel_text_secondary" />
+    <ImageView android:id="@+id/ivChannelMediaPreview" android:layout_width="match_parent" android:layout_height="150dp" android:layout_marginLeft="16dp" android:layout_marginRight="16dp" android:scaleType="centerCrop" android:visibility="gone" />
+    <LinearLayout android:id="@+id/rowChannelSelectedMedia" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:paddingLeft="16dp" android:paddingRight="10dp" android:paddingTop="8dp" android:paddingBottom="8dp" android:visibility="gone">
+        <TextView android:id="@+id/tvChannelSelectedMedia" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:textColor="@color/channel_text_secondary" />
+        <ImageView android:id="@+id/btnChannelClearMedia" android:layout_width="44dp" android:layout_height="36dp" android:padding="8dp" android:scaleType="centerInside" app:srcCompat="@drawable/ic_close" android:tint="#E05252" android:contentDescription="@null" />
+    </LinearLayout>
+    <LinearLayout android:id="@+id/channelUploadProgressBox" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingLeft="16dp" android:paddingRight="16dp" android:paddingBottom="8dp" android:orientation="vertical" android:visibility="gone">
+        <ProgressBar android:id="@+id/channelUploadProgress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="6dp" android:max="100" />
+        <TextView android:id="@+id/tvChannelUploadProgress" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="right" android:text="0%" android:textSize="12sp" android:textColor="@color/channel_text_secondary" />
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="52dp" android:orientation="horizontal" android:background="@color/channel_media_bg">
+        <TextView android:id="@+id/btnChannelChooseImage" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="图片" android:textStyle="bold" android:textColor="@color/channel_accent" />
+        <TextView android:id="@+id/btnChannelChooseVoice" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="语音" android:textStyle="bold" android:textColor="@color/channel_accent" />
+        <TextView android:id="@+id/btnChannelChooseVideo" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="视频" android:textStyle="bold" android:textColor="@color/channel_accent" />
+        <TextView android:id="@+id/btnChannelChooseFile" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="文件" android:textStyle="bold" android:textColor="@color/channel_accent" />
+    </LinearLayout>
+</LinearLayout>

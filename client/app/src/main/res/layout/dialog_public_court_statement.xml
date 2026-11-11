@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_profile_item"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <TextView
+        android:id="@+id/tvStatementUploadHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="可附加截图证据，支持多张"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="12sp" />
+
+    <EditText
+        android:id="@+id/etStatementReason"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:hint="陈述理由"
+        android:minLines="2"
+        android:maxLines="4" />
+
+    <EditText
+        android:id="@+id/etStatementEvidence"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:hint="证据（聊天记录、时间、截图描述等）"
+        android:minLines="3"
+        android:maxLines="6" />
+
+    <TextView
+        android:id="@+id/btnPickEvidence"
+        android:layout_width="wrap_content"
+        android:layout_height="36dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/flat_button_bg"
+        android:gravity="center"
+        android:paddingLeft="12dp"
+        android:paddingRight="12dp"
+        android:text="上传截图证据"
+        android:textColor="@color/color_text_primary"
+        android:textSize="12sp" />
+
+    <TextView
+        android:id="@+id/tvEvidenceUploadStatus"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="12sp" />
+
+</LinearLayout>

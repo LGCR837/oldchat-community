@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/color_background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp"
+        android:background="@color/color_surface">
+
+        <ImageView
+            android:id="@+id/btnGroupAnnouncementBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:padding="6dp"
+            android:src="@drawable/ic_nav_back"
+            android:tint="@color/color_text_primary"
+            android:contentDescription="@null" />
+
+        <TextView
+            android:id="@+id/tvGroupAnnouncementPageTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="8dp"
+            android:text="群公告"
+            android:textColor="@color/color_text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/svGroupAnnouncementContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <TextView
+                android:id="@+id/tvGroupAnnouncementGroupName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/color_text_secondary"
+                android:textSize="13sp"
+                android:text="群聊" />
+
+            <LinearLayout
+                android:id="@+id/layoutGroupAnnouncementQuickActions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="end"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/btnGroupAnnouncementArrowUp"
+                    android:layout_width="34dp"
+                    android:layout_height="34dp"
+                    android:gravity="center"
+                    android:text="▲"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="14sp"
+                    android:background="@drawable/flat_button_bg" />
+
+                <TextView
+                    android:id="@+id/btnGroupAnnouncementArrowDown"
+                    android:layout_width="42dp"
+                    android:layout_height="34dp"
+                    android:layout_marginLeft="8dp"
+                    android:gravity="center"
+                    android:text="▼发"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="13sp"
+                    android:background="@drawable/flat_button_bg" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutAnnouncementEditor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:layout_marginTop="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="公告内容"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <EditText
+                    android:id="@+id/etGroupAnnouncementContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/flat_input_bg"
+                    android:gravity="top|start"
+                    android:hint="请输入群公告"
+                    android:inputType="textMultiLine"
+                    android:maxLines="10"
+                    android:minLines="8"
+                    android:padding="12dp"
+                    android:textColor="@color/color_text_primary"
+                    android:textColorHint="@color/color_text_secondary" />
+
+                <TextView
+                    android:id="@+id/viewGroupAnnouncementCursorPad"
+                    android:layout_width="match_parent"
+                    android:layout_height="34dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_seamless_row"
+                    android:gravity="center"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/group_announcement_cursor_pad"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvGroupAnnouncementCount"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="end"
+                    android:text="0 字"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="阅读方式"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <RadioGroup
+                    android:id="@+id/rgAnnouncementMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:orientation="horizontal">
+
+                    <RadioButton
+                        android:id="@+id/rbAnnouncementOptional"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="选读"
+                        android:textColor="@color/color_text_primary" />
+
+                    <RadioButton
+                        android:id="@+id/rbAnnouncementRequired"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="14dp"
+                        android:text="必读"
+                        android:textColor="@color/color_text_primary" />
+                </RadioGroup>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="预览"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/tvGroupAnnouncementPreview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_seamless_row"
+                    android:padding="12dp"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="13sp"
+                    android:text="暂无群公告" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/layoutAnnouncementViewer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/tvAnnouncementViewerMode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="8dp"
+                    android:paddingRight="8dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="选读"
+                    android:textColor="@color/color_on_primary"
+                    android:textSize="11sp"
+                    android:background="@drawable/bg_badge_title" />
+
+                <TextView
+                    android:id="@+id/tvAnnouncementViewerContent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_seamless_row"
+                    android:padding="12dp"
+                    android:text="暂无群公告"
+                    android:textColor="@color/color_text_primary"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="2dp" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:background="@color/color_surface">
+
+        <TextView
+            android:id="@+id/btnGroupAnnouncementDelete"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="删除"
+            android:textColor="@color/color_text_primary"
+            android:textSize="14sp"
+            android:background="@drawable/flat_button_bg"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/btnGroupAnnouncementPrimary"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:layout_marginLeft="10dp"
+            android:gravity="center"
+            android:text="发布公告"
+            android:textColor="@color/color_text_primary"
+            android:textSize="14sp"
+            android:background="@drawable/flat_button_bg" />
+
+    </LinearLayout>
+
+</LinearLayout>

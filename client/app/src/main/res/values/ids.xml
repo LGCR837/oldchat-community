@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="radioMusicBgLight" type="id" />
+    <item name="radioMusicBgDark" type="id" />
+    <item name="radioMusicBgDynamic" type="id" />
+    <item name="radioMusicTextDark" type="id" />
+    <item name="radioMusicTextTwoTone" type="id" />
+    <item name="tag_square_press_installed" type="id" />
+    <item name="tag_square_press_last_apply_ms" type="id" />
+    <item name="tag_square_press_pending" type="id" />
+    <item name="tag_square_press_bound" type="id" />
+    <item name="view_holder_tag" type="id" />
+    <item name="message_tag" type="id" />
+    <item name="tag_is_bili" type="id" />
+    <item name="splash_logo" type="id" />
+    <item name="btnActionEmoji" type="id" />
+    <item name="layoutActionBurnTile" type="id" />
+    <item name="ivActionBurnIcon" type="id" />
+    <item name="tvActionBurnLabel" type="id" />
+</resources>
