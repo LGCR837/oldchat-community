@@ -13,6 +13,8 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	_ "modernc.org/sqlite"
+
+	"metrochat/internal/data"
 )
 
 func newTestDB(t *testing.T) *sqlx.DB {
@@ -342,10 +344,15 @@ func TestRunMigratesOwnMomentsAndComments(t *testing.T) {
 		UserID    string `db:"user_id"`
 		Body      string `db:"body"`
 		ImageURL  string `db:"image_url"`
+		LikeExtra int    `db:"like_extra"`
 		CreatedAt string `db:"created_at"`
 	}
-	if err := db.Get(&first, `SELECT user_id, body, image_url, created_at FROM moments WHERE official_moment_id = 'M1'`); err != nil {
+	if err := db.Get(&first, `SELECT user_id, body, image_url, like_extra, created_at FROM moments WHERE official_moment_id = 'M1'`); err != nil {
 		t.Fatal(err)
+	}
+	// 旧站 3 个赞，其中本人那一条走 moment_likes，剩下 2 个记在 like_extra。
+	if first.LikeExtra != 2 {
+		t.Fatalf("附加点赞数应为 2，实际 %d", first.LikeExtra)
 	}
 	if first.UserID != userID || first.Body != "第一条" {
 		t.Fatalf("朋友圈内容不对：%+v", first)
@@ -409,12 +416,36 @@ func TestRunMigratesOwnMomentsAndComments(t *testing.T) {
 		t.Fatalf("自己的评论应挂在自己账号，实际 %q", selfCommentUser)
 	}
 
-	var likes int
-	if err := db.Get(&likes, `SELECT COUNT(1) FROM moment_likes`); err != nil {
+	var selfLikes int
+	if err := db.Get(&selfLikes, `SELECT COUNT(1) FROM moment_likes`); err != nil {
 		t.Fatal(err)
 	}
-	if likes != 1 {
-		t.Fatalf("本人点过的赞应迁 1 条，实际 %d", likes)
+	if selfLikes != 1 {
+		t.Fatalf("本人点过的赞应迁 1 条，实际 %d", selfLikes)
+	}
+
+	var momentID string
+	if err := db.Get(&momentID, `SELECT id FROM moments WHERE official_moment_id = 'M1'`); err != nil {
+		t.Fatal(err)
+	}
+	counts, err := data.NewMomentStore(db).CountLikes(context.Background(), []string{momentID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if counts[momentID] != 3 {
+		t.Fatalf("点赞总数应为旧站的 3，实际 %d", counts[momentID])
+	}
+
+	// 取消本人点赞后，总数只掉自己的那一条，迁移过来的数量仍在。
+	if err := data.NewMomentStore(db).Unlike(context.Background(), momentID, userID); err != nil {
+		t.Fatal(err)
+	}
+	counts, err = data.NewMomentStore(db).CountLikes(context.Background(), []string{momentID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if counts[momentID] != 2 {
+		t.Fatalf("取消本人点赞后应为 2，实际 %d", counts[momentID])
 	}
 }
 

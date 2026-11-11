@@ -197,6 +197,7 @@ CREATE TABLE IF NOT EXISTS moments (
     official_moment_id TEXT NOT NULL DEFAULT '',
     body TEXT NOT NULL,
     image_url VARCHAR(512) NOT NULL DEFAULT '',
+    like_extra INTEGER NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

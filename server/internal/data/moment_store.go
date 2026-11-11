@@ -173,11 +173,12 @@ func (s *MomentStore) CountLikes(ctx context.Context, momentIDs []string) (map[s
 	if len(momentIDs) == 0 {
 		return map[string]int{}, nil
 	}
+	// like_extra 是迁移过来的点赞数：旧站只给总数，没有点赞人明细。
 	query, args, err := sqlx.In(`
-SELECT moment_id, COUNT(*) AS cnt
-FROM moment_likes
-WHERE moment_id IN (?)
-GROUP BY moment_id`, momentIDs)
+SELECT m.id AS moment_id,
+       (SELECT COUNT(*) FROM moment_likes l WHERE l.moment_id = m.id) + m.like_extra AS cnt
+FROM moments m
+WHERE m.id IN (?)`, momentIDs)
 	if err != nil {
 		return nil, err
 	}

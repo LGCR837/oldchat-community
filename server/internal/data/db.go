@@ -422,6 +422,7 @@ func ensureMessageColumns(db *sqlx.DB) {
 	_ = addColumnIfMissing(db, "groups", "official_group_id", "TEXT NOT NULL DEFAULT ''")
 	_ = addColumnIfMissing(db, "groups", "imported", "INTEGER NOT NULL DEFAULT 0")
 	_ = addColumnIfMissing(db, "moments", "official_moment_id", "TEXT NOT NULL DEFAULT ''")
+	_ = addColumnIfMissing(db, "moments", "like_extra", "INTEGER NOT NULL DEFAULT 0")
 	_ = addColumnIfMissing(db, "moment_comments", "official_comment_id", "TEXT NOT NULL DEFAULT ''")
 	_, _ = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_official_uid ON users (official_uid) WHERE official_uid != ''`)
 	_, _ = db.Exec(`CREATE UNIQUE INDEX IF NOT EXISTS idx_direct_msg_official ON direct_messages (official_msg_id) WHERE official_msg_id != ''`)

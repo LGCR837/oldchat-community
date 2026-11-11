@@ -437,7 +437,12 @@ func (s *Service) importMoments(ctx context.Context, jobID string, client *offic
 				oldest = m.CreatedAt
 			}
 			imageURL := s.pullMomentImages(ctx, jobID, m.ImageURL, stats, images)
-			momentID, created, err := s.store.InsertMoment(ctx, selfID, m.ID, m.Body, imageURL, m.CreatedAt)
+			// 旧站只给点赞总数：本人的那条单独落 moment_likes，其余作为附加数量。
+			likeExtra := m.Likes
+			if m.Liked && likeExtra > 0 {
+				likeExtra--
+			}
+			momentID, created, err := s.store.InsertMoment(ctx, selfID, m.ID, m.Body, imageURL, likeExtra, m.CreatedAt)
 			if err != nil {
 				s.store.AddEvent(ctx, jobID, "warn", "朋友圈", fmt.Sprintf("一条朋友圈写入失败：%v", err))
 				continue
@@ -445,9 +450,12 @@ func (s *Service) importMoments(ctx context.Context, jobID string, client *offic
 			if created {
 				stats["moments"]++
 			}
+			if created {
+				stats["moment_likes"] += int64(m.Likes)
+			}
 			if m.Liked {
 				if err := s.store.LikeMoment(ctx, momentID, selfID, m.CreatedAt); err == nil && created {
-					stats["moment_likes"]++
+					stats["moment_self_likes"]++
 				}
 			}
 			saved, skipped, err := s.importMomentComments(ctx, client, momentID, m.ID, selfID, selfUID, selfNcuid)

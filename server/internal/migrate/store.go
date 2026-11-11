@@ -300,10 +300,18 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, datetime(?, 'unixepoch'), datetime(?, 'uni
 }
 
 // InsertMoment 幂等写入一条朋友圈，返回本地 id 与是否新插入。
-func (s *Store) InsertMoment(ctx context.Context, userID, officialMomentID, body, imageURL string, createdAt int64) (string, bool, error) {
+// likeExtra 是旧站的点赞总数（不含本人那一条，本人点赞另走 LikeMoment）。
+func (s *Store) InsertMoment(ctx context.Context, userID, officialMomentID, body, imageURL string, likeExtra int, createdAt int64) (string, bool, error) {
+	if likeExtra < 0 {
+		likeExtra = 0
+	}
 	var id string
 	err := s.db.GetContext(ctx, &id, `SELECT id FROM moments WHERE official_moment_id = ? LIMIT 1`, officialMomentID)
 	if err == nil {
+		// 重跑迁移时把点赞数刷成最新值，避免旧站期间新增的点赞丢掉。
+		if _, e := s.db.ExecContext(ctx, `UPDATE moments SET like_extra = ? WHERE id = ?`, likeExtra, id); e != nil {
+			return "", false, e
+		}
 		return id, false, nil
 	}
 	if !errors.Is(err, sql.ErrNoRows) {
@@ -311,8 +319,8 @@ func (s *Store) InsertMoment(ctx context.Context, userID, officialMomentID, body
 	}
 	id = newID()
 	res, err := s.db.ExecContext(ctx, `
-INSERT OR IGNORE INTO moments (id, user_id, body, image_url, created_at, official_moment_id)
-VALUES (?, ?, ?, ?, datetime(?, 'unixepoch'), ?)`, id, userID, body, imageURL, createdAt, officialMomentID)
+INSERT OR IGNORE INTO moments (id, user_id, body, image_url, like_extra, created_at, official_moment_id)
+VALUES (?, ?, ?, ?, ?, datetime(?, 'unixepoch'), ?)`, id, userID, body, imageURL, likeExtra, createdAt, officialMomentID)
 	if err != nil {
 		return "", false, err
 	}

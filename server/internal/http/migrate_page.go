@@ -268,6 +268,7 @@ const appMigrateHTML = `<!doctype html>
         add('群消息', 'group_messages', ' 条');
         add('朋友圈', 'moments', ' 条');
         add('朋友圈评论', 'moment_comments', ' 条');
+        add('朋友圈点赞', 'moment_likes', ' 个');
         add('占位账号', 'shadow_users', ' 个');
         add('图片', 'media_files', ' 张');
         add('图片失败', 'media_failed', ' 张');
