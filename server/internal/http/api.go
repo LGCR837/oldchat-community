@@ -447,7 +447,9 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	r.Post("/admins/lua/apps/toggle", api.handleAdminLuaAppToggle)
 	r.Post("/admins/lua/apps/delete", api.handleAdminLuaAppDelete)
 
-	r.Handle("/update/*", withUpdateDownloadLimit(http.StripPrefix("/update/", http.FileServer(http.Dir(cfg.UpdateDir)))))
+	updateCenter := withUpdateDownloadLimit(http.HandlerFunc(api.handleUpdateCenter))
+	r.Handle("/update", updateCenter)
+	r.Handle("/update/*", updateCenter)
 	fileDownloads := withFileDownloadHeaders(http.StripPrefix("/files/", http.FileServer(http.Dir(filepath.Join(cfg.UploadDir, "files")))))
 	r.Handle("/files/*", api.authMiddleware(withDownloadLimit(fileDownloads)))
 	resourceDownloads := withFileDownloadHeaders(http.StripPrefix("/resources/", http.FileServer(http.Dir(filepath.Join(cfg.UploadDir, "resources")))))

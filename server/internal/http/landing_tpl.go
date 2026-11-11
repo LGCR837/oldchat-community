@@ -7,8 +7,12 @@ type appLandingData struct {
 }
 
 type landingRelease struct {
-	VersionName string `json:"version_name"`
-	APK         string `json:"apk"`
+	VersionName  string `json:"version_name"`
+	VersionCode  int    `json:"version_code"`
+	APK          string `json:"apk"`
+	APKURL       string `json:"apk_url"`
+	Notes        string `json:"notes"`
+	ReleaseNotes string `json:"release_notes"`
 }
 
 const appLandingHTML = `<!doctype html>
@@ -202,7 +206,6 @@ const appLandingHTML = `<!doctype html>
     <h2>客户端下载</h2>
     <div style="margin: 12px 0; display: flex; gap: 8px; flex-wrap: wrap;">
       <a class="btn-pill primary" href="/update/">前往客户端下载中心</a>
-      <a class="btn-pill" style="background:#1976D2; color:#fff;" href="/update/oldchat-text-android1.6.apk">Android 1.6+ 兼容版 (1.5MB)</a>
     </div>
   </div>
 </div>

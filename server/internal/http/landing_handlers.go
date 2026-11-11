@@ -32,12 +32,12 @@ func (a *API) handleAppAPKDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	apkName := filepath.Base(rawApk)
 	if apkName == "" || apkName == "." || apkName == ".." || !strings.HasSuffix(strings.ToLower(apkName), ".apk") {
-		http.NotFound(w, r)
+		http.Redirect(w, r, "/update/", http.StatusFound)
 		return
 	}
 	apkPath := filepath.Join(a.cfg.UpdateDir, apkName)
 	if info, err := os.Stat(apkPath); err != nil || info.IsDir() {
-		http.NotFound(w, r)
+		http.Redirect(w, r, "/update/", http.StatusFound)
 		return
 	}
 	w.Header().Set("Content-Disposition", `attachment; filename="oldchat.apk"`)
@@ -53,12 +53,12 @@ func (a *API) handleAppDevAPKDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	apkName := filepath.Base(rawApk)
 	if apkName == "" || apkName == "." || apkName == ".." || !strings.HasSuffix(strings.ToLower(apkName), ".apk") {
-		http.NotFound(w, r)
+		http.Redirect(w, r, "/update/", http.StatusFound)
 		return
 	}
 	apkPath := filepath.Join(a.cfg.UpdateDir, apkName)
 	if info, err := os.Stat(apkPath); err != nil || info.IsDir() {
-		http.NotFound(w, r)
+		http.Redirect(w, r, "/update/", http.StatusFound)
 		return
 	}
 	w.Header().Set("Content-Disposition", `attachment; filename="oldchat-dev.apk"`)
