@@ -194,6 +194,7 @@ CREATE TABLE IF NOT EXISTS group_message_sequences (
 CREATE TABLE IF NOT EXISTS moments (
     id VARCHAR(32) PRIMARY KEY,
     user_id VARCHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    official_moment_id TEXT NOT NULL DEFAULT '',
     body TEXT NOT NULL,
     image_url VARCHAR(512) NOT NULL DEFAULT '',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -213,6 +214,7 @@ CREATE INDEX IF NOT EXISTS idx_moment_likes_moment ON moment_likes (moment_id);
 CREATE TABLE IF NOT EXISTS moment_comments (
     id VARCHAR(32) PRIMARY KEY,
     moment_id VARCHAR(32) NOT NULL REFERENCES moments(id) ON DELETE CASCADE,
+    official_comment_id TEXT NOT NULL DEFAULT '',
     user_id VARCHAR(32) NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     body TEXT NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -429,3 +431,5 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_official_uid ON users (official_uid)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_direct_msg_official ON direct_messages (official_msg_id) WHERE official_msg_id != '';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_group_msg_official ON group_messages (official_msg_id) WHERE official_msg_id != '';
 CREATE UNIQUE INDEX IF NOT EXISTS idx_groups_official ON groups (official_group_id) WHERE official_group_id != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_moments_official ON moments (official_moment_id) WHERE official_moment_id != '';
+CREATE UNIQUE INDEX IF NOT EXISTS idx_moment_comments_official ON moment_comments (official_comment_id) WHERE official_comment_id != '';

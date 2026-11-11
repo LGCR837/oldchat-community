@@ -95,6 +95,31 @@ func newFakeOfficial(t *testing.T, directCalls *int) *httptest.Server {
 			writeTestJSON(w, map[string]interface{}{"messages": []interface{}{}, "has_more": false})
 		}
 	})
+	mux.HandleFunc("/v1/moments/user", func(w http.ResponseWriter, r *http.Request) {
+		requireAuth(t, w, r)
+		writeTestJSON(w, map[string]interface{}{"moments": []map[string]interface{}{
+			{
+				"id": "M1", "from_uid": "1001", "from_ncuid": "NC1001", "body": "第一条",
+				"image_url": "/oss/moments/m1.png", "created_at": 1700000300, "likes": 3, "comments": 2, "liked": true,
+			},
+			{
+				"id": "M2", "from_uid": "1001", "from_ncuid": "NC1001", "body": "多图那条",
+				"image_url":  `["https://ocf.oss-cn-shanghai.aliyuncs.com/moments/m2a.png","/oss/moments/m2b.png"]`,
+				"created_at": 1700000400, "likes": 0, "comments": 0, "liked": false,
+			},
+		}})
+	})
+	mux.HandleFunc("/v1/moments/comments", func(w http.ResponseWriter, r *http.Request) {
+		requireAuth(t, w, r)
+		if r.URL.Query().Get("moment_id") != "M1" {
+			writeTestJSON(w, map[string]interface{}{"comments": []interface{}{}})
+			return
+		}
+		writeTestJSON(w, map[string]interface{}{"comments": []map[string]interface{}{
+			{"id": "C1", "moment_id": "M1", "from_uid": "2002", "from_name": "老王", "body": "不错", "created_at": 1700000320},
+			{"id": "C2", "moment_id": "M1", "from_uid": "1001", "from_name": "我", "body": "谢谢", "created_at": 1700000340},
+		}})
+	})
 	mux.HandleFunc("/v1/groups/list", func(w http.ResponseWriter, r *http.Request) {
 		requireAuth(t, w, r)
 		writeTestJSON(w, map[string]interface{}{"groups": []map[string]interface{}{
@@ -286,6 +311,110 @@ func TestRunMigratesProfileAndImages(t *testing.T) {
 	}
 	if !strings.HasPrefix(groupAvatar, "/v1/uploads/avatars/") {
 		t.Fatalf("群头像应换成本地地址，实际 %q", groupAvatar)
+	}
+}
+
+func TestRunMigratesOwnMomentsAndComments(t *testing.T) {
+	db := newTestDB(t)
+	userID := seedLocalUser(t, db)
+	directCalls := 0
+	srv := newFakeOfficial(t, &directCalls)
+	uploadDir := t.TempDir()
+
+	svc := NewService(db, Options{SourceHost: srv.URL, UploadDir: uploadDir, IncludeGroups: false})
+	job, err := svc.Store().CreateJob(context.Background(), userID, "1001", srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := svc.Run(context.Background(), job.ID, Credentials{Username: "me", Password: "good-pass"}); err != nil {
+		t.Fatalf("迁移失败: %v", err)
+	}
+
+	var moments int
+	if err := db.Get(&moments, `SELECT COUNT(1) FROM moments`); err != nil {
+		t.Fatal(err)
+	}
+	if moments != 2 {
+		t.Fatalf("朋友圈条数异常，期望 2，实际 %d", moments)
+	}
+
+	var first struct {
+		UserID    string `db:"user_id"`
+		Body      string `db:"body"`
+		ImageURL  string `db:"image_url"`
+		CreatedAt string `db:"created_at"`
+	}
+	if err := db.Get(&first, `SELECT user_id, body, image_url, created_at FROM moments WHERE official_moment_id = 'M1'`); err != nil {
+		t.Fatal(err)
+	}
+	if first.UserID != userID || first.Body != "第一条" {
+		t.Fatalf("朋友圈内容不对：%+v", first)
+	}
+	if !strings.HasPrefix(first.ImageURL, "/v1/uploads/moments/") {
+		t.Fatalf("单图应换成本地地址，实际 %q", first.ImageURL)
+	}
+	if !strings.HasPrefix(first.CreatedAt, "2023") {
+		t.Fatalf("应保留原始发布时间，实际 %q", first.CreatedAt)
+	}
+
+	var multiImages string
+	if err := db.Get(&multiImages, `SELECT image_url FROM moments WHERE official_moment_id = 'M2'`); err != nil {
+		t.Fatal(err)
+	}
+	var urls []string
+	if err := json.Unmarshal([]byte(multiImages), &urls); err != nil {
+		t.Fatalf("多图应保持 JSON 数组，实际 %q", multiImages)
+	}
+	if len(urls) != 2 {
+		t.Fatalf("多图数量异常：%v", urls)
+	}
+	for _, u := range urls {
+		if !strings.HasPrefix(u, "/v1/uploads/moments/") {
+			t.Fatalf("多图地址未本地化：%v", urls)
+		}
+	}
+
+	var comments int
+	if err := db.Get(&comments, `SELECT COUNT(1) FROM moment_comments`); err != nil {
+		t.Fatal(err)
+	}
+	if comments != 2 {
+		t.Fatalf("评论条数异常，期望 2，实际 %d", comments)
+	}
+
+	var friendComment struct {
+		UserID    string `db:"user_id"`
+		Body      string `db:"body"`
+		CreatedAt string `db:"created_at"`
+	}
+	if err := db.Get(&friendComment, `SELECT user_id, body, created_at FROM moment_comments WHERE official_comment_id = 'C1'`); err != nil {
+		t.Fatal(err)
+	}
+	var shadowID string
+	if err := db.Get(&shadowID, `SELECT id FROM users WHERE official_uid = '2002'`); err != nil {
+		t.Fatal(err)
+	}
+	if friendComment.UserID != shadowID {
+		t.Fatalf("好友评论应挂到占位账号，实际 %q 期望 %q", friendComment.UserID, shadowID)
+	}
+	if !strings.HasPrefix(friendComment.CreatedAt, "2023") {
+		t.Fatalf("评论应保留原始时间，实际 %q", friendComment.CreatedAt)
+	}
+
+	var selfCommentUser string
+	if err := db.Get(&selfCommentUser, `SELECT user_id FROM moment_comments WHERE official_comment_id = 'C2'`); err != nil {
+		t.Fatal(err)
+	}
+	if selfCommentUser != userID {
+		t.Fatalf("自己的评论应挂在自己账号，实际 %q", selfCommentUser)
+	}
+
+	var likes int
+	if err := db.Get(&likes, `SELECT COUNT(1) FROM moment_likes`); err != nil {
+		t.Fatal(err)
+	}
+	if likes != 1 {
+		t.Fatalf("本人点过的赞应迁 1 条，实际 %d", likes)
 	}
 }
 

@@ -299,6 +299,56 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, datetime(?, 'unixepoch'), datetime(?, 'uni
 	return n > 0, nil
 }
 
+// InsertMoment 幂等写入一条朋友圈，返回本地 id 与是否新插入。
+func (s *Store) InsertMoment(ctx context.Context, userID, officialMomentID, body, imageURL string, createdAt int64) (string, bool, error) {
+	var id string
+	err := s.db.GetContext(ctx, &id, `SELECT id FROM moments WHERE official_moment_id = ? LIMIT 1`, officialMomentID)
+	if err == nil {
+		return id, false, nil
+	}
+	if !errors.Is(err, sql.ErrNoRows) {
+		return "", false, err
+	}
+	id = newID()
+	res, err := s.db.ExecContext(ctx, `
+INSERT OR IGNORE INTO moments (id, user_id, body, image_url, created_at, official_moment_id)
+VALUES (?, ?, ?, ?, datetime(?, 'unixepoch'), ?)`, id, userID, body, imageURL, createdAt, officialMomentID)
+	if err != nil {
+		return "", false, err
+	}
+	if n, err := res.RowsAffected(); err == nil && n == 0 {
+		if e := s.db.GetContext(ctx, &id, `SELECT id FROM moments WHERE official_moment_id = ? LIMIT 1`, officialMomentID); e != nil {
+			return "", false, e
+		}
+		return id, false, nil
+	}
+	return id, true, nil
+}
+
+// InsertMomentComment 幂等写入一条评论。
+func (s *Store) InsertMomentComment(ctx context.Context, momentID, userID, officialCommentID, body string, createdAt int64) (bool, error) {
+	res, err := s.db.ExecContext(ctx, `
+INSERT OR IGNORE INTO moment_comments (id, moment_id, user_id, body, created_at, official_comment_id)
+VALUES (?, ?, ?, ?, datetime(?, 'unixepoch'), ?)`,
+		newID(), momentID, userID, body, createdAt, officialCommentID)
+	if err != nil {
+		return false, err
+	}
+	n, err := res.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	return n > 0, nil
+}
+
+// LikeMoment 补本人当时点过的赞，其他人的点赞旧站没给明细，无法还原。
+func (s *Store) LikeMoment(ctx context.Context, momentID, userID string, createdAt int64) error {
+	_, err := s.db.ExecContext(ctx, `
+INSERT OR IGNORE INTO moment_likes (moment_id, user_id, created_at) VALUES (?, ?, datetime(?, 'unixepoch'))`,
+		momentID, userID, createdAt)
+	return err
+}
+
 func (s *Store) AddFriendPair(ctx context.Context, userID, otherID, remark string) error {
 	_, err := s.db.ExecContext(ctx, `
 INSERT INTO friends (user_id, friend_user_id, remark_name, created_at)

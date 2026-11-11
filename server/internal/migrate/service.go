@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -255,7 +256,7 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 					s.store.AddEvent(ctx, jobID, "warn", "群聊", fmt.Sprintf("群 %s 成员关系写入失败：%v", g.Name, err))
 				}
 				s.store.AddEvent(ctx, jobID, "info", "群聊", fmt.Sprintf("正在迁移群 %s（%d/%d）", g.Name, i+1, len(groups)))
-				groupPct := 72 + int(float64(i)/float64(max(len(groups), 1))*26)
+				groupPct := 72 + int(float64(i)/float64(max(len(groups), 1))*16)
 				count, err := s.importGroup(ctx, client, job.UserID, officialUID, groupID, g.GroupID, func(n int) {
 					s.store.UpdateProgress(ctx, jobID, fmt.Sprintf("迁移群 %s，本群已导入 %d 条", g.Name, n), groupPct, stats)
 				})
@@ -267,16 +268,23 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 				stats["groups"]++
 				s.store.AddEvent(ctx, jobID, "ok", "群聊", fmt.Sprintf("群 %s 完成：%d 条消息", g.Name, count))
 				s.store.UpdateProgress(ctx, jobID, fmt.Sprintf("迁移群聊（%d/%d）", i+1, len(groups)),
-					72+int(float64(i+1)/float64(max(len(groups), 1))*26), stats)
+					72+int(float64(i+1)/float64(max(len(groups), 1))*16), stats)
 			}
 		}
+	}
+
+	// 阶段 5：本人朋友圈与每条的评论。
+	s.store.UpdateProgress(ctx, jobID, "迁移朋友圈", 90, stats)
+	s.store.AddEvent(ctx, jobID, "info", "朋友圈", "正在读取本人朋友圈")
+	if err := s.importMoments(ctx, jobID, client, job.UserID, profile, stats, images); err != nil && ctx.Err() == nil {
+		s.store.AddEvent(ctx, jobID, "warn", "朋友圈", fmt.Sprintf("朋友圈中断：%v", err))
 	}
 
 	s.store.UpdateProgress(ctx, jobID, "迁移完成", 100, stats)
 	s.store.SetStatus(ctx, jobID, StatusDone, "迁移完成", "")
 	s.store.AddEvent(ctx, jobID, "ok", "完成", fmt.Sprintf(
-		"全部完成：好友 %d，私聊消息 %d，群 %d，群消息 %d，图片 %d 张",
-		stats["friends"], stats["direct_messages"], stats["groups"], stats["group_messages"], stats["media_files"]))
+		"全部完成：好友 %d，私聊消息 %d，群 %d，群消息 %d，朋友圈 %d 条，图片 %d 张",
+		stats["friends"], stats["direct_messages"], stats["groups"], stats["group_messages"], stats["moments"], stats["media_files"]))
 	return nil
 }
 
@@ -400,6 +408,155 @@ func (s *Service) importGroup(ctx context.Context, client *official.Client, self
 		time.Sleep(pageDelay)
 	}
 	return int(inserted), nil
+}
+
+// importMoments 迁本人发过的朋友圈与每条的评论。
+func (s *Service) importMoments(ctx context.Context, jobID string, client *official.Client, selfID string, profile official.Profile, stats map[string]int64, images map[string]string) error {
+	selfUID := strings.TrimSpace(profile.UID)
+	selfNcuid := strings.TrimSpace(profile.Ncuid)
+	var before int64
+	pages := 0
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		page, err := client.UserMoments(ctx, selfNcuid, selfUID, pageSize, before)
+		if err != nil {
+			return err
+		}
+		if len(page) == 0 {
+			break
+		}
+		pages++
+		var oldest int64
+		for _, m := range page {
+			if m.CreatedAt <= 0 {
+				continue
+			}
+			if oldest == 0 || m.CreatedAt < oldest {
+				oldest = m.CreatedAt
+			}
+			imageURL := s.pullMomentImages(ctx, jobID, m.ImageURL, stats, images)
+			momentID, created, err := s.store.InsertMoment(ctx, selfID, m.ID, m.Body, imageURL, m.CreatedAt)
+			if err != nil {
+				s.store.AddEvent(ctx, jobID, "warn", "朋友圈", fmt.Sprintf("一条朋友圈写入失败：%v", err))
+				continue
+			}
+			if created {
+				stats["moments"]++
+			}
+			if m.Liked {
+				if err := s.store.LikeMoment(ctx, momentID, selfID, m.CreatedAt); err == nil && created {
+					stats["moment_likes"]++
+				}
+			}
+			saved, skipped, err := s.importMomentComments(ctx, client, momentID, m.ID, selfID, selfUID, selfNcuid)
+			stats["moment_comments"] += int64(saved)
+			if err != nil {
+				s.store.AddEvent(ctx, jobID, "warn", "朋友圈", fmt.Sprintf("一条朋友圈的评论中断：%v", err))
+			}
+			if skipped > 0 {
+				s.store.AddEvent(ctx, jobID, "warn", "朋友圈", fmt.Sprintf("%d 条评论的作者无法建档，已跳过", skipped))
+			}
+		}
+		s.store.AddEvent(ctx, jobID, "info", "朋友圈", fmt.Sprintf("本页 %d 条，累计朋友圈 %d 条、评论 %d 条", len(page), stats["moments"], stats["moment_comments"]))
+		s.store.UpdateProgress(ctx, jobID, "迁移朋友圈", 90+min(8, pages*2), stats)
+		if len(page) < pageSize || oldest <= 0 {
+			break
+		}
+		before = oldest
+		time.Sleep(pageDelay)
+	}
+	s.store.AddEvent(ctx, jobID, "ok", "朋友圈", fmt.Sprintf("朋友圈完成：%d 条，评论 %d 条", stats["moments"], stats["moment_comments"]))
+	return nil
+}
+
+// importMomentComments 分页拉完一条朋友圈的评论，返回写入数与跳过数。
+func (s *Service) importMomentComments(ctx context.Context, client *official.Client, momentID, officialMomentID, selfID, selfUID, selfNcuid string) (int, int, error) {
+	var before int64
+	saved := 0
+	skipped := 0
+	for {
+		if err := ctx.Err(); err != nil {
+			return saved, skipped, err
+		}
+		list, err := client.MomentComments(ctx, officialMomentID, 100, before)
+		if err != nil {
+			return saved, skipped, err
+		}
+		if len(list) == 0 {
+			break
+		}
+		var oldest int64
+		for _, c := range list {
+			if c.CreatedAt <= 0 {
+				continue
+			}
+			if oldest == 0 || c.CreatedAt < oldest {
+				oldest = c.CreatedAt
+			}
+			if strings.TrimSpace(c.Body) == "" {
+				continue
+			}
+			authorID := selfID
+			authorUID := firstNonEmpty(c.FromUID, c.FromNcuid)
+			if authorUID != "" && authorUID != selfUID && authorUID != selfNcuid {
+				id, _, err := s.store.UpsertShadowUser(ctx, ShadowProfile{
+					OfficialUID: authorUID,
+					DisplayName: c.FromName,
+				})
+				if err != nil {
+					skipped++
+					continue
+				}
+				authorID = id
+			}
+			ok, err := s.store.InsertMomentComment(ctx, momentID, authorID, c.ID, c.Body, c.CreatedAt)
+			if err != nil {
+				skipped++
+				continue
+			}
+			if ok {
+				saved++
+			}
+		}
+		if len(list) < 100 || oldest <= 0 {
+			break
+		}
+		before = oldest
+		time.Sleep(pageDelay)
+	}
+	return saved, skipped, nil
+}
+
+// pullMomentImages 处理朋友圈图片：image_url 可能是单图地址，也可能是 JSON 数组。
+func (s *Service) pullMomentImages(ctx context.Context, jobID, raw string, stats map[string]int64, images map[string]string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	if strings.HasPrefix(raw, "[") {
+		var urls []string
+		if err := json.Unmarshal([]byte(raw), &urls); err == nil {
+			out := make([]string, 0, len(urls))
+			for _, u := range urls {
+				if v := s.pullImage(ctx, jobID, "朋友圈图片", u, "moments", stats, images); v != "" {
+					out = append(out, v)
+				}
+			}
+			switch len(out) {
+			case 0:
+				return ""
+			case 1:
+				return out[0]
+			}
+			if b, err := json.Marshal(out); err == nil {
+				return string(b)
+			}
+			return ""
+		}
+	}
+	return s.pullImage(ctx, jobID, "朋友圈图片", raw, "moments", stats, images)
 }
 
 // pullImage 把旧站图片下到本地，失败时退回原地址，不中断整次迁移。

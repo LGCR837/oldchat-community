@@ -54,7 +54,7 @@ const appMigrateHTML = `<!doctype html>
           <button type="button" class="mig-tab" data-mode="existing">我已注册，只导入</button>
         </div>
 
-        <p class="mig-note">服务器会用你提供的旧账号密码代你登录一次，把账号资料、好友、私聊与群聊记录搬到本服务器。密码只在内存里用一次，不写入数据库与日志。</p>
+        <p class="mig-note">服务器会用你提供的旧账号密码代你登录一次，把账号资料、头像封面、好友、私聊、群聊与朋友圈搬到本服务器。密码只在内存里用一次，不写入数据库与日志。</p>
 
         <div class="mig-group">
           <div class="mig-group-title">旧服务器账号</div>
@@ -266,6 +266,8 @@ const appMigrateHTML = `<!doctype html>
         add('私聊消息', 'direct_messages', ' 条');
         add('群聊', 'groups', ' 个');
         add('群消息', 'group_messages', ' 条');
+        add('朋友圈', 'moments', ' 条');
+        add('朋友圈评论', 'moment_comments', ' 条');
         add('占位账号', 'shadow_users', ' 个');
         add('图片', 'media_files', ' 张');
         add('图片失败', 'media_failed', ' 张');

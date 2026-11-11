@@ -215,6 +215,74 @@ func (c *Client) DirectMessages(ctx context.Context, withUID string, limit int, 
 	return page, nil
 }
 
+// Moment 是旧站朋友圈条目，image_url 在单图时是地址，多图时是 JSON 数组。
+type Moment struct {
+	ID        string `json:"id"`
+	FromUID   string `json:"from_uid"`
+	FromNcuid string `json:"from_ncuid"`
+	Body      string `json:"body"`
+	ImageURL  string `json:"image_url"`
+	CreatedAt int64  `json:"created_at"`
+	Likes     int    `json:"likes"`
+	Comments  int    `json:"comments"`
+	Liked     bool   `json:"liked"`
+}
+
+// MomentComment 是朋友圈下的一条评论。
+type MomentComment struct {
+	ID        string `json:"id"`
+	MomentID  string `json:"moment_id"`
+	FromUID   string `json:"from_uid"`
+	FromNcuid string `json:"from_ncuid"`
+	FromName  string `json:"from_name"`
+	Body      string `json:"body"`
+	CreatedAt int64  `json:"created_at"`
+}
+
+// UserMoments 拉取某个账号的朋友圈，按时间倒序，用 before 往前翻。
+func (c *Client) UserMoments(ctx context.Context, ncuid, uid string, limit int, before int64) ([]Moment, error) {
+	q := url.Values{}
+	if strings.TrimSpace(ncuid) != "" {
+		q.Set("ncuid", strings.TrimSpace(ncuid))
+	} else {
+		q.Set("uid", strings.ToUpper(strings.TrimSpace(uid)))
+	}
+	if limit <= 0 {
+		limit = 50
+	}
+	q.Set("limit", strconv.Itoa(limit))
+	if before > 0 {
+		q.Set("before", strconv.FormatInt(before, 10))
+	}
+	var resp struct {
+		Moments []Moment `json:"moments"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/v1/moments/user?"+q.Encode(), nil, &resp); err != nil {
+		return nil, err
+	}
+	return resp.Moments, nil
+}
+
+// MomentComments 拉取一条朋友圈的评论。
+func (c *Client) MomentComments(ctx context.Context, momentID string, limit int, before int64) ([]MomentComment, error) {
+	q := url.Values{}
+	q.Set("moment_id", momentID)
+	if limit <= 0 {
+		limit = 100
+	}
+	q.Set("limit", strconv.Itoa(limit))
+	if before > 0 {
+		q.Set("before", strconv.FormatInt(before, 10))
+	}
+	var resp struct {
+		Comments []MomentComment `json:"comments"`
+	}
+	if err := c.do(ctx, http.MethodGet, "/v1/moments/comments?"+q.Encode(), nil, &resp); err != nil {
+		return nil, err
+	}
+	return resp.Comments, nil
+}
+
 func (c *Client) Groups(ctx context.Context) ([]Group, error) {
 	var resp struct {
 		Groups []Group `json:"groups"`
