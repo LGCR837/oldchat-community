@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"net/url"
@@ -54,6 +56,9 @@ type Config struct {
 	V2RequireDevice       bool
 	ResourceSquareEnabled bool
 	MusicPlazaEnabled     bool
+	// OssEnabled 控制阿里云 OSS 与雨云 S3 同步。社区版默认关闭，
+	// 仅在 settings.json 的 oss_enabled 或环境变量 OSS_ENABLED 显式开启时启用。
+	OssEnabled bool
 }
 
 func Load() (Config, error) {
@@ -102,10 +107,28 @@ func Load() (Config, error) {
 	// /v2 防护开关（灰度默认关闭，等带签名的客户端覆盖后再开）。
 	cfg.V2RequireSignature = parseBoolEnv("V2_REQUIRE_SIGNATURE", false)
 	cfg.V2RequireDevice = parseBoolEnv("V2_REQUIRE_DEVICE", false)
+	// 对象存储默认关闭：社区版以本地 uploads/ 为权威存储，
+	// 需要 CDN 加速时再通过 settings.json 或环境变量开启。
+	cfg.OssEnabled = parseBoolEnv("OSS_ENABLED", false)
 
 	settingsPath := getEnv("SETTINGS_JSON", "settings.json")
 	settings, settingsOk := loadSettingsFromJSON(settingsPath)
 	if settingsOk {
+		// 部署方可把管理员账号与对象存储开关放在 settings.json（该文件不入库）。
+		// 环境变量显式设置时优先级更高。
+		if _, ok := os.LookupEnv("OSS_ENABLED"); !ok && settings.OssEnabled != nil {
+			cfg.OssEnabled = *settings.OssEnabled
+		}
+		if _, ok := os.LookupEnv("ADMIN_USER"); !ok {
+			if v := strings.TrimSpace(settings.AdminUser); v != "" {
+				cfg.AdminUser = v
+			}
+		}
+		if _, ok := os.LookupEnv("ADMIN_PASSWORD"); !ok {
+			if v := settings.AdminPassword; strings.TrimSpace(v) != "" {
+				cfg.AdminPassword = v
+			}
+		}
 		if v := strings.TrimSpace(settings.PublicBaseURL); v != "" {
 			cfg.PublicBaseURL = v
 		}
@@ -219,7 +242,13 @@ func Load() (Config, error) {
 		if settingsOk && strings.TrimSpace(settings.JWTSecret) != "" {
 			secret = strings.TrimSpace(settings.JWTSecret)
 		} else {
-			secret = "default-secret-at-least-32-characters-long"
+			// 未配置时生成随机密钥并写回 settings.json：
+			// 避免所有社区部署共用同一个固定默认值，导致 token 可被跨站伪造。
+			generated, err := randomSecret()
+			if err != nil {
+				return cfg, errors.New("JWT_SECRET must be at least 32 bytes")
+			}
+			secret = generated
 		}
 	}
 	if len(secret) < 32 {
@@ -270,6 +299,15 @@ func cleanDownloadSources(input []string) []string {
 		}
 	}
 	return out
+}
+
+// randomSecret 生成 32 字节随机密钥的 base64url 编码。
+func randomSecret() (string, error) {
+	buf := make([]byte, 32)
+	if _, err := rand.Read(buf); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(buf), nil
 }
 
 func getEnv(key, def string) string {
@@ -411,6 +449,9 @@ type quotaSettings struct {
 type settingsFile struct {
 	ResourceQuotaBytes        int64    `json:"resource_quota_bytes"`
 	RegistrationLimit         int      `json:"registration_limit"`
+	AdminUser                 string   `json:"admin_user"`
+	AdminPassword             string   `json:"admin_password"`
+	OssEnabled                *bool    `json:"oss_enabled"`
 	PublicBaseURL             string   `json:"public_base_url"`
 	DataServerBaseURL         string   `json:"data_server_base_url"`
 	DataServerSyncToken       string   `json:"data_server_sync_token"`

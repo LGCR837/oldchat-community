@@ -24,7 +24,7 @@ const appRegisterHTML = `
       <form id="registerForm" autocomplete="off">
         <label class="field">
           <span>邮箱</span>
-          <input type="email" name="email" placeholder="仅支持 QQ 邮箱" required />
+          <input type="email" name="email" placeholder="常用邮箱" required />
         </label>
         <label class="field">
           <span>用户名</span>
@@ -177,11 +177,6 @@ const appRegisterHTML = `
         }
       }
 
-      function isQQEmail(email) {
-        var e = (email || '').trim().toLowerCase();
-        return e.indexOf('@qq.com') !== -1 || e.indexOf('@vip.qq.com') !== -1;
-      }
-
       function apiRequest(path, options) {
         options = options || {};
         var headers = { 'Content-Type': 'application/json' };
@@ -216,7 +211,6 @@ const appRegisterHTML = `
         var email = form.elements.email.value.trim();
         var v = window.__geetest;
         if (!email) { showErr('请先填写邮箱'); return; }
-        if (!isQQEmail(email)) { showErr('仅支持 QQ 邮箱注册'); return; }
         if (!v) { showErr('请先完成人机验证'); return; }
 
         btnSendCode.disabled = true;
@@ -234,7 +228,7 @@ const appRegisterHTML = `
           if (res.code === 200) {
             // 发码已通过人机验证，本次会话不再要求重复验证。
             humanVerified = true;
-            showOk('验证码已发送，请查收 QQ 邮箱');
+            showOk('验证码已发送，请查收邮箱');
             startCountdown();
           } else if (res.data && res.data.error === 'email_registered') {
             showRegisteredModal(email);
@@ -278,7 +272,6 @@ const appRegisterHTML = `
         var agreeTerms = form.elements.agree_terms ? form.elements.agree_terms.checked : false;
 
         if (!email || !username || !password || !emailCode) { showErr('请填写完整信息'); return; }
-        if (!isQQEmail(email)) { showErr('仅支持 QQ 邮箱注册'); return; }
         if (!agreeTerms) { showErr('请先阅读并勾选同意《用户服务协议与免责声明》'); return; }
 
         if (!humanVerified) {

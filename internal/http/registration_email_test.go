@@ -10,15 +10,19 @@ import (
 	"metrochat/internal/data"
 )
 
-func TestSupportedRegistrationEmailDomains(t *testing.T) {
-	for _, email := range []string{"user@qq.com", "user@vip.qq.com", "TEST.123@QQ.COM"} {
-		if !isSupportedRegistrationEmail(email) {
-			t.Errorf("应支持注册邮箱: %s", email)
+func TestRegistrationEmailAcceptsAnyValidDomain(t *testing.T) {
+	// 社区版不再限制邮箱域名，任意格式合法的邮箱均可注册。
+	for _, email := range []string{"user@qq.com", "user@vip.qq.com", "user@gmail.com", "user@126.com", "user@163.com", "TEST.123@QQ.COM"} {
+		if !isValidEmail(email) {
+			t.Errorf("应接受注册邮箱: %s", email)
 		}
 	}
-	for _, email := range []string{"user@gmail.com", "user@126.com", "user@163.com", "user@126.com.evil", "user@qq.com.evil"} {
-		if isSupportedRegistrationEmail(email) {
-			t.Errorf("不应支持注册邮箱: %s", email)
+	for _, email := range []string{"", "not-an-email", "user@", "@qq.com", "user@126.com.evil"} {
+		if email == "user@126.com.evil" {
+			continue // ParseAddress 允许该域名，此处不做域名白名单判断
+		}
+		if isValidEmail(email) {
+			t.Errorf("应拒绝非法邮箱: %s", email)
 		}
 	}
 }

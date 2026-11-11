@@ -21,6 +21,7 @@ server.exe
 *.bak_*
 *.tmp
 *.swp
+.build_tmp/
 
 # 编辑器与系统
 .vscode/

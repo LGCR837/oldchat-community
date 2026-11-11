@@ -51,10 +51,6 @@ func (a *API) handleEmailCode(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_email", "邮箱格式不正确，请检查后重试")
 		return
 	}
-	if username == "" && !isSupportedRegistrationEmail(email) {
-		writeError(w, http.StatusBadRequest, "invalid_email_domain", "仅支持 QQ 邮箱注册")
-		return
-	}
 	// 注册用途：检查注册名额上限、注销冷却期与是否已注册
 	if username == "" {
 		if a.cfg.RegistrationLimit > 0 {

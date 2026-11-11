@@ -99,20 +99,29 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	// Ensure system user exists for sending notifications
 	_ = data.EnsureSystemUser(db)
 
-	ossClient, ossErr := oss.NewClient(oss.LoadConfigFromEnv())
-	if ossErr != nil {
-		log.Printf("OSS 初始化失败，将继续使用本地资源回源: %v", ossErr)
-		ossClient = nil
-	} else if ossClient.IsEnabled() {
-		log.Printf("OSS 已启用，新资源将同步到对象存储")
-	}
+	// 对象存储按配置开关决定是否接入；关闭时全部媒体以本地 uploads/ 为权威存储。
+	var ossClient *oss.Client
+	var rainClient *oss.RainClient
+	if !cfg.OssEnabled {
+		log.Printf("对象存储已关闭，媒体仅保存在本地 uploads/")
+	} else {
+		var ossErr error
+		ossClient, ossErr = oss.NewClient(oss.LoadConfigFromEnv())
+		if ossErr != nil {
+			log.Printf("OSS 初始化失败，将继续使用本地资源回源: %v", ossErr)
+			ossClient = nil
+		} else if ossClient.IsEnabled() {
+			log.Printf("OSS 已启用，新资源将同步到对象存储")
+		}
 
-	rainClient, rainErr := oss.NewRainClient(oss.LoadRainConfigFromEnv())
-	if rainErr != nil {
-		log.Printf("雨云 S3 初始化失败，资源广场将仅本地存储: %v", rainErr)
-		rainClient = nil
-	} else if rainClient.IsEnabled() {
-		log.Printf("雨云 S3 已启用，资源广场文件将同步（全局限速 5MB/s）")
+		var rainErr error
+		rainClient, rainErr = oss.NewRainClient(oss.LoadRainConfigFromEnv())
+		if rainErr != nil {
+			log.Printf("雨云 S3 初始化失败，资源广场将仅本地存储: %v", rainErr)
+			rainClient = nil
+		} else if rainClient.IsEnabled() {
+			log.Printf("雨云 S3 已启用，资源广场文件将同步（全局限速 5MB/s）")
+		}
 	}
 
 	api := &API{

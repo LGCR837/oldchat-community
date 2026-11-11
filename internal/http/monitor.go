@@ -11,7 +11,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 )
 
@@ -331,16 +330,6 @@ func (w monitorWriter) Write(p []byte) (int, error) {
 		_, _ = w.m.plainWriter.Write(p)
 	}
 	return len(p), nil
-}
-
-func readCPUTime() time.Duration {
-	var ru syscall.Rusage
-	if err := syscall.Getrusage(syscall.RUSAGE_SELF, &ru); err != nil {
-		return 0
-	}
-	sec := time.Duration(ru.Utime.Sec+ru.Stime.Sec) * time.Second
-	usec := time.Duration(ru.Utime.Usec+ru.Stime.Usec) * time.Microsecond
-	return sec + usec
 }
 
 func formatChatPreview(msgType, body string) string {

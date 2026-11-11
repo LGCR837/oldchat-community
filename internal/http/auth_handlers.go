@@ -221,10 +221,6 @@ func (a *API) handleWebRegister(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if !isSupportedRegistrationEmail(email) {
-		writeError(w, http.StatusBadRequest, "invalid_email_domain", "仅支持 QQ 邮箱注册")
-		return
-	}
 
 	inCooldown, until, err := a.users.GetDeletedAccountCooldown(r.Context(), email)
 	if err == nil && inCooldown {
@@ -719,11 +715,6 @@ func isValidEmail(email string) bool {
 		return false
 	}
 	return addr.Address == email
-}
-
-func isSupportedRegistrationEmail(email string) bool {
-	e := strings.ToLower(strings.TrimSpace(email))
-	return strings.HasSuffix(e, "@qq.com") || strings.HasSuffix(e, "@vip.qq.com")
 }
 
 func isValidUsername(username string) bool {

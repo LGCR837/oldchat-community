@@ -79,8 +79,8 @@ func (a *API) handleOAuthAccountPost(w http.ResponseWriter, r *http.Request, mod
 	password := r.FormValue("password")
 	base := oauthAccountPageData{Mode: mode, RequestID: req.ID, CSRF: csrf, Username: username, Email: email}
 	if r.FormValue("action") == "send_code" {
-		if !isValidUsername(username) || !isValidEmail(email) || !isSupportedRegistrationEmail(email) {
-			base.Error = "用户名或 QQ 邮箱格式不正确"
+		if !isValidUsername(username) || !isValidEmail(email) {
+			base.Error = "用户名或邮箱格式不正确"
 			a.renderOAuthAccount(w, r, mode, base)
 			return
 		}
