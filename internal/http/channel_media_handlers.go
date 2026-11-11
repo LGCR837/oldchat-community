@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -133,15 +134,19 @@ func (a *API) validChannelMediaRef(ref string) bool {
 	return a.validChannelFileRef(ref)
 }
 
-// validChannelFileRef accepts an uploaded shared file URL (files.mcl0 /v2/files/download/{id})
+// validChannelFileRef accepts an uploaded shared file URL (/v2/files/download/{id})
 // and verifies the underlying asset still exists, so channel posts can reference chat files.
+// 不绑定具体域名：只要路径落在文件下载接口上就接受，社区版换域名后依旧生效。
 func (a *API) validChannelFileRef(ref string) bool {
-	id := ""
-	if strings.HasPrefix(ref, "http://files.mcl0.dpdns.org/v2/files/download/") {
-		id = strings.TrimPrefix(ref, "http://files.mcl0.dpdns.org/v2/files/download/")
-	} else if strings.HasPrefix(ref, "/v2/files/download/") {
-		id = strings.TrimPrefix(ref, "/v2/files/download/")
+	const filePathPrefix = "/v2/files/download/"
+	path := strings.TrimSpace(ref)
+	if u, err := neturl.Parse(path); err == nil && u.Path != "" {
+		path = u.Path
 	}
+	if !strings.HasPrefix(path, filePathPrefix) {
+		return false
+	}
+	id := strings.TrimPrefix(path, filePathPrefix)
 	id = strings.TrimSpace(id)
 	if id == "" || strings.ContainsAny(id, "/?&#") {
 		return false

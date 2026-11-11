@@ -73,7 +73,8 @@ func Load() (Config, error) {
 	cfg.UploadDir = getEnv("UPLOAD_DIR", "uploads")
 	cfg.UpdateDir = getEnv("UPDATE_DIR", "update")
 	cfg.PublicBaseURL = strings.TrimSpace(getEnv("PUBLIC_BASE_URL", ""))
-	cfg.FilesBaseURL = strings.TrimRight(strings.TrimSpace(getEnv("FILES_BASE_URL", "http://files.mcl0.dpdns.org")), "/")
+	// 社区版不接对象存储，文件默认由源服务器自身提供；留空表示同源相对路径。
+	cfg.FilesBaseURL = strings.TrimRight(strings.TrimSpace(getEnv("FILES_BASE_URL", "")), "/")
 	cfg.OAuthIssuer = strings.TrimRight(strings.TrimSpace(
 		getEnv("OAUTH_ISSUER", "https://oc.mcl0.dpdns.org")), "/")
 	cfg.OAuthSigningKeyPath = strings.TrimSpace(getEnv("OAUTH_SIGNING_KEY_PATH", "oauth_ed25519.key"))
@@ -171,6 +172,11 @@ func Load() (Config, error) {
 		cfg.DownloadSources = cleanDownloadSources(settings.DownloadSources)
 	}
 
+	// 未单独配置文件域名时跟随公开访问域名，保证媒体地址指向源服务器自身。
+	if cfg.FilesBaseURL == "" {
+		cfg.FilesBaseURL = strings.TrimRight(strings.TrimSpace(cfg.PublicBaseURL), "/")
+	}
+
 	if envQuota := getInt64Env("RESOURCE_QUOTA_BYTES", 0); envQuota > 0 {
 		cfg.ResourceQuota = envQuota
 	}
@@ -193,11 +199,9 @@ func Load() (Config, error) {
 		cfg.DownloadSources = cleanDownloadSources(strings.Split(envSources, ","))
 	}
 	if len(cfg.DownloadSources) == 0 {
-		// 默认：优先 http://files.mcl0.dpdns.org（Cloudflare 边缘加速），回退雨云 S3 直链。
-		// 注意雨云桶为私有桶，直链仅作回退（带签名或内部使用时有效）。
-		cfg.DownloadSources = []string{
-			"http://files.mcl0.dpdns.org",
-			"http://cn-sy1.rains3.com/oldchat",
+		// 社区版只有源服务器一个下载源，不再把官方 CDN 与对象存储作为默认回退。
+		if cfg.FilesBaseURL != "" {
+			cfg.DownloadSources = []string{cfg.FilesBaseURL}
 		}
 	}
 	if v, ok := getIntEnvAllowZero("MEDIA_DOWNLOAD_CONCURRENCY"); ok && v > 0 {

@@ -3,7 +3,11 @@ package httpapi
 import (
 	"io"
 	"net/http"
+	"strings"
 )
+
+// officialDocBase 文档正文里沿用的官方示例地址，输出时按部署域名替换。
+const officialDocBase = "https://oc.mcl0.dpdns.org"
 
 func writeDeveloperMarkdown(w http.ResponseWriter, content string) {
 	w.Header().Set("Content-Type", "text/markdown; charset=utf-8")
@@ -12,12 +16,20 @@ func writeDeveloperMarkdown(w http.ResponseWriter, content string) {
 	_, _ = io.WriteString(w, content)
 }
 
-func handleBotAPIDocument(w http.ResponseWriter, r *http.Request) {
-	writeDeveloperMarkdown(w, botAPIDocument)
+func (a *API) renderDeveloperDoc(content string) string {
+	base := a.docBase()
+	if base == officialDocBase {
+		return content
+	}
+	return strings.ReplaceAll(content, officialDocBase, base)
 }
 
-func handleChannelAPIDocument(w http.ResponseWriter, r *http.Request) {
-	writeDeveloperMarkdown(w, channelAPIDocument)
+func (a *API) handleBotAPIDocument(w http.ResponseWriter, r *http.Request) {
+	writeDeveloperMarkdown(w, a.renderDeveloperDoc(botAPIDocument))
+}
+
+func (a *API) handleChannelAPIDocument(w http.ResponseWriter, r *http.Request) {
+	writeDeveloperMarkdown(w, a.renderDeveloperDoc(channelAPIDocument))
 }
 
 const botAPIDocument = `# OldChat 机器人按钮消息开发手册

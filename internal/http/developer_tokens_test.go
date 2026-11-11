@@ -9,13 +9,14 @@ import (
 )
 
 func TestDeveloperTokenDocuments(t *testing.T) {
+	api := &API{}
 	for _, tc := range []struct {
 		path    string
 		handler http.HandlerFunc
 		want    []string
 	}{
-		{"/bot-api.md", handleBotAPIDocument, []string{"/bot-apply", "/v2/buttons/send", "/v2/buttons/responses", "Bearer"}},
-		{"/channel-api.md", handleChannelAPIDocument, []string{"/channel-api/apply", "/v2/channel-api/channels", "/v2/channel-api/posts", "Bearer"}},
+		{"/bot-api.md", api.handleBotAPIDocument, []string{"/bot-apply", "/v2/buttons/send", "/v2/buttons/responses", "Bearer"}},
+		{"/channel-api.md", api.handleChannelAPIDocument, []string{"/channel-api/apply", "/v2/channel-api/channels", "/v2/channel-api/posts", "Bearer"}},
 	} {
 		rec := httptest.NewRecorder()
 		tc.handler(rec, httptest.NewRequest(http.MethodGet, tc.path, nil))
@@ -25,8 +26,12 @@ func TestDeveloperTokenDocuments(t *testing.T) {
 		if got := rec.Header().Get("Content-Type"); !strings.Contains(got, "text/markdown") {
 			t.Fatalf("%s content-type=%q", tc.path, got)
 		}
+		body := rec.Body.String()
+		if strings.Contains(body, "mcl0.dpdns.org") {
+			t.Fatalf("%s 仍包含官方域名", tc.path)
+		}
 		for _, want := range tc.want {
-			if !strings.Contains(rec.Body.String(), want) {
+			if !strings.Contains(body, want) {
 				t.Fatalf("%s missing %q", tc.path, want)
 			}
 		}

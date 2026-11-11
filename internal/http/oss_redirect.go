@@ -14,8 +14,9 @@ import (
 var ossBackfillInFlight sync.Map
 
 // handleOSSDownload 为私有 OSS 对象签发短时 URL，并让客户端直接从 OSS 下载。
+// 社区版不接对象存储，此时直接由源服务器返回本地副本，旧的 /oss/ 绝对地址继续可用。
 func (a *API) handleOSSDownload(w http.ResponseWriter, r *http.Request) {
-	if a == nil || a.ossClient == nil || !a.ossClient.IsEnabled() {
+	if a == nil {
 		http.NotFound(w, r)
 		return
 	}
@@ -23,6 +24,10 @@ func (a *API) handleOSSDownload(w http.ResponseWriter, r *http.Request) {
 	relPath = strings.TrimSpace(relPath)
 	if relPath == "" || strings.HasPrefix(relPath, "../") || strings.Contains(relPath, "/../") {
 		http.NotFound(w, r)
+		return
+	}
+	if a.ossClient == nil || !a.ossClient.IsEnabled() {
+		a.serveLocalOSSObject(w, r, relPath)
 		return
 	}
 	signedURL, err := a.ossClient.SignedDownloadURL(relPath, 10*60)
@@ -33,6 +38,17 @@ func (a *API) handleOSSDownload(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "private, max-age=300")
 	http.Redirect(w, r, signedURL, http.StatusTemporaryRedirect)
+}
+
+// serveLocalOSSObject 在对象存储关闭时用本地 uploads 目录顶替 /oss/ 路径。
+func (a *API) serveLocalOSSObject(w http.ResponseWriter, r *http.Request, relPath string) {
+	localPath := filepath.Join(a.cfg.UploadDir, filepath.FromSlash(relPath))
+	info, err := os.Stat(localPath)
+	if err != nil || info.IsDir() {
+		http.NotFound(w, r)
+		return
+	}
+	http.ServeFile(w, r, localPath)
 }
 
 // ossRedirectHandler 保留服务器本地文件响应，并在旧资源被访问时后台补传 OSS。

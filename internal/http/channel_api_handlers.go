@@ -350,7 +350,7 @@ func (a *API) handleChannelAPIAdminReview(w http.ResponseWriter, r *http.Request
 		writeError(w, http.StatusConflict, "not_pending", "application is not pending")
 		return
 	}
-	a.notifyPermitReviewEmail(r.Context(), "channel_api_permits", req.ID, req.Action, req.ReviewReason, "https://oc.mcl0.dpdns.org/channel-api/apply")
+	a.notifyPermitReviewEmail(r.Context(), "channel_api_permits", req.ID, req.Action, req.ReviewReason, a.publicURL("/channel-api/apply"))
 	writeChannelJSON(w, map[string]interface{}{"ok": true})
 }
 

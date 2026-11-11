@@ -16,9 +16,12 @@ type downloadSourceResponse struct {
 func (a *API) handleDownloadSources(w http.ResponseWriter, r *http.Request) {
 	sources := a.downloadSources()
 	if len(sources) == 0 {
-		sources = []string{
-			"http://files.mcl0.dpdns.org",
-			"http://cn-sy1.rains3.com/oldchat",
+		// 社区版：唯一来源就是源服务器自身。基址为空时返回空列表，
+		// 客户端按自己请求的业务地址同源下载。
+		if base := a.filesBase(); base != "" {
+			sources = []string{base}
+		} else {
+			sources = []string{}
 		}
 	}
 	writeJSON(w, http.StatusOK, downloadSourceResponse{Sources: sources})

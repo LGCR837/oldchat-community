@@ -1206,9 +1206,9 @@ func (a *API) handleAdminModerationPermitReview(w http.ResponseWriter, r *http.R
 		return
 	}
 	if section == "bots" {
-		a.notifyPermitReviewEmail(ctx, "bot_permits", id, action, reviewReason, "https://oc.mcl0.dpdns.org/bot-apply")
+		a.notifyPermitReviewEmail(ctx, "bot_permits", id, action, reviewReason, a.publicURL("/bot-apply"))
 	} else {
-		a.notifyPermitReviewEmail(ctx, "channel_api_permits", id, action, reviewReason, "https://oc.mcl0.dpdns.org/channel-api/apply")
+		a.notifyPermitReviewEmail(ctx, "channel_api_permits", id, action, reviewReason, a.publicURL("/channel-api/apply"))
 	}
 	label := "已通过"
 	if action == "reject" {

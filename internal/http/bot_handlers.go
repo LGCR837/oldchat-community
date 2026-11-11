@@ -260,7 +260,7 @@ func (a *API) handleBotAdminReview(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusConflict, "not_pending", "application is not pending")
 		return
 	}
-	a.notifyPermitReviewEmail(r.Context(), "bot_permits", req.ID, req.Action, req.ReviewReason, "https://oc.mcl0.dpdns.org/bot-apply")
+	a.notifyPermitReviewEmail(r.Context(), "bot_permits", req.ID, req.Action, req.ReviewReason, a.publicURL("/bot-apply"))
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 }

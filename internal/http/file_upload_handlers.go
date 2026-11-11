@@ -283,12 +283,43 @@ func normalizeSHA256(raw string) string {
 	return value
 }
 
-func (a *API) fileAssetURL(fileID string) string {
-	base := "http://files.mcl0.dpdns.org"
-	if a != nil && strings.TrimSpace(a.cfg.FilesBaseURL) != "" {
-		base = strings.TrimRight(strings.TrimSpace(a.cfg.FilesBaseURL), "/")
+// filesBase 返回文件访问基址。社区版不接对象存储，默认由源服务器自身提供，
+// 此时基址为空，拼出的地址是相对路径（同源访问）；需要独立文件域名时用 FILES_BASE_URL 覆盖。
+func (a *API) filesBase() string {
+	if a == nil {
+		return ""
 	}
-	return base + "/v2/files/download/" + strings.TrimSpace(fileID)
+	return strings.TrimRight(strings.TrimSpace(a.cfg.FilesBaseURL), "/")
+}
+
+// publicBase 返回站点对外基址（PUBLIC_BASE_URL）。未配置时为空，表示同源。
+func (a *API) publicBase() string {
+	if a == nil {
+		return ""
+	}
+	return strings.TrimRight(strings.TrimSpace(a.cfg.PublicBaseURL), "/")
+}
+
+// publicURL 拼接站点内绝对地址；未配置基址时返回相对路径。
+func (a *API) publicURL(path string) string {
+	p := "/" + strings.TrimLeft(strings.TrimSpace(path), "/")
+	base := a.publicBase()
+	if base == "" {
+		base = a.filesBase()
+	}
+	return base + p
+}
+
+// docBase 用于文档示例里的服务地址；未配置时给出占位符而不是官方域名。
+func (a *API) docBase() string {
+	if base := a.publicBase(); base != "" {
+		return base
+	}
+	return "https://<你的域名>"
+}
+
+func (a *API) fileAssetURL(fileID string) string {
+	return a.filesBase() + "/v2/files/download/" + strings.TrimSpace(fileID)
 }
 
 // fileAssetURLWithRef 在下载地址后附加对象相对路径（ref），供客户端拼接对象存储直链。
@@ -302,11 +333,7 @@ func (a *API) fileAssetURLWithRef(fileID, relativePath string) string {
 }
 
 func (a *API) resourceItemURL(itemID string) string {
-	base := "http://files.mcl0.dpdns.org"
-	if a != nil && strings.TrimSpace(a.cfg.FilesBaseURL) != "" {
-		base = strings.TrimRight(strings.TrimSpace(a.cfg.FilesBaseURL), "/")
-	}
-	return base + "/v2/resources/download/" + strings.TrimSpace(itemID)
+	return a.filesBase() + "/v2/resources/download/" + strings.TrimSpace(itemID)
 }
 
 // resourceItemURLWithRef 在下载地址后附加对象相对路径（ref），供客户端拼接对象存储直链。
@@ -328,11 +355,7 @@ func (a *API) resourcePublicURL(raw string) string {
 
 func (a *API) filePublicURL(relativePath string) string {
 	path := strings.TrimLeft(strings.TrimSpace(relativePath), "/")
-	base := "http://files.mcl0.dpdns.org"
-	if a != nil && strings.TrimSpace(a.cfg.FilesBaseURL) != "" {
-		base = strings.TrimRight(strings.TrimSpace(a.cfg.FilesBaseURL), "/")
-	}
-	return base + "/" + path
+	return a.filesBase() + "/" + path
 }
 
 func parsePositiveInt64(raw string) int64 {
