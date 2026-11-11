@@ -25,6 +25,7 @@ import (
 
 type API struct {
 	cfg                 config.Config
+	powGuard            *verify.PowGuard
 	dataSyncClient      *http.Client
 	ossClient           *oss.Client
 	rainOSSClient       *oss.RainClient
@@ -122,8 +123,32 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 		}
 	}
 
+	// 人机验证：极验 / Turnstile 缺凭据时自动回落到自建 PoW，
+	// 避免因配置缺失把注册入口彻底写死。
+	switch cfg.CaptchaMode {
+	case config.CaptchaModeGeetest:
+		if cfg.GeetestID == "" || cfg.GeetestKey == "" {
+			log.Printf("未配置 GEETEST_ID / GEETEST_KEY，人机验证回落为自建 PoW")
+			cfg.CaptchaMode = config.CaptchaModePow
+		}
+	case config.CaptchaModeTurnstile:
+		if cfg.TurnstileSecretKey == "" {
+			log.Printf("未配置 TURNSTILE_SECRET，人机验证回落为自建 PoW")
+			cfg.CaptchaMode = config.CaptchaModePow
+		}
+	}
+	var powGuard *verify.PowGuard
+	if cfg.CaptchaMode == config.CaptchaModePow {
+		powGuard = verify.NewPowGuard(cfg.JWTSecret, cfg.PowDifficulty)
+		log.Printf("人机验证：自建 PoW（难度 %d 位）", powGuard.Difficulty())
+	} else {
+		log.Printf("人机验证：%s", cfg.CaptchaMode)
+	}
+	log.Printf("邮箱验证码：%v", cfg.EmailVerify)
+
 	api := &API{
 		cfg:                cfg,
+		powGuard:           powGuard,
 		dataSyncClient:     &http.Client{Timeout: 70 * time.Second},
 		ossClient:          ossClient,
 		rainOSSClient:      rainClient,
@@ -605,6 +630,7 @@ func (api *API) registerV1Routes(r chi.Router) {
 	r.Post("/auth/direct-create", api.handleDirectCreateUser)
 	r.Post("/auth/password/reset", api.handleResetPassword)
 	r.Post("/auth/handshake", api.handleHandshake)
+	r.Get("/auth/captcha/challenge", api.handleCaptchaChallenge)
 	r.Get("/auth/email/send", api.handleEmailCode)
 	r.Post("/auth/email/send", api.handleEmailCode)
 	r.Post("/auth/refresh", api.handleRefresh)

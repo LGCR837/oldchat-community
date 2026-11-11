@@ -63,6 +63,40 @@ type Config struct {
 	// 社区版暂无第三方登录接入，默认关闭：关闭时不校验 OAUTH_ISSUER，
 	// 也不需要域名与证书即可启动。
 	OAuthEnabled bool
+	// CaptchaMode 注册/发码接口的人机验证方式：
+	// off（关闭）、pow（自建工作量证明，默认）、geetest、turnstile。
+	CaptchaMode string
+	// PowDifficulty 自建工作量证明的难度（SHA-256 前导零位数），默认 18。
+	PowDifficulty int
+	// GeetestID / GeetestKey 由部署方自己的极验 4.0 账号提供，留空即不可用。
+	GeetestID  string
+	GeetestKey string
+	// EmailVerify 是否强制邮箱验证码。社区版默认关闭：填邮箱即可注册，
+	// 代价是无法自助找回密码。
+	EmailVerify bool
+}
+
+// CaptchaModeOff / Pow / Geetest / Turnstile 是 CaptchaMode 的合法取值。
+const (
+	CaptchaModeOff       = "off"
+	CaptchaModePow       = "pow"
+	CaptchaModeGeetest   = "geetest"
+	CaptchaModeTurnstile = "turnstile"
+)
+
+// NormalizeCaptchaMode 归一化人机验证方式，无法识别的取值回落到自建 PoW。
+func NormalizeCaptchaMode(v string) string {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case CaptchaModeOff:
+		return CaptchaModeOff
+	case CaptchaModePow:
+		return CaptchaModePow
+	case CaptchaModeGeetest:
+		return CaptchaModeGeetest
+	case CaptchaModeTurnstile:
+		return CaptchaModeTurnstile
+	}
+	return CaptchaModePow
 }
 
 func Load() (Config, error) {
@@ -112,6 +146,14 @@ func Load() (Config, error) {
 	// 对象存储默认关闭：社区版以本地 uploads/ 为权威存储，
 	// 需要 CDN 加速时再通过 settings.json 或环境变量开启。
 	cfg.OssEnabled = parseBoolEnv("OSS_ENABLED", false)
+	// 人机验证默认走自建 PoW，不依赖任何第三方服务。
+	cfg.CaptchaMode = NormalizeCaptchaMode(getEnv("CAPTCHA_MODE", CaptchaModePow))
+	cfg.PowDifficulty = getIntEnv("POW_DIFFICULTY", 18)
+	// 极验 ID/Key 不再内置，需部署方用自己的账号申请后通过环境变量注入。
+	cfg.GeetestID = strings.TrimSpace(getEnv("GEETEST_ID", ""))
+	cfg.GeetestKey = strings.TrimSpace(getEnv("GEETEST_KEY", ""))
+	// 邮箱验证默认关闭：社区版没有稳定的 SMTP，注册只校验邮箱格式。
+	cfg.EmailVerify = parseBoolEnv("EMAIL_VERIFY", false)
 
 	settingsPath := getEnv("SETTINGS_JSON", "settings.json")
 	settings, settingsOk := loadSettingsFromJSON(settingsPath)
@@ -123,6 +165,27 @@ func Load() (Config, error) {
 		}
 		if settings.OAuthEnabled != nil && !envIsSet("OAUTH_ENABLED") {
 			cfg.OAuthEnabled = *settings.OAuthEnabled
+		}
+		if !envIsSet("CAPTCHA_MODE") {
+			if v := strings.TrimSpace(settings.CaptchaMode); v != "" {
+				cfg.CaptchaMode = NormalizeCaptchaMode(v)
+			}
+		}
+		if !envIsSet("POW_DIFFICULTY") && settings.PowDifficulty > 0 {
+			cfg.PowDifficulty = settings.PowDifficulty
+		}
+		if !envIsSet("GEETEST_ID") {
+			if v := strings.TrimSpace(settings.GeetestID); v != "" {
+				cfg.GeetestID = v
+			}
+		}
+		if !envIsSet("GEETEST_KEY") {
+			if v := strings.TrimSpace(settings.GeetestKey); v != "" {
+				cfg.GeetestKey = v
+			}
+		}
+		if settings.EmailVerify != nil && !envIsSet("EMAIL_VERIFY") {
+			cfg.EmailVerify = *settings.EmailVerify
 		}
 		if !envIsSet("PORT") {
 			if v := strings.TrimSpace(settings.Port); v != "" {
@@ -488,6 +551,11 @@ type settingsFile struct {
 	AdminPassword             string   `json:"admin_password"`
 	OssEnabled                *bool    `json:"oss_enabled"`
 	OAuthEnabled              *bool    `json:"oauth_enabled"`
+	CaptchaMode               string   `json:"captcha_mode"`
+	PowDifficulty             int      `json:"pow_difficulty"`
+	GeetestID                 string   `json:"geetest_id"`
+	GeetestKey                string   `json:"geetest_key"`
+	EmailVerify               *bool    `json:"email_verify"`
 	Port                      string   `json:"port"`
 	OAuthIssuer               string   `json:"oauth_issuer"`
 	PublicBaseURL             string   `json:"public_base_url"`

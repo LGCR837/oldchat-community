@@ -1,7 +1,15 @@
 package httpapi
 
-// appRegisterHTML 官网注册页（/register，GeeTest 4.0 人机验证）。
-// 内嵌于二进制，不依赖 webapp 静态目录。
+import (
+	"encoding/json"
+	"strings"
+
+	"metrochat/internal/config"
+)
+
+// appRegisterHTML 官网注册页（/register）。
+// 人机验证与邮箱验证码都是可配置的：渲染时用 renderRegisterPage 注入前端配置，
+// 未开启的字段由脚本自动隐藏，不加载任何第三方脚本。
 const appRegisterHTML = `
 <!doctype html>
 <html lang="zh-CN">
@@ -10,8 +18,7 @@ const appRegisterHTML = `
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>旧聊 · 注册</title>
   <link rel="stylesheet" href="/app-assets/app.css" />
-  <!-- GeeTest 4.0 人机验证 -->
-  <script src="https://static.geetest.com/v4/gt4.js"></script>
+  <!--__CAPTCHA_SCRIPT__-->
 </head>
 <body>
   <div class="auth-page">
@@ -35,13 +42,13 @@ const appRegisterHTML = `
           <input type="password" name="password" placeholder="至少 8 位" required minlength="8" />
         </label>
 
-        <!-- GeeTest 4.0：验证通过后 getValidate() 写入 window.__geetest -->
-        <div class="field turnstile-field">
+        <!-- 人机验证：按 CAPTCHA_MODE 由脚本渲染（自建 PoW / 极验） -->
+        <div class="field captcha-field">
           <span>人机验证</span>
           <div id="captchaContainer"></div>
         </div>
 
-        <div class="field-row">
+        <div class="field-row email-code-row">
           <label class="field email-code-field">
             <span>邮箱验证码</span>
             <input type="text" name="email_code" placeholder="输入邮件中的 6 位码" required maxlength="6" />
@@ -96,6 +103,7 @@ const appRegisterHTML = `
     </div>
   </div>
 
+  <script>window.__REG_CFG = __REG_CFG_JSON__;</script>
   <script>
     (function () {
       'use strict';
@@ -110,10 +118,11 @@ const appRegisterHTML = `
       var btnAcceptTerms = document.getElementById('btnAcceptTerms');
       var agreeTermsCheckbox = document.getElementById('agreeTerms');
       var sendCodeTimer = null;
+      var CFG = window.__REG_CFG || { captcha: 'off', emailVerify: false, powDifficulty: 18 };
+      var powSolution = null;      // { token, nonce }，本站自建人机验证的解
       var humanVerified = false;   // 本次会话已通过人机验证（发码成功即视为已验证）
-      window.__geetest = null;
       var geetestObj = null;
-      var GEETEST_CAPTCHA_ID = '769d069177e132e46eeba07a6210cf3a';
+      window.__geetest = null;
 
       // 弹窗事件
       if (openTermsModal && termsModal) {
@@ -137,7 +146,50 @@ const appRegisterHTML = `
         });
       }
 
-      // GeeTest 4.0 初始化
+      // ---- 人机验证：自建 PoW / 极验，由 renderRegisterPage 注入的配置决定 ----
+      /*__POW_JS__*/
+
+      function setPowHint(text, disabled) {
+        var btn = document.getElementById('powBtn');
+        if (btn) { btn.textContent = text; btn.disabled = !!disabled; }
+      }
+
+      function requestPow() {
+        return apiRequest('/auth/captcha/challenge').then(function (res) {
+          if (res.code !== 200 || !res.data || !res.data.challenge) { throw new Error('challenge failed'); }
+          var data = res.data;
+          return solvePow(data.challenge, data.difficulty || CFG.powDifficulty || 18).then(function (nonce) {
+            powSolution = { token: data.token, nonce: nonce };
+            return powSolution;
+          });
+        });
+      }
+
+      // ensurePow 保证本次提交前有可用的人机验证解；已解过则直接复用。
+      function ensurePow() {
+        if (CFG.captcha !== 'pow') { return Promise.resolve(); }
+        if (powSolution) { return Promise.resolve(); }
+        setPowHint('验证中…', true);
+        return requestPow().then(function () {
+          setPowHint('已验证', true);
+        }).catch(function () {
+          powSolution = null;
+          setPowHint('验证失败，点击重试', false);
+          throw new Error('pow failed');
+        });
+      }
+
+      function initPow() {
+        var box = document.getElementById('captchaContainer');
+        if (!box) { return; }
+        box.innerHTML = '<button type="button" class="btn-ghost" id="powBtn" style="width:100%;height:44px;">点击完成人机验证</button>';
+        document.getElementById('powBtn').addEventListener('click', function () {
+          if (powSolution) { return; }
+          ensurePow().then(function () { showOk('人机验证通过'); }).catch(function () { showErr('人机验证失败，请重试'); });
+        });
+      }
+
+      // GeeTest 4.0（仅在 CAPTCHA_MODE=geetest 时启用）
       function initGeetest() {
         if (typeof window.initGeetest4 !== 'function') {
           showErr('人机验证组件加载失败，请刷新重试');
@@ -145,7 +197,7 @@ const appRegisterHTML = `
         }
         try {
           window.initGeetest4({
-            captchaId: GEETEST_CAPTCHA_ID,
+            captchaId: CFG.geetestId,
             product: 'popup',
             riskType: 'ai',
             nativeButton: { width: '100%', height: '44px' }
@@ -177,6 +229,23 @@ const appRegisterHTML = `
         }
       }
 
+      function initCaptcha() {
+        if (CFG.captcha === 'pow') { initPow(); return; }
+        if (CFG.captcha === 'geetest') { initGeetest(); }
+      }
+
+      // 本站未开启的字段直接隐藏，避免用户看到无法使用的输入框。
+      function applyConfig() {
+        if (!CFG.emailVerify) {
+          var codeRow = form.querySelector('.email-code-row');
+          if (codeRow) { codeRow.style.display = 'none'; }
+        }
+        if (CFG.captcha === 'off') {
+          var captchaField = form.querySelector('.captcha-field');
+          if (captchaField) { captchaField.style.display = 'none'; }
+        }
+      }
+
       function apiRequest(path, options) {
         options = options || {};
         var headers = { 'Content-Type': 'application/json' };
@@ -193,58 +262,79 @@ const appRegisterHTML = `
       }
 
       function showErr(msg) {
-        if (errEl) { errEl.style.color = 'var(--error)'; errEl.textContent = msg; }
+        if (errEl) { errEl.style.color = 'var(--error)'; errEl.textContent = msg || ''; }
       }
       function showOk(msg) {
-        if (errEl) { errEl.style.color = 'var(--ok)'; errEl.textContent = msg; }
+        if (errEl) { errEl.style.color = 'var(--ok)'; errEl.textContent = msg || ''; }
       }
 
-      // 提交后重置验证，重试时重新弹出
+      // 提交后重置验证，重试时重新验证
       function resetCaptcha() {
+        powSolution = null;
+        if (CFG.captcha === 'pow') { setPowHint('点击完成人机验证', false); }
         window.__geetest = null;
         try { if (geetestObj) geetestObj.refresh(); } catch (e) {}
-        try { if (geetestObj) geetestObj.showCaptcha(); } catch (e) {}
       }
 
-      btnSendCode.addEventListener('click', function () {
-        if (sendCodeTimer) return;
-        var email = form.elements.email.value.trim();
+      // 组装人机验证参数
+      function captchaPayload() {
+        if (CFG.captcha === 'pow' && powSolution) {
+          return { pow_token: powSolution.token, pow_nonce: powSolution.nonce };
+        }
         var v = window.__geetest;
-        if (!email) { showErr('请先填写邮箱'); return; }
-        if (!v) { showErr('请先完成人机验证'); return; }
-
-        btnSendCode.disabled = true;
-        apiRequest('/auth/email/send', {
-          method: 'POST',
-          body: {
-            email: email,
+        if (CFG.captcha === 'geetest' && v) {
+          return {
             geetest_lot_number: v.lot_number,
             geetest_captcha_output: v.captcha_output,
             geetest_pass_token: v.pass_token,
             geetest_gen_time: v.gen_time
-          }
-        }).then(function (res) {
-          resetCaptcha();
-          if (res.code === 200) {
-            // 发码已通过人机验证，本次会话不再要求重复验证。
-            humanVerified = true;
-            showOk('验证码已发送，请查收邮箱');
-            startCountdown();
-          } else if (res.data && res.data.error === 'email_registered') {
-            showRegisteredModal(email);
+          };
+        }
+        return {};
+      }
+
+      function merge(target, extra) {
+        for (var k in extra) { if (Object.prototype.hasOwnProperty.call(extra, k)) { target[k] = extra[k]; } }
+        return target;
+      }
+
+      if (btnSendCode) {
+        btnSendCode.addEventListener('click', function () {
+          if (sendCodeTimer) { return; }
+          var email = form.elements.email.value.trim();
+          if (!email) { showErr('请先填写邮箱'); return; }
+
+          btnSendCode.disabled = true;
+          ensurePow().then(function () {
+            return apiRequest('/auth/email/send', {
+              method: 'POST',
+              body: merge({ email: email }, captchaPayload())
+            });
+          }).then(function (res) {
+            resetCaptcha();
+            if (res.code === 200) {
+              humanVerified = true;
+              showOk('验证码已发送，请查收邮箱');
+              startCountdown();
+            } else if (res.data && res.data.error === 'email_registered') {
+              showRegisteredModal(email);
+              btnSendCode.disabled = false;
+            } else {
+              var msg = (res.data && (res.data.error || res.data.message)) || ('发送失败 (' + res.code + ')');
+              showErr(msg);
+              btnSendCode.disabled = false;
+            }
+          }).catch(function () {
+            showErr('人机验证失败，请重试');
             btnSendCode.disabled = false;
-          } else {
-            var msg = (res.data && (res.data.error || res.data.message)) || ('发送失败 (' + res.code + ')');
-            showErr(msg);
-            btnSendCode.disabled = false;
-          }
+          });
         });
-      });
+      }
 
       // 邮箱已注册：弹出登录/找回密码入口
       function showRegisteredModal(email) {
         var modal = document.getElementById('regModal');
-        if (!modal) return;
+        if (!modal) { return; }
         modal.style.display = 'flex';
       }
 
@@ -252,12 +342,11 @@ const appRegisterHTML = `
         var left = 120;
         sendCodeTimer = setInterval(function () {
           left--;
-          btnSendCode.textContent = left + 's 后重发';
+          if (btnSendCode) { btnSendCode.textContent = left + 's 后重发'; }
           if (left <= 0) {
             clearInterval(sendCodeTimer);
             sendCodeTimer = null;
-            btnSendCode.textContent = '发送验证码';
-            btnSendCode.disabled = false;
+            if (btnSendCode) { btnSendCode.textContent = '发送验证码'; btnSendCode.disabled = false; }
           }
         }, 1000);
       }
@@ -268,26 +357,27 @@ const appRegisterHTML = `
         var email = form.elements.email.value.trim();
         var username = form.elements.username.value.trim();
         var password = form.elements.password.value;
-        var emailCode = form.elements.email_code.value.trim();
+        var emailCode = CFG.emailVerify ? form.elements.email_code.value.trim() : '';
         var agreeTerms = form.elements.agree_terms ? form.elements.agree_terms.checked : false;
 
-        if (!email || !username || !password || !emailCode) { showErr('请填写完整信息'); return; }
+        if (!email || !username || !password) { showErr('请填写完整信息'); return; }
+        if (CFG.emailVerify && !emailCode) { showErr('请填写邮箱验证码'); return; }
         if (!agreeTerms) { showErr('请先阅读并勾选同意《用户服务协议与免责声明》'); return; }
 
-        if (!humanVerified) {
-          var v = window.__geetest;
-          if (!v) { showErr('请先完成人机验证并获取验证码'); return; }
-        }
-
         btnRegister.disabled = true;
-        apiRequest('/auth/web/register', {
-          method: 'POST',
-          body: {
-            email: email, username: username, password: password,
-            email_code: emailCode,
-            agree_terms: true,
-            platform: 'web', app_version: '1.0.0'
-          }
+        var body = {
+          email: email, username: username, password: password,
+          agree_terms: true, platform: 'web', app_version: '1.0.0'
+        };
+        if (emailCode) { body.email_code = emailCode; }
+
+        // 开启邮箱验证时，验证码本身即人机凭证；否则注册请求自己过人机验证。
+        var gate = CFG.emailVerify ? Promise.resolve() : ensurePow();
+        gate.then(function () {
+          return apiRequest('/auth/web/register', {
+            method: 'POST',
+            body: merge(body, CFG.emailVerify ? {} : captchaPayload())
+          });
         }).then(function (res) {
           resetCaptcha();
           if (res.code >= 200 && res.code < 300) {
@@ -298,12 +388,41 @@ const appRegisterHTML = `
             showErr(msg);
             btnRegister.disabled = false;
           }
+        }).catch(function () {
+          showErr('人机验证失败，请重试');
+          btnRegister.disabled = false;
         });
       });
 
-      initGeetest();
+      applyConfig();
+      initCaptcha();
     })();
   </script>
 </body>
 </html>
 `
+
+// renderRegisterPage 按运行配置渲染注册页。
+// 人机验证方式与是否开启邮箱验证都随 settings.json / 环境变量变化，
+// 页面据此隐藏未启用的字段，并在需要时才加载极验脚本。
+func renderRegisterPage(cfg config.Config) string {
+	payload := map[string]interface{}{
+		"captcha":       cfg.CaptchaMode,
+		"emailVerify":   cfg.EmailVerify,
+		"powDifficulty": cfg.PowDifficulty,
+	}
+	if cfg.CaptchaMode == config.CaptchaModeGeetest {
+		payload["geetestId"] = cfg.GeetestID
+	}
+	raw, err := json.Marshal(payload)
+	if err != nil {
+		raw = []byte(`{"captcha":"off","emailVerify":false,"powDifficulty":18}`)
+	}
+	captchaScript := ""
+	if cfg.CaptchaMode == config.CaptchaModeGeetest {
+		captchaScript = `<script src="https://static.geetest.com/v4/gt4.js"></script>`
+	}
+	out := strings.ReplaceAll(appRegisterHTML, "__REG_CFG_JSON__", string(raw))
+	out = injectPowJS(out)
+	return strings.ReplaceAll(out, "<!--__CAPTCHA_SCRIPT__-->", captchaScript)
+}

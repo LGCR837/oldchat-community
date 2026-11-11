@@ -14,14 +14,9 @@ import (
 )
 
 type emailCodeRequest struct {
-	Email          string `json:"email"`
-	Username       string `json:"username"`
-	TurnstileToken string `json:"turnstile_token"`
-	// GeeTest 4.0 验证参数
-	GeeTestLotNumber     string         `json:"geetest_lot_number"`
-	GeeTestCaptchaOutput string         `json:"geetest_captcha_output"`
-	GeeTestPassToken     string         `json:"geetest_pass_token"`
-	GeeTestGenTime       geetestGenTime `json:"geetest_gen_time"`
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	captchaInput
 }
 
 func (a *API) handleEmailCode(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +41,11 @@ func (a *API) handleEmailCode(w http.ResponseWriter, r *http.Request) {
 	purpose := "register"
 	if username != "" {
 		purpose = "reset"
+	}
+	// 邮箱验证默认关闭：整个发码接口一并关闭，注册只校验邮箱格式。
+	if !a.cfg.EmailVerify {
+		writeError(w, http.StatusForbidden, "email_verify_disabled", "本站未开启邮箱验证，无需获取验证码")
+		return
 	}
 	if !isValidEmail(email) {
 		writeError(w, http.StatusBadRequest, "invalid_email", "邮箱格式不正确，请检查后重试")
@@ -96,27 +96,10 @@ func (a *API) handleEmailCode(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// 人机验证：GeeTest 或 Turnstile，两者至少通过其一（图形验证码已下线）。
-	turnstile := strings.TrimSpace(req.TurnstileToken)
-	geetestGiven := strings.TrimSpace(req.GeeTestLotNumber) != "" ||
-		strings.TrimSpace(req.GeeTestCaptchaOutput) != "" ||
-		strings.TrimSpace(req.GeeTestPassToken) != ""
-	geetestOK := false
-	if geetestGiven {
-		if err := verify.VerifyGeeTest(req.GeeTestLotNumber, req.GeeTestCaptchaOutput,
-			req.GeeTestPassToken, string(req.GeeTestGenTime), ip); err == nil {
-			geetestOK = true
-		}
-	}
-	if !geetestOK {
-		if turnstile == "" {
-			writeError(w, http.StatusBadRequest, "invalid_turnstile", "人机验证未通过")
-			return
-		}
-		if err := verify.VerifyTurnstile(a.cfg.TurnstileSecretKey, turnstile, ip); err != nil {
-			writeError(w, http.StatusBadRequest, "invalid_turnstile", "invalid turnstile")
-			return
-		}
+	// 人机验证：按 CAPTCHA_MODE 走自建 PoW、极验或 Turnstile。
+	if err := a.verifyCaptcha(ip, req.captchaInput); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_captcha", "人机验证未通过")
+		return
 	}
 
 	a.sendLimiter.PruneOlderThan(10 * time.Minute)

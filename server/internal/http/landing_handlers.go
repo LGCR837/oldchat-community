@@ -20,7 +20,7 @@ func (a *API) handleLanding(w http.ResponseWriter, r *http.Request) {
 
 func (a *API) handleRegisterPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = io.WriteString(w, appRegisterHTML)
+	_, _ = io.WriteString(w, renderRegisterPage(a.cfg))
 }
 
 func (a *API) handleAppAPKDownload(w http.ResponseWriter, r *http.Request) {

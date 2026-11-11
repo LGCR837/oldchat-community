@@ -18,7 +18,6 @@ import (
 
 	"metrochat/internal/auth"
 	"metrochat/internal/data"
-	"metrochat/internal/verify"
 )
 
 // geetestGenTime 兼容极验前端返回的字符串时间戳，也兼容数字形式的旧调用方。
@@ -61,22 +60,17 @@ func isOfficialAPKSignature(sig string) bool {
 }
 
 type registerRequest struct {
-	Email          string `json:"email"`
-	Username       string `json:"username"`
-	Password       string `json:"password"`
-	EmailCode      string `json:"email_code"`
-	DeviceID       string `json:"device_id"`
-	IMEI           string `json:"imei"`
-	DeviceName     string `json:"device_name"`
-	Platform       string `json:"platform"`
-	AppVersion     string `json:"app_version"`
-	AgreeTerms     bool   `json:"agree_terms"`
-	TurnstileToken string `json:"turnstile_token"`
-	// GeeTest 4.0 验证参数（注册页使用）
-	GeeTestLotNumber     string         `json:"geetest_lot_number"`
-	GeeTestCaptchaOutput string         `json:"geetest_captcha_output"`
-	GeeTestPassToken     string         `json:"geetest_pass_token"`
-	GeeTestGenTime       geetestGenTime `json:"geetest_gen_time"`
+	Email      string `json:"email"`
+	Username   string `json:"username"`
+	Password   string `json:"password"`
+	EmailCode  string `json:"email_code"`
+	DeviceID   string `json:"device_id"`
+	IMEI       string `json:"imei"`
+	DeviceName string `json:"device_name"`
+	Platform   string `json:"platform"`
+	AppVersion string `json:"app_version"`
+	AgreeTerms bool   `json:"agree_terms"`
+	captchaInput
 }
 
 type loginRequest struct {
@@ -142,24 +136,6 @@ type statusResponse struct {
 	Status string `json:"status"`
 }
 
-// verifyWebCaptcha 注册/发码链路的人机验证：
-// GeeTest 4.0 参数齐全时优先校验 GeeTest；否则回退 Cloudflare Turnstile（兼容旧页面/旧客户端）。
-func verifyWebCaptcha(a *API, w http.ResponseWriter, ip string, lotNumber, captchaOutput, passToken string, genTime geetestGenTime, turnstileToken string) error {
-	if strings.TrimSpace(lotNumber) != "" || strings.TrimSpace(captchaOutput) != "" || strings.TrimSpace(passToken) != "" {
-		if err := verify.VerifyGeeTest(lotNumber, captchaOutput, passToken, string(genTime), ip); err != nil {
-			return err
-		}
-		return nil
-	}
-	if strings.TrimSpace(turnstileToken) != "" {
-		if err := verify.VerifyTurnstile(a.cfg.TurnstileSecretKey, turnstileToken, ip); err != nil {
-			return err
-		}
-		return nil
-	}
-	return errors.New("captcha missing")
-}
-
 var dummyHash string
 
 func init() {
@@ -190,9 +166,10 @@ func (a *API) handleWebRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 说明：此处不再调用 verifyWebCaptcha。
-	// 邮箱验证码（一次性、10 分钟有效、每邮箱 120s 冷却）只有通过人机验证后才能获取，
-	// 注册提交校验验证码正确即可，避免用户“发码验一次、注册又验一次”的重复体验。
+	// 人机验证与邮箱验证码的关系：
+	// 开启邮箱验证（EMAIL_VERIFY=true）时，验证码本身就是在通过人机验证后才下发的，
+	// 注册提交只需校验验证码，避免“发码验一次、注册又验一次”；
+	// 关闭时（社区版默认）整条发码链路停用，注册请求自己必须带人机验证。
 
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 	username := strings.ToLower(strings.TrimSpace(req.Username))
@@ -240,8 +217,13 @@ func (a *API) handleWebRegister(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid_password", "密码至少 8 位")
 		return
 	}
-	if emailCode == "" || !a.emailCodes.VerifyForPurpose(email, "register", emailCode) {
-		writeError(w, http.StatusBadRequest, "invalid_email_code", "邮箱验证码错误或已过期，请重新获取")
+	if a.cfg.EmailVerify {
+		if emailCode == "" || !a.emailCodes.VerifyForPurpose(email, "register", emailCode) {
+			writeError(w, http.StatusBadRequest, "invalid_email_code", "邮箱验证码错误或已过期，请重新获取")
+			return
+		}
+	} else if err := a.verifyCaptcha(ip, req.captchaInput); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid_captcha", "人机验证未通过")
 		return
 	}
 	if deviceID != "" {
@@ -463,6 +445,12 @@ func (a *API) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	ip := clientIP(r)
 	if !a.ipLimiter.Allow("reset:" + ip) {
 		writeError(w, http.StatusTooManyRequests, "rate_limited", "too many requests")
+		return
+	}
+
+	// 邮箱验证关闭时无法下发验证码，自助重置整条链路不可用。
+	if !a.cfg.EmailVerify {
+		writeError(w, http.StatusForbidden, "email_verify_disabled", "本站未开启邮箱验证，请联系管理员重置密码")
 		return
 	}
 

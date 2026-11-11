@@ -31,12 +31,6 @@ const (
 // 变量用于在单元测试中替换为本地校验服务。
 var geetestValidateURL = "https://gcaptcha4.geetest.com/validate"
 
-// 极验 4.0 验证参数（写死，与 register 页面前端 initGeetest4 使用同一对 ID/Key）。
-const (
-	geetestCaptchaID  = "769d069177e132e46eeba07a6210cf3a"
-	geetestCaptchaKey = "b241019216ca3c061cf83afc02ba2210"
-)
-
 type geetestValidateResponse struct {
 	Result      string                 `json:"result"`
 	Reason      string                 `json:"reason"`
@@ -44,8 +38,13 @@ type geetestValidateResponse struct {
 }
 
 // VerifyGeeTest 校验 GeeTest 4.0 验证结果。只有 result === "success" 才放行。
-// captcha_id / captcha_key 直接使用本文件写死的常量。
-func VerifyGeeTest(lotNumber, captchaOutput, passToken, genTime, remoteIP string) error {
+// captchaID / captchaKey 由部署方自己的极验账号提供，未配置时一律拒绝。
+func VerifyGeeTest(captchaID, captchaKey, lotNumber, captchaOutput, passToken, genTime, remoteIP string) error {
+	captchaID = strings.TrimSpace(captchaID)
+	captchaKey = strings.TrimSpace(captchaKey)
+	if captchaID == "" || captchaKey == "" {
+		return errors.New("geetest not configured")
+	}
 	lotNumber = strings.TrimSpace(lotNumber)
 	captchaOutput = strings.TrimSpace(captchaOutput)
 	passToken = strings.TrimSpace(passToken)
@@ -55,7 +54,7 @@ func VerifyGeeTest(lotNumber, captchaOutput, passToken, genTime, remoteIP string
 		return errors.New("geetest params missing")
 	}
 
-	signToken := geetestSignToken(geetestCaptchaKey, lotNumber)
+	signToken := geetestSignToken(captchaKey, lotNumber)
 	form := url.Values{
 		"lot_number":     {lotNumber},
 		"captcha_output": {captchaOutput},
@@ -67,7 +66,7 @@ func VerifyGeeTest(lotNumber, captchaOutput, passToken, genTime, remoteIP string
 		form.Set("ip_address", remoteIP)
 	}
 
-	validateURL := geetestValidateURL + "?captcha_id=" + url.QueryEscape(geetestCaptchaID)
+	validateURL := geetestValidateURL + "?captcha_id=" + url.QueryEscape(captchaID)
 	client := &http.Client{Timeout: geetestHTTPTimeout}
 	resp, err := client.Post(validateURL, "application/x-www-form-urlencoded", strings.NewReader(form.Encode()))
 	if err != nil {
