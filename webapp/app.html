@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#193f36">
+  <meta name="description" content="旧聊网页版。让熟悉的人，重新靠近。私聊、群聊与音乐，在浏览器里继续。">
+  <title>旧聊 · 让对话继续</title>
+  <link rel="icon" href="/app-assets/reborn-20261101-2336/mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/app-assets/reborn-20261101-2336/style.css?v=20261029a">
+  <link rel="stylesheet" href="/app-assets/reborn-20261101-2336/chat.css?v=20261029a">
+</head>
+<body>
+  <a class="skip-link" href="#workspace">跳到主要内容</a>
+  <section id="auth-screen" class="auth-screen">
+    <div class="auth-story">
+      <a class="wordmark" href="/" aria-label="旧聊首页"><img src="/app-assets/reborn-20261101-2336/mark.svg" alt="">旧聊<span>OLDCHAT / WEB</span></a>
+      <div class="story-copy"><p class="eyebrow">GOOD TO SEE YOU AGAIN</p><h1>世界很大，<br>聊得来的人<br><em>就在这里。</em></h1><p class="story-description">不用下载，不必等待。<br>打开浏览器，让那些熟悉的对话继续。</p></div>
+      <div class="story-art" aria-hidden="true"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><span class="art-star">✳</span><div class="paper-note note-one"><span class="note-dot"></span>好久不见。</div><div class="paper-note note-two">一直都在。<span>↗</span></div><div class="art-caption">LESS DISTANCE. MORE CONVERSATION.</div></div>
+      <div class="story-footer"><span>慢一点，也能聊很久。</span><span>EST. OLDCHAT ↗</span></div>
+    </div>
+    <div class="auth-form-area">
+      <button class="icon-button theme-toggle auth-theme" aria-label="切换深浅主题" title="切换深浅主题">◐</button>
+      <div class="auth-card"><span class="section-number">01 / 重新连接</span><h2>欢迎回来<span class="hello-dot">.</span></h2><p class="muted">用你的旧聊账号，接上未完的对话。</p>
+        <form id="login-form">
+          <label for="identifier">账号或邮箱</label><input id="identifier" name="username" autocomplete="username" placeholder="用户名 / UID / 邮箱" required maxlength="254">
+          <div class="label-row"><label for="password">密码</label><a href="/forgot-password">忘记密码？</a></div>
+          <div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" placeholder="输入你的密码" required maxlength="256"><button type="button" id="reveal-password" aria-label="显示密码" aria-pressed="false">显示</button></div>
+          <p class="form-hint">请在个人设备登录；退出登录会清除此浏览器的凭据。</p>
+          <p id="login-error" class="form-error" role="alert"></p>
+          <button type="submit" class="primary-button" id="login-submit">进入旧聊 <span>↗</span></button>
+        </form>
+        <p class="register-line">第一次来？ <a href="/register">创建一个账号 ↗</a></p>
+        <div class="auth-links"><a href="/app/music">♫ 先去音乐广场</a><a href="/download/oldchat.apk">下载 Android 客户端 ↗</a></div>
+        <p class="legal">使用旧聊即表示你已阅读 <a href="/terms">服务条款</a> 与 <a href="/privacy">隐私说明</a>。</p>
+      </div>
+      <div class="auth-bottom"><span class="status-dot"></span>简单一点，靠近一点。<span>WEB 2.0</span></div>
+    </div>
+  </section>
+  <div id="workspace" class="workspace" hidden tabindex="-1">
+    <nav class="rail" aria-label="主要导航">
+      <a href="/app" class="rail-brand" aria-label="旧聊"><img src="/app-assets/reborn-20261101-2336/mark.svg" alt="旧聊"></a>
+      <button class="rail-item active" data-tab="all" title="全部会话" aria-label="全部会话" aria-pressed="true"><span data-icon="chat"></span><small>消息</small></button>
+      <button class="rail-item" data-tab="direct" title="好友" aria-label="好友" aria-pressed="false"><span data-icon="users"></span><small>好友</small></button>
+      <button class="rail-item" data-tab="group" title="群聊" aria-label="群聊" aria-pressed="false"><span data-icon="grid"></span><small>群聊</small></button>
+      <a class="rail-item" href="/app/music" title="音乐广场"><span data-icon="music"></span><small>音乐</small></a>
+      <div class="rail-bottom"><button class="icon-button theme-toggle" aria-label="切换深浅主题" title="切换深浅主题">◐</button><button class="self-avatar" id="profile-button" aria-label="我的账号" title="我的账号">我</button></div>
+    </nav>
+    <aside class="sidebar" aria-label="会话列表">
+      <header class="sidebar-header"><div><span class="eyebrow">YOUR LITTLE CORNER</span><h1 id="list-title">消息<span class="title-dot">.</span></h1></div><button class="icon-button accent-button" id="new-chat" aria-label="添加好友或群聊" title="添加好友或群聊"><span data-icon="plus"></span></button></header>
+      <div class="search-box"><span data-icon="search"></span><input id="conversation-search" type="search" placeholder="找一个人，或一个群" aria-label="搜索会话"></div>
+      <div class="filter-row"><button class="filter active" data-filter="all" aria-pressed="true">全部</button><button class="filter" data-filter="unread" aria-pressed="false">未读 <span id="unread-total">0</span></button><button class="icon-button" id="requests-button" aria-label="好友申请" title="好友申请"><span data-icon="user-plus"></span></button><button class="icon-button" id="refresh-list" aria-label="刷新列表" title="刷新列表"><span data-icon="refresh"></span></button></div>
+      <p id="list-error" class="inline-error" role="status" hidden></p>
+      <div id="conversation-list" class="conversation-list"></div>
+      <footer class="connection"><span class="status-dot" id="connection-dot"></span><span id="connection-label" role="status">正在连接…</span><span class="connection-tag">旧聊 WEB</span></footer>
+    </aside>
+    <main class="chat-main">
+      <section id="welcome" class="welcome"><div class="welcome-mark" aria-hidden="true">聊<span>✳</span></div><p class="eyebrow">A LITTLE CLOSER, EVERY DAY</p><h2>好久不见，<br>让对话继续。</h2><p>选一位好友，或者走进一个群。<br>一句简单的问候，就能拉近一点距离。</p><button class="outline-button" id="welcome-add">找到你的朋友 <span>↗</span></button><div class="welcome-footer"><span></span> 真正的连接，不止在线 <span></span></div></section>
+      <section id="chat-panel" class="chat-panel" hidden>
+        <header class="chat-header"><button class="icon-button mobile-back" id="back-button" aria-label="返回会话列表"><span data-icon="back"></span></button><div id="chat-avatar" class="avatar"></div><div class="chat-heading"><h2 id="chat-name"></h2><p id="chat-subtitle"></p></div><button class="icon-button" id="chat-details" title="会话资料" aria-label="会话资料"><span data-icon="info"></span></button></header>
+        <div id="message-error" class="message-error" hidden role="alert"></div>
+        <div id="message-scroll" class="message-scroll" tabindex="0" aria-label="聊天消息"><div class="history-control"><button class="text-button" id="load-older">加载更早消息 ↑</button></div><div id="messages" class="messages" role="log" aria-label="消息记录" aria-live="off"></div></div>
+        <button id="jump-latest" class="jump-latest" hidden>有新消息 · 回到底部 ↓</button>
+        <div class="composer-wrap"><div id="attachment-preview" class="attachment-preview" hidden></div><form id="compose-form"><div class="compose-tools"><button type="button" class="icon-button" id="attach-button" title="发送图片" aria-label="发送图片"><span data-icon="image"></span></button><button type="button" class="icon-button" id="emoji-button" title="插入表情" aria-label="插入表情"><span data-icon="smile"></span></button><span class="compose-tip">把想说的，留在这里。</span></div><div class="compose-row"><textarea id="message-input" rows="1" maxlength="8000" placeholder="写下一条消息…" aria-label="消息内容"></textarea><button class="send-button" id="send-button" type="submit" title="发送消息" aria-label="发送消息"><span data-icon="send"></span></button></div><div class="compose-footer"><span>Enter 发送 · Shift + Enter 换行</span><span id="send-status" role="status"></span></div></form><input id="file-input" type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden></div>
+      </section>
+    </main>
+  </div>
+  <dialog id="modal" class="modal"><header><h2 id="modal-title"></h2><button class="icon-button" id="modal-close" aria-label="关闭弹窗">×</button></header><div id="modal-body"></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <noscript><p class="noscript">旧聊网页版需要 JavaScript。请在浏览器设置中启用，或使用 Android 客户端。</p></noscript>
+  <script src="/app-assets/reborn-20261101-2336/ws-crypto.js?v=20261029a"></script>
+  <script type="module" src="/app-assets/reborn-20261101-2336/app.js?v=20261029a"></script>
+</body>
+</html>
