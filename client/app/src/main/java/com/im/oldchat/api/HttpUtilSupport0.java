@@ -28,7 +28,7 @@ import java.util.zip.GZIPInputStream;
 class HttpUtilSupport0 {
     protected static final String TAG = "HttpUtil";
     /** 无版本前缀的主机（/v2 等新协议使用）。 */
-    public static final String DEFAULT_BASE_HOST = "http://110.42.36.103:8082";
+    public static final String DEFAULT_BASE_HOST = "http://octest.reverie.dpdns.org";
     /** API 版本前缀：用户配置与对外展示一律不带，仅在内部拼 URL 时附加。 */
     public static final String API_PREFIX = "/v1";
     public static final String DEFAULT_BASE_URL = DEFAULT_BASE_HOST + API_PREFIX;
