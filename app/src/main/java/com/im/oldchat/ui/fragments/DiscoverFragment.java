@@ -858,9 +858,7 @@ public class DiscoverFragment extends Fragment {
 
     private void openLuaDocs() {
         if (getActivity() == null) return;
-        String base = com.im.oldchat.api.HttpUtil.BASE_URL == null ? "" : com.im.oldchat.api.HttpUtil.BASE_URL;
-        int index = base.indexOf("/v1");
-        String origin = index > 0 ? base.substring(0, index) : base;
+        String origin = com.im.oldchat.api.HttpUtil.getBaseOrigin();
         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(origin + "/lua-cip.md"))); }
         catch (Exception e) { Toast.makeText(getActivity(), "无法打开开发文档", Toast.LENGTH_SHORT).show(); }
     }

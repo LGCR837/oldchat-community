@@ -105,12 +105,7 @@ public class LoginActivity extends BaseActivity {
     /** 打开官网找回密码页（浏览器跳转）。 */
     private void openForgotPasswordPage() {
         try {
-            String base = HttpUtil.BASE_URL == null ? "" : HttpUtil.BASE_URL;
-            String root = base;
-            int idx = base.indexOf("/v1");
-            if (idx > 0) {
-                root = base.substring(0, idx);
-            }
+            String root = HttpUtil.getBaseOrigin();
             String url = root + "/forgot-password";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -120,15 +115,10 @@ public class LoginActivity extends BaseActivity {
         }
     }
 
-    /** 打开官网注册页（浏览器跳转）。从 BASE_URL 推导官网根地址，拼 /register。 */
+    /** 打开官网注册页（浏览器跳转）。从站点根地址拼 /register。 */
     private void openRegisterPage() {
         try {
-            String base = HttpUtil.BASE_URL == null ? "" : HttpUtil.BASE_URL;
-            String root = base;
-            int idx = base.indexOf("/v1");
-            if (idx > 0) {
-                root = base.substring(0, idx);
-            }
+            String root = HttpUtil.getBaseOrigin();
             String url = root + "/register";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -161,7 +151,7 @@ public class LoginActivity extends BaseActivity {
     private void showServerBaseUrlDialog() {
         final EditText input = new EditText(this);
         input.setSingleLine(true);
-        input.setHint("http://example.com:8080/v1");
+        input.setHint("example.com 或 https://example.com:8443");
         String currentBaseUrl = ServerBaseUrlManager.getCurrentBaseUrl();
         if (currentBaseUrl != null) {
             input.setText(currentBaseUrl);
@@ -169,7 +159,7 @@ public class LoginActivity extends BaseActivity {
         }
 
         new AlertDialog.Builder(this)
-                .setTitle("设置服务器 Base URL")
+                .setTitle("设置服务器地址")
                 .setView(input)
                 .setPositiveButton("保存", new DialogInterface.OnClickListener() {
                     @Override
@@ -177,7 +167,7 @@ public class LoginActivity extends BaseActivity {
                         String raw = input.getText() == null ? "" : input.getText().toString();
                         String saved = ServerBaseUrlManager.saveAndApply(LoginActivity.this, raw);
                         if (saved == null) {
-                            Toast.makeText(LoginActivity.this, "地址格式无效，请输入 http(s)://host[:port][/path]",
+                            Toast.makeText(LoginActivity.this, "地址格式无效，请输入 http(s)://host[:port]",
                                     Toast.LENGTH_LONG).show();
                             return;
                         }

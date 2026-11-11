@@ -29,8 +29,12 @@ class HttpUtilSupport0 {
     protected static final String TAG = "HttpUtil";
     /** 无版本前缀的主机（/v2 等新协议使用）。 */
     public static final String DEFAULT_BASE_HOST = "http://oc.mcl0.dpdns.org";
-    public static final String DEFAULT_BASE_URL = DEFAULT_BASE_HOST + "/v1";
+    /** API 版本前缀：用户配置与对外展示一律不带，仅在内部拼 URL 时附加。 */
+    public static final String API_PREFIX = "/v1";
+    public static final String DEFAULT_BASE_URL = DEFAULT_BASE_HOST + API_PREFIX;
+    /** 站点根地址（无版本前缀），媒体、官网页、更新清单等非 API 资源都以它为源。 */
     public static volatile String BASE_HOST = DEFAULT_BASE_HOST;
+    /** API 根地址 = BASE_HOST + API_PREFIX，由 BASE_HOST 单向派生，不允许单独赋值。 */
     public static volatile String BASE_URL = DEFAULT_BASE_URL;
     protected static final String AUTH_SILENT = "auth_silent";
     protected static final String AUTH_WARNING = "auth_warning";

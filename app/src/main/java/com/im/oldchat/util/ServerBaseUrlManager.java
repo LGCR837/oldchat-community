@@ -8,6 +8,11 @@ import com.im.oldchat.api.HttpUtil;
 import java.net.URI;
 import java.util.Locale;
 
+/**
+ * 服务器地址管理：持久化的是「站点根地址」，不带 /v1 版本前缀。
+ * API 根地址（BASE_URL）由 HttpUtil 单向派生，任何地方都不允许再单独赋值，
+ * 避免出现「业务请求打到自定义服务器、媒体仍指向默认服务器」的地址漂移。
+ */
 public final class ServerBaseUrlManager {
     private static final String PREFS_SETTINGS = "settings";
     private static final String KEY_SERVER_BASE_URL = "server_base_url";
@@ -23,17 +28,22 @@ public final class ServerBaseUrlManager {
         String saved = preferences.getString(KEY_SERVER_BASE_URL, null);
         String normalized = normalizeBaseUrl(saved);
         if (normalized == null) {
-            HttpUtil.BASE_URL = HttpUtil.DEFAULT_BASE_URL;
+            HttpUtil.setBaseOrigin(HttpUtil.DEFAULT_BASE_HOST);
             if (saved != null && saved.length() > 0) {
                 preferences.edit().remove(KEY_SERVER_BASE_URL).apply();
             }
             return;
         }
-        HttpUtil.BASE_URL = normalized;
+        HttpUtil.setBaseOrigin(normalized);
+        // 旧版本存的是带 /v1 的地址，归一后回写，避免每次启动重复裁剪。
+        if (!normalized.equals(saved)) {
+            preferences.edit().putString(KEY_SERVER_BASE_URL, normalized).apply();
+        }
     }
 
+    /** 当前站点根地址（不含 /v1）。 */
     public static String getCurrentBaseUrl() {
-        return HttpUtil.BASE_URL;
+        return HttpUtil.getBaseOrigin();
     }
 
     public static String saveAndApply(Context context, String rawBaseUrl) {
@@ -41,7 +51,7 @@ public final class ServerBaseUrlManager {
         if (normalized == null) {
             return null;
         }
-        HttpUtil.BASE_URL = normalized;
+        HttpUtil.setBaseOrigin(normalized);
         if (context != null) {
             prefs(context).edit().putString(KEY_SERVER_BASE_URL, normalized).apply();
         }
@@ -49,12 +59,16 @@ public final class ServerBaseUrlManager {
     }
 
     public static void resetToDefault(Context context) {
-        HttpUtil.BASE_URL = HttpUtil.DEFAULT_BASE_URL;
+        HttpUtil.setBaseOrigin(HttpUtil.DEFAULT_BASE_HOST);
         if (context != null) {
             prefs(context).edit().remove(KEY_SERVER_BASE_URL).apply();
         }
     }
 
+    /**
+     * 归一为站点根地址：补全 http://、校验 scheme/authority、去掉结尾斜杠与 /v1、/v2 版本段。
+     * 用户输入 "example.com"、"https://example.com/v1" 都会得到 "https://example.com"。
+     */
     public static String normalizeBaseUrl(String rawBaseUrl) {
         if (rawBaseUrl == null) {
             return null;
@@ -81,12 +95,17 @@ public final class ServerBaseUrlManager {
                 return null;
             }
             String path = uri.getRawPath();
-            if (path == null || path.length() == 0 || "/".equals(path)) {
-                path = "/v1";
-            } else {
-                while (path.endsWith("/") && path.length() > 1) {
-                    path = path.substring(0, path.length() - 1);
-                }
+            if (path == null) {
+                path = "";
+            }
+            while (path.endsWith("/") && path.length() > 0) {
+                path = path.substring(0, path.length() - 1);
+            }
+            if (path.endsWith("/v1") || path.endsWith("/v2")) {
+                path = path.substring(0, path.length() - 3);
+            }
+            while (path.endsWith("/") && path.length() > 0) {
+                path = path.substring(0, path.length() - 1);
             }
             return normalizedScheme + "://" + authority + path;
         } catch (Exception ignored) {

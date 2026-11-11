@@ -66,8 +66,11 @@ public class FileDownloadService extends Service {
     private static String forceAuthenticatedOrigin(String url) {
         if (url == null) return "";
         String lower = url.toLowerCase(java.util.Locale.US);
-        if ((lower.startsWith("https://files.mcl0.dpdns.org/") || lower.startsWith("http://files.mcl0.dpdns.org/"))
-                && lower.indexOf("auth_required=") < 0) {
+        // 社区版只有一个源服务器：凡是源服务器的下载地址都要求携带登录态。
+        String origin = com.im.oldchat.api.HttpUtil.getBaseOrigin();
+        String originLower = origin == null ? "" : origin.toLowerCase(java.util.Locale.US);
+        boolean sameOrigin = originLower.length() > 0 && lower.startsWith(originLower + "/");
+        if (sameOrigin && lower.indexOf("auth_required=") < 0) {
             return url + (url.indexOf('?') >= 0 ? "&" : "?") + "auth_required=1";
         }
         return url;

@@ -233,9 +233,7 @@ public class MiniAppsActivity extends BaseActivity {
     }
 
     private void openDocs() {
-        String base = HttpUtil.BASE_URL == null ? "" : HttpUtil.BASE_URL;
-        int index = base.indexOf("/v1");
-        String origin = index > 0 ? base.substring(0, index) : base;
+        String origin = HttpUtil.getBaseOrigin();
         try { startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(origin + "/lua-cip.md"))); }
         catch (Exception e) { Toast.makeText(this, "无法打开开发文档", Toast.LENGTH_SHORT).show(); }
     }

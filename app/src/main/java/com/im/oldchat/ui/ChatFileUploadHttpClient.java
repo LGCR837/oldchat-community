@@ -17,8 +17,6 @@ final class ChatFileUploadHttpClient {
     private static final String PREFS_SETTINGS = "settings";
     private static final String PREFS_AUTH = "auth";
     private static final String KEY_FILES_SERVER_BASE_URL = "file_upload_base_url";
-    private static final String DEFAULT_FILES_SERVER_BASE_URL = "http://oc.mcl0.dpdns.org";
-    private static final String FILES_DOWNLOAD_BASE_URL = "http://files.mcl0.dpdns.org";
     private static final int CONNECT_TIMEOUT_MS = 20000;
     private static final int READ_TIMEOUT_MS = 20 * 60 * 1000;
     private static final long MAX_FILE_BYTES = 500L * 1024L * 1024L;
@@ -51,7 +49,7 @@ final class ChatFileUploadHttpClient {
         }
         String normalized = normalizeServerBase(raw);
         if (normalized.length() == 0) {
-            normalized = normalizeServerBase(DEFAULT_FILES_SERVER_BASE_URL);
+            normalized = com.im.oldchat.api.HttpUtil.getBaseOrigin();
         }
         if (!normalized.endsWith("/v2")) {
             normalized = normalized + "/v2";
@@ -78,7 +76,7 @@ final class ChatFileUploadHttpClient {
         if (value.startsWith("http://") || value.startsWith("https://")) {
             return value;
         }
-        String origin = FILES_DOWNLOAD_BASE_URL;
+        String origin = com.im.oldchat.api.HttpUtil.getBaseOrigin();
         if (value.startsWith("/")) {
             return origin + value;
         }

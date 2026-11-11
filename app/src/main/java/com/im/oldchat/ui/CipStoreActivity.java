@@ -88,11 +88,7 @@ public class CipStoreActivity extends BaseActivity {
                 @Override
                 public void onClick(View v) {
                     try {
-                        String uploadUrl = HttpUtil.BASE_URL;
-                        if (uploadUrl.endsWith("/v1") || uploadUrl.endsWith("/v2")) {
-                            uploadUrl = uploadUrl.substring(0, uploadUrl.lastIndexOf('/'));
-                        }
-                        uploadUrl = uploadUrl + "/cip-upload";
+                        String uploadUrl = HttpUtil.getBaseOrigin() + "/cip-upload";
                         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uploadUrl));
                         startActivity(intent);
                     } catch (Exception e) {
@@ -290,10 +286,7 @@ public class CipStoreActivity extends BaseActivity {
             public void run() {
                 String downloadUrl = item.cipFileUrl;
                 if (!downloadUrl.startsWith("http://") && !downloadUrl.startsWith("https://")) {
-                    String base = HttpUtil.BASE_URL;
-                    if (base.endsWith("/v1") || base.endsWith("/v2")) {
-                        base = base.substring(0, base.lastIndexOf('/'));
-                    }
+                    String base = HttpUtil.getBaseOrigin();
                     downloadUrl = base + (downloadUrl.startsWith("/") ? downloadUrl : "/" + downloadUrl);
                 }
 

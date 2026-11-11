@@ -104,7 +104,7 @@ final class ChannelPostAdapter extends BaseAdapter {
         if(url==null)return "";
         if(url.startsWith("http://")||url.startsWith("https://"))return url;
         String host=com.im.oldchat.api.HttpUtil.BASE_HOST;
-        if(host==null||host.length()==0)host="http://oc.mcl0.dpdns.org";
+        if(host==null||host.length()==0)host=com.im.oldchat.api.HttpUtil.getBaseOrigin();
         return host+(url.startsWith("/")?"":"/")+url;
     }
     private void playVoice(final String absolute,final String displayKey){

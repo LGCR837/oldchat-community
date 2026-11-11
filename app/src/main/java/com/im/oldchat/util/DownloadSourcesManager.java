@@ -17,10 +17,6 @@ import java.util.ArrayList;
 public final class DownloadSourcesManager {
     public static final long CACHE_TTL_MS = 10L * 60L * 1000L;
 
-    // 内置默认：http://files.mcl0.dpdns.org（Cloudflare 边缘加速）优先，雨云 S3 直链回退（与线上服务端默认一致）。
-    private static final String DEFAULT_FILES_SOURCE = "http://files.mcl0.dpdns.org";
-    private static final String DEFAULT_RAIN_SOURCE = "http://cn-sy1.rains3.com/oldchat";
-
     private static volatile String[] cachedSources;
     private static volatile long cachedAtMs;
     private static volatile boolean refreshInFlight;
@@ -48,12 +44,12 @@ public final class DownloadSourcesManager {
 
     public static String getFilesSource() {
         String[] sources = getSources();
-        return sources.length > 0 ? sources[0] : DEFAULT_FILES_SOURCE;
+        return sources.length > 0 ? sources[0] : com.im.oldchat.api.HttpUtil.getBaseOrigin();
     }
 
     public static String getRainSource() {
         String[] sources = getSources();
-        return sources.length > 1 ? sources[1] : DEFAULT_RAIN_SOURCE;
+        return sources.length > 1 ? sources[1] : com.im.oldchat.api.HttpUtil.getBaseOrigin();
     }
 
     /** 异步刷新（带防抖）；结果直接写缓存，无需回调。 */
@@ -133,7 +129,7 @@ public final class DownloadSourcesManager {
     }
 
     private static String[] defaultSources() {
-        return new String[]{DEFAULT_FILES_SOURCE, DEFAULT_RAIN_SOURCE};
+        return new String[]{com.im.oldchat.api.HttpUtil.getBaseOrigin()};
     }
 
     /** 供 UI 线程在应用启动时预热调用。 */

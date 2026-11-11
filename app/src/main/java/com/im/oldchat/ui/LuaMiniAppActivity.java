@@ -182,9 +182,7 @@ public class LuaMiniAppActivity extends BaseActivity {
                     if (local.exists() && local.getCanonicalPath().startsWith(base + java.io.File.separator))
                         return LuaValue.valueOf(Uri.fromFile(local).toString());
                 } catch (Exception ignored) { }
-                String apiBase = com.im.oldchat.api.HttpUtil.BASE_URL == null ? "" : com.im.oldchat.api.HttpUtil.BASE_URL;
-                int index = apiBase.indexOf("/v1");
-                String origin = index > 0 ? apiBase.substring(0, index) : apiBase;
+                String origin = com.im.oldchat.api.HttpUtil.getBaseOrigin();
                 return LuaValue.valueOf(origin + "/lua-assets/" + miniApp.id + "/" + relative);
             }
         });

@@ -32,6 +32,57 @@ public class HttpUtil extends HttpUtilSupport1 {
         HttpAuthHelper.invalidateAuthOperations();
     }
 
+    /** 站点根地址，不含 /v1 版本前缀；媒体、官网页、更新清单等非 API 资源都以它为源。 */
+    public static String getBaseOrigin() {
+        return BASE_HOST;
+    }
+
+    /** API 根地址，含版本前缀；仅业务请求内部使用。 */
+    public static String getApiBase() {
+        return BASE_URL;
+    }
+
+    /**
+     * 设置站点根地址，并同步派生 API 根地址。
+     * 入参允许带 /v1、/v2 后缀或结尾斜杠，统一归一为 origin，
+     * 避免 BASE_HOST 与 BASE_URL 出现两套不一致的地址。
+     */
+    public static void setBaseOrigin(String origin) {
+        String normalized = normalizeOriginInput(origin);
+        if (normalized == null) {
+            return;
+        }
+        BASE_HOST = normalized;
+        BASE_URL = normalized + API_PREFIX;
+    }
+
+    /** 归一站点根地址：去掉结尾斜杠与 /v1、/v2 版本段；非法输入返回 null。 */
+    static String normalizeOriginInput(String origin) {
+        if (origin == null) {
+            return null;
+        }
+        String value = origin.trim();
+        if (value.length() == 0 || value.indexOf("://") <= 0) {
+            return null;
+        }
+        while (value.endsWith("/")) {
+            value = value.substring(0, value.length() - 1);
+        }
+        while (true) {
+            if (value.endsWith(API_PREFIX) && value.length() > API_PREFIX.length()) {
+                value = value.substring(0, value.length() - API_PREFIX.length());
+            } else if (value.endsWith("/v2") && value.length() > 3) {
+                value = value.substring(0, value.length() - 3);
+            } else {
+                break;
+            }
+            while (value.endsWith("/")) {
+                value = value.substring(0, value.length() - 1);
+            }
+        }
+        return value.length() > 0 ? value : null;
+    }
+
     private static <P, Pr, R> void executeTask(AsyncTask<P, Pr, R> task, P... params) {
         AsyncTaskExecutionCompat.execute(task, params);
     }

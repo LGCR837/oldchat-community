@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 public class MediaUrlResolver {
+    // 历史源站常量只用于「识别并改写」旧消息里的绝对地址，不再作为任何候选线路。
+    // 社区版只走用户配置的源服务器（HttpUtil.BASE_HOST），不存在 OSS、CDN、备用 IP 多线路。
     private static final String DATA_ORIGIN = "http://154.8.227.219:9090";
     private static final String OSS_ORIGIN = "https://ocf.oss-cn-shanghai.aliyuncs.com";
     private static final String MAIN_ORIGIN_60 = "http://60.205.94.101:8080";
@@ -186,6 +188,14 @@ public class MediaUrlResolver {
             return buildUploadCandidatesFromOssPath(pathAndQuery);
         }
         if (!isUploadPath(pathAndQuery)) {
+            // 旧官方基础设施上的业务地址（下载、频道页、小程序资源等）一律改写到当前源服务器，
+            // 社区版不允许任何流量继续打到第三方源站。第三方地址保持原样。
+            if (isKnownUploadOrigin(parsed)) {
+                String origin = resolveMainOrigin();
+                if (origin.length() > 0) {
+                    return new String[]{origin + pathAndQuery};
+                }
+            }
             // 业务下载 URL（如 /v2/files/download/{id}）带 ?ref= 时，可生成对象直链候选。
             String ref = extractRefFromUrl(raw);
             if (ref.length() > 0) {
@@ -212,46 +222,12 @@ public class MediaUrlResolver {
     }
 
     private static String[] buildUploadCandidates(String path) {
-        String ossPath = extractUploadPath(path);
         String appPath = toAppUploadPath(path);
-        return dedupe(concat(
-                dynamicCandidates(ossPath, appPath),
-                new String[]{
-                    OSS_ORIGIN + ossPath,
-                    MAIN_ORIGIN_60 + appPath,
-                    CURRENT_MAIN_ORIGIN + appPath,
-                    resolveMainOrigin() + appPath
-                }));
-    }
-
-    /** 动态下载源候选：资源广场（filewearhouse）优先 files 域名（CF）API；雨云桶为私有桶，不生成直链。 */
-    private static String[] dynamicCandidates(String ossPath, String appPath) {
-        ArrayList<String> out = new ArrayList<String>();
-        String rel = ossPath == null ? "" : ossPath.trim();
-        while (rel.startsWith("/")) {
-            rel = rel.substring(1);
+        String origin = resolveMainOrigin();
+        if (origin.length() == 0) {
+            return new String[0];
         }
-        // 只有资源广场文件在雨云桶中有对象；头像/媒体/封面等未同步，不能插雨云直链。
-        boolean isResourceHall = rel.startsWith("filewearhouse/")
-                || (appPath != null && appPath.contains("/uploads/filewearhouse/"));
-        if (!isResourceHall) {
-            return out.toArray(new String[out.size()]);
-        }
-        // 雨云桶私有：不生成雨云直链候选（403 无意义），保留 files API（走 CF）原线路。
-        try {
-            String[] sources = DownloadSourcesManager.getSourcesAndMaybeRefresh(null);
-            if (sources != null && sources.length > 0) {
-                // 其余为 API 源：files 域名 + 原业务路径
-                for (int i = 0; i < sources.length; i++) {
-                    String api = sources[i] + appPath;
-                    if (api.length() > 0 && !out.contains(api)) {
-                        out.add(api);
-                    }
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return out.toArray(new String[out.size()]);
+        return new String[]{origin + appPath};
     }
 
     /** 从带 ?ref= 的完整 URL 还原相对路径（对象存储直链需要）。 */
@@ -278,13 +254,10 @@ public class MediaUrlResolver {
         return "";
     }
 
-    private static String[] concat(String[] a, String[] b) {
-        String[] out = new String[a.length + b.length];
-        System.arraycopy(a, 0, out, 0, a.length);
-        System.arraycopy(b, 0, out, a.length, b.length);
-        return out;
-    }
-
+    /**
+     * 是否为旧官方基础设施的地址（阿里云 OSS、官方域名及其子域、旧 IP、雨云桶）。
+     * 命中即说明是历史数据里的绝对地址，需要改写到当前源服务器。
+     */
     private static boolean isKnownUploadOrigin(URL parsed) {
         if (parsed == null) {
             return false;
@@ -293,8 +266,14 @@ public class MediaUrlResolver {
         if (host == null) {
             return false;
         }
-        String lowerHost = host.trim().toLowerCase(java.util.Locale.US);
-        if (lowerHost.endsWith(".aliyuncs.com")) {
+        String h = host.trim().toLowerCase(java.util.Locale.US);
+        if (h.endsWith(".aliyuncs.com") || h.endsWith(".rains3.com")) {
+            return true;
+        }
+        if (h.equals("mcl0.dpdns.org") || h.endsWith(".mcl0.dpdns.org")) {
+            return true;
+        }
+        if (h.equals("60.205.94.101") || h.equals("154.8.227.219")) {
             return true;
         }
         String origin = buildOrigin(parsed.getProtocol(), parsed.getHost(), parsed.getPort());
@@ -313,12 +292,11 @@ public class MediaUrlResolver {
         if (appPath.equals(ossPath)) {
             appPath = "/v1/uploads" + ossPath;
         }
-        return dedupe(new String[]{
-            OSS_ORIGIN + ossPath,
-            MAIN_ORIGIN_60 + appPath,
-            CURRENT_MAIN_ORIGIN + appPath,
-            resolveMainOrigin() + appPath
-        });
+        String origin = resolveMainOrigin();
+        if (origin.length() == 0) {
+            return new String[0];
+        }
+        return new String[]{origin + appPath};
     }
 
     private static boolean hasOrigin(String url, String expectedOrigin) {
@@ -339,13 +317,7 @@ public class MediaUrlResolver {
     }
 
     private static String resolveMainOrigin() {
-        String base = HttpUtil.BASE_URL;
-        if (base == null) {
-            return "";
-        }
-        String trimmed = base.trim();
-        int idx = trimmed.indexOf("/v1");
-        return idx > 0 ? normalizeOrigin(trimmed.substring(0, idx)) : normalizeOrigin(trimmed);
+        return normalizeOrigin(HttpUtil.getBaseOrigin());
     }
 
     private static boolean isUploadPath(String path) {
@@ -369,40 +341,6 @@ public class MediaUrlResolver {
                 || p.startsWith("avatars/")
                 || p.startsWith("/covers/")
                 || p.startsWith("covers/");
-    }
-
-    private static String extractUploadPath(String path) {
-        if (path == null) {
-            return "/";
-        }
-        String p = path.trim();
-        if (p.startsWith("/oss/")) {
-            return "/" + p.substring(5);
-        }
-        if (p.startsWith("oss/")) {
-            return "/" + p.substring(4);
-        }
-        if (p.startsWith("/v1/uploads/")) {
-            return "/" + p.substring(12);
-        }
-        if (p.startsWith("v1/uploads/")) {
-            return "/" + p.substring(11);
-        }
-        if (p.startsWith("/uploads/")) {
-            return "/" + p.substring(9);
-        }
-        if (p.startsWith("uploads/")) {
-            return "/" + p.substring(8);
-        }
-        if (p.startsWith("/media/") || p.startsWith("/music/") || p.startsWith("/lyrics/")
-                || p.startsWith("/avatars/") || p.startsWith("/covers/")) {
-            return p;
-        }
-        if (p.startsWith("media/") || p.startsWith("music/") || p.startsWith("lyrics/")
-                || p.startsWith("avatars/") || p.startsWith("covers/")) {
-            return "/" + p;
-        }
-        return p;
     }
 
     private static String toAppUploadPath(String path) {

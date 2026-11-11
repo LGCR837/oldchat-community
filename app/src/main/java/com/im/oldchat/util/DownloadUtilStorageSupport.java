@@ -141,17 +141,10 @@ class DownloadUtilStorageSupport {
         return conn;
     }
     private static boolean shouldAttachAuth(String rawUrl) {
+        // 社区版媒体只从源服务器取，token 只发给源服务器；第三方地址一律不带登录态。
         try {
             URL target = new URL(rawUrl);
-            if (sameEndpoint(target, new URL(HttpUtil.BASE_URL))) {
-                return true;
-            }
-            String host = target.getHost() == null ? "" : target.getHost().toLowerCase(java.util.Locale.US);
-            int port = effectivePort(target);
-            return ("oc.mcl0.dpdns.org".equals(host) && (port == 80 || port == 443))
-                    || ("files.mcl0.dpdns.org".equals(host) && (port == 80 || port == 443))
-                    || ("60.205.94.101".equals(host) && port == 8080)
-                    || ("154.8.227.219".equals(host) && port == 9090);
+            return sameEndpoint(target, new URL(HttpUtil.getBaseOrigin()));
         } catch (Exception e) {
             return false;
         }

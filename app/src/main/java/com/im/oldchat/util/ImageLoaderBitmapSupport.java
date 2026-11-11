@@ -569,34 +569,8 @@ class ImageLoaderBitmapSupport {
     }
 
     private static boolean shouldUseFastFailoverTimeout(String url) {
-        if (url == null || url.length() == 0) {
-            return false;
-        }
-        String lower = url.trim().toLowerCase(Locale.US);
-        // 上传资源有 files → 60 → oc 三条线路。前两条只给 4 秒预算，避免首线路
-        // 握手或旧服务器卡住时让图片空白十几秒；最后的 oc 主站仍使用正常超时。
-        if (lower.startsWith("https://ocf.oss-cn-shanghai.aliyuncs.com/")
-                || lower.startsWith("http://ocf.oss-cn-shanghai.aliyuncs.com/")) {
-            return true;
-        }
-        if (isUploadPath(lower)) {
-            return lower.startsWith("http://60.205.94.101:8080/")
-                    || lower.startsWith("https://60.205.94.101:8080/");
-        }
-        if (!MediaUrlResolver.isMainOriginUrl(url)) {
-            return false;
-        }
-        String fallback = MediaUrlResolver.resolveFallback(url);
-        return fallback != null && fallback.length() > 0 && !fallback.equals(url)
-                && MediaUrlResolver.isDataOriginUrl(fallback);
-    }
-
-    private static boolean isUploadPath(String url) {
-        if (url == null) {
-            return false;
-        }
-        String lower = url.toLowerCase(Locale.US);
-        return lower.indexOf("/uploads/") >= 0 || lower.indexOf("/v1/uploads/") >= 0;
+        // 社区版媒体只有源服务器一条线路，不存在 OSS/CDN 抢首包问题，统一用正常超时。
+        return false;
     }
 
     private static void maybeTrimDiskCache(Context context, String cacheDirName) {

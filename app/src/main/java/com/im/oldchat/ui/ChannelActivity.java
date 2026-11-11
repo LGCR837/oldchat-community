@@ -258,7 +258,7 @@ public class ChannelActivity extends BaseActivity {
     private void shareChannel() {
         if (currentState == null) return;
         String target = currentState.handle == null || currentState.handle.length() == 0
-                ? currentState.channelId : "https://oc.mcl0.dpdns.org/c/" + currentState.handle;
+                ? currentState.channelId : com.im.oldchat.api.HttpUtil.getBaseOrigin() + "/c/" + currentState.handle;
         Intent share = new Intent(Intent.ACTION_SEND); share.setType("text/plain");
         share.putExtra(Intent.EXTRA_TEXT, currentState.name + "\n" + target);
         startActivity(Intent.createChooser(share, "分享频道"));

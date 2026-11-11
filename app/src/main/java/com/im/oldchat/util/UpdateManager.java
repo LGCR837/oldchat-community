@@ -349,15 +349,7 @@ public class UpdateManager {
     }
 
     private static String getBaseUrl() {
-        String apiBase = HttpUtil.BASE_URL;
-        if (apiBase.endsWith("/v1")) {
-            return apiBase.substring(0, apiBase.length() - 3);
-        }
-        int idx = apiBase.indexOf("/v1/");
-        if (idx > 0) {
-            return apiBase.substring(0, idx);
-        }
-        return apiBase;
+        return HttpUtil.getBaseOrigin();
     }
 
     private static int getCurrentVersionCode(Context context) {
