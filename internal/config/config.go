@@ -59,12 +59,16 @@ type Config struct {
 	// OssEnabled 控制阿里云 OSS 与雨云 S3 同步。社区版默认关闭，
 	// 仅在 settings.json 的 oss_enabled 或环境变量 OSS_ENABLED 显式开启时启用。
 	OssEnabled bool
+	// OAuthEnabled 控制 OAuth 2.1 / OIDC 提供方是否对外提供。
+	// 社区版暂无第三方登录接入，默认关闭：关闭时不校验 OAUTH_ISSUER，
+	// 也不需要域名与证书即可启动。
+	OAuthEnabled bool
 }
 
 func Load() (Config, error) {
 	cfg := Config{}
 
-	cfg.Port = getEnv("PORT", "8080")
+	cfg.Port = getEnv("PORT", "8082")
 	dbURL, dbURLSet := getEnvRaw("DATABASE_URL")
 	if dbURL == "" {
 		dbURL = "metrochat.db"
@@ -75,16 +79,13 @@ func Load() (Config, error) {
 	cfg.PublicBaseURL = strings.TrimSpace(getEnv("PUBLIC_BASE_URL", ""))
 	// 社区版不接对象存储，文件默认由源服务器自身提供；留空表示同源相对路径。
 	cfg.FilesBaseURL = strings.TrimRight(strings.TrimSpace(getEnv("FILES_BASE_URL", "")), "/")
-	cfg.OAuthIssuer = strings.TrimRight(strings.TrimSpace(
-		getEnv("OAUTH_ISSUER", "https://oc.mcl0.dpdns.org")), "/")
+	// OAuth 提供方默认关闭，Issuer 只在开启时校验（见下方 settings 加载之后）。
+	cfg.OAuthEnabled = parseBoolEnv("OAUTH_ENABLED", false)
+	cfg.OAuthIssuer = strings.TrimRight(strings.TrimSpace(getEnv("OAUTH_ISSUER", "")), "/")
 	cfg.OAuthSigningKeyPath = strings.TrimSpace(getEnv("OAUTH_SIGNING_KEY_PATH", "oauth_ed25519.key"))
 	cfg.OAuthAccessTokenTTL = getDurationEnv("OAUTH_ACCESS_TOKEN_TTL", 10*time.Minute)
 	cfg.OAuthRefreshTokenTTL = getDurationEnv("OAUTH_REFRESH_TOKEN_TTL", 30*24*time.Hour)
 	cfg.OAuthAuthorizationCodeTTL = getDurationEnv("OAUTH_CODE_TTL", 90*time.Second)
-	issuerURL, issuerErr := url.Parse(cfg.OAuthIssuer)
-	if issuerErr != nil || issuerURL.Scheme != "https" || issuerURL.Host == "" || issuerURL.User != nil || issuerURL.RawQuery != "" || issuerURL.Fragment != "" {
-		return cfg, errors.New("OAUTH_ISSUER must be an absolute HTTPS URL without userinfo, query or fragment")
-	}
 	cfg.DataServerBaseURL = strings.TrimRight(strings.TrimSpace(getEnv("DATA_SERVER_BASE_URL", "")), "/")
 	cfg.DataServerSyncToken = strings.TrimSpace(getEnv("DATA_SERVER_SYNC_TOKEN", ""))
 	cfg.AdminUser = getEnv("ADMIN_USER", "admin")
@@ -119,6 +120,19 @@ func Load() (Config, error) {
 		// 环境变量显式设置时优先级更高。
 		if _, ok := os.LookupEnv("OSS_ENABLED"); !ok && settings.OssEnabled != nil {
 			cfg.OssEnabled = *settings.OssEnabled
+		}
+		if settings.OAuthEnabled != nil && !envIsSet("OAUTH_ENABLED") {
+			cfg.OAuthEnabled = *settings.OAuthEnabled
+		}
+		if !envIsSet("PORT") {
+			if v := strings.TrimSpace(settings.Port); v != "" {
+				cfg.Port = v
+			}
+		}
+		if !envIsSet("OAUTH_ISSUER") {
+			if v := strings.TrimRight(strings.TrimSpace(settings.OAuthIssuer), "/"); v != "" {
+				cfg.OAuthIssuer = v
+			}
 		}
 		if _, ok := os.LookupEnv("ADMIN_USER"); !ok {
 			if v := strings.TrimSpace(settings.AdminUser); v != "" {
@@ -175,6 +189,17 @@ func Load() (Config, error) {
 	// 未单独配置文件域名时跟随公开访问域名，保证媒体地址指向源服务器自身。
 	if cfg.FilesBaseURL == "" {
 		cfg.FilesBaseURL = strings.TrimRight(strings.TrimSpace(cfg.PublicBaseURL), "/")
+	}
+
+	// OAuth 提供方关闭时不校验 Issuer：社区版未配域名与证书也能启动。
+	if cfg.OAuthEnabled {
+		if cfg.OAuthIssuer == "" {
+			return cfg, errors.New("OAUTH_ENABLED=true 时需要配置 OAUTH_ISSUER（绝对 HTTPS 地址）")
+		}
+		issuerURL, issuerErr := url.Parse(cfg.OAuthIssuer)
+		if issuerErr != nil || issuerURL.Scheme != "https" || issuerURL.Host == "" || issuerURL.User != nil || issuerURL.RawQuery != "" || issuerURL.Fragment != "" {
+			return cfg, errors.New("OAUTH_ISSUER must be an absolute HTTPS URL without userinfo, query or fragment")
+		}
 	}
 
 	if envQuota := getInt64Env("RESOURCE_QUOTA_BYTES", 0); envQuota > 0 {
@@ -342,6 +367,12 @@ func getEnvRaw(key string) (string, bool) {
 	return v, ok
 }
 
+// envIsSet 判断环境变量是否被赋予了非空值；空字符串等同于未设置。
+func envIsSet(key string) bool {
+	v, ok := os.LookupEnv(key)
+	return ok && strings.TrimSpace(v) != ""
+}
+
 func resolveDatabaseURL(value string, explicit bool) string {
 	if value == "" {
 		return value
@@ -456,6 +487,9 @@ type settingsFile struct {
 	AdminUser                 string   `json:"admin_user"`
 	AdminPassword             string   `json:"admin_password"`
 	OssEnabled                *bool    `json:"oss_enabled"`
+	OAuthEnabled              *bool    `json:"oauth_enabled"`
+	Port                      string   `json:"port"`
+	OAuthIssuer               string   `json:"oauth_issuer"`
 	PublicBaseURL             string   `json:"public_base_url"`
 	DataServerBaseURL         string   `json:"data_server_base_url"`
 	DataServerSyncToken       string   `json:"data_server_sync_token"`

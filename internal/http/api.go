@@ -219,10 +219,12 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 			prune()
 		}
 	}()
-	if key, err := auth.LoadOrCreateOAuthSigningKey(cfg.OAuthSigningKeyPath); err != nil {
-		log.Printf("OAuth 签名密钥初始化失败，第三方登录暂不可用: %v", err)
-	} else {
-		api.oauthSigningKey = key
+	if cfg.OAuthEnabled {
+		if key, err := auth.LoadOrCreateOAuthSigningKey(cfg.OAuthSigningKeyPath); err != nil {
+			log.Printf("OAuth 签名密钥初始化失败，第三方登录暂不可用: %v", err)
+		} else {
+			api.oauthSigningKey = key
+		}
 	}
 	// 按钮 tid 签名器（RSA，密钥持久化到 UploadDir）
 	if signer, err := secure.LoadOrCreateButtonSigner(filepath.Join(cfg.UploadDir, "keys")); err != nil {
@@ -231,30 +233,32 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 		api.buttonSigner = signer
 	}
 	// 首个 client 通过环境变量人工引导创建；后续 client 由管理员审核后写入。
-	if clientID := strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_CLIENT_ID")); clientID != "" {
-		redirectURI := strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_REDIRECT_URI"))
-		if redirectURI != "" && auth.ValidateOAuthHTTPSURL(redirectURI, true) {
-			secret := strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_CLIENT_SECRET"))
-			if secret != "" && len(secret) < 32 {
-				log.Printf("OAuth 引导 client secret 少于 32 字符，已拒绝创建")
-			} else {
-				secretHash := ""
-				if secret != "" {
-					secretHash = auth.HashToken(secret)
+	if cfg.OAuthEnabled {
+		if clientID := strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_CLIENT_ID")); clientID != "" {
+			redirectURI := strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_REDIRECT_URI"))
+			if redirectURI != "" && auth.ValidateOAuthHTTPSURL(redirectURI, true) {
+				secret := strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_CLIENT_SECRET"))
+				if secret != "" && len(secret) < 32 {
+					log.Printf("OAuth 引导 client secret 少于 32 字符，已拒绝创建")
+				} else {
+					secretHash := ""
+					if secret != "" {
+						secretHash = auth.HashToken(secret)
+					}
+					client := data.OAuthClient{
+						ClientID: clientID, Name: strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_CLIENT_NAME")),
+						SecretHash: secretHash, RedirectURI: redirectURI,
+						AllowedScopes: "openid profile offline_access", PublicClient: secret == "", Active: true,
+					}
+					if client.Name == "" {
+						client.Name = clientID
+					}
+					ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+					if err := api.oauth.UpsertClient(ctx, client); err != nil {
+						log.Printf("OAuth 引导 client 创建失败: %v", err)
+					}
+					cancel()
 				}
-				client := data.OAuthClient{
-					ClientID: clientID, Name: strings.TrimSpace(os.Getenv("OAUTH_BOOTSTRAP_CLIENT_NAME")),
-					SecretHash: secretHash, RedirectURI: redirectURI,
-					AllowedScopes: "openid profile offline_access", PublicClient: secret == "", Active: true,
-				}
-				if client.Name == "" {
-					client.Name = clientID
-				}
-				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-				if err := api.oauth.UpsertClient(ctx, client); err != nil {
-					log.Printf("OAuth 引导 client 创建失败: %v", err)
-				}
-				cancel()
 			}
 		}
 	}
@@ -279,19 +283,23 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	r.Use(gzipResponses)
 	r.Use(secureHeaders)
 
-	r.Get("/.well-known/openid-configuration", api.handleOIDCDiscovery)
-	r.Get("/oauth/jwks.json", api.handleOAuthJWKS)
-	r.Get("/oauth/authorize", api.handleOAuthAuthorizeGet)
-	r.Post("/oauth/authorize", api.handleOAuthAuthorizePost)
-	r.Get("/oauth/authorize/resume", api.handleOAuthAuthorizeResume)
-	r.Get("/oauth/register", api.handleOAuthRegisterGet)
-	r.Post("/oauth/register", api.handleOAuthRegisterPost)
-	r.Get("/oauth/reset", api.handleOAuthResetGet)
-	r.Post("/oauth/reset", api.handleOAuthResetPost)
-	r.Post("/oauth/token", api.handleOAuthToken)
-	r.Post("/oauth/introspect", api.handleOAuthIntrospect)
-	r.Post("/oauth/revoke", api.handleOAuthRevoke)
-	r.Get("/oauth/userinfo", api.handleOAuthUserInfo)
+	// OAuth 2.1 / OIDC 提供方默认关闭；开启后才注册对外端点。
+	if cfg.OAuthEnabled {
+		r.Get("/.well-known/openid-configuration", api.handleOIDCDiscovery)
+		r.Get("/oauth/jwks.json", api.handleOAuthJWKS)
+		r.Get("/oauth/authorize", api.handleOAuthAuthorizeGet)
+		r.Post("/oauth/authorize", api.handleOAuthAuthorizePost)
+		r.Get("/oauth/authorize/resume", api.handleOAuthAuthorizeResume)
+		r.Get("/oauth/register", api.handleOAuthRegisterGet)
+		r.Post("/oauth/register", api.handleOAuthRegisterPost)
+		r.Get("/oauth/reset", api.handleOAuthResetGet)
+		r.Post("/oauth/reset", api.handleOAuthResetPost)
+		r.Post("/oauth/token", api.handleOAuthToken)
+		r.Post("/oauth/introspect", api.handleOAuthIntrospect)
+		r.Post("/oauth/revoke", api.handleOAuthRevoke)
+		r.Get("/oauth/userinfo", api.handleOAuthUserInfo)
+		r.Get("/oauth.md", handleOAuthLoginDocument)
+	}
 
 	r.Get("/", api.handleLanding)
 	r.Get("/landing", api.handleLanding)
@@ -330,7 +338,6 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	r.Get("/client-guide.md", handleClientGuideDocument)
 	r.Get("/routes.md", handleNonAdminRoutesDocument)
 	r.Get("/internal/message-sync.md", handleInternalMessageSyncDoc)
-	r.Get("/oauth.md", handleOAuthLoginDocument)
 	r.Handle("/lua-assets/*", http.HandlerFunc(api.handleLuaAppAsset))
 	r.Post("/report", api.handleReportSubmit)
 	r.Post("/shop/login", api.handleShopLogin)
@@ -364,8 +371,10 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	r.Post("/admins/moderators/toggle", api.handleAdminModeratorToggle)
 	r.Post("/admins/moderators/reset-password", api.handleAdminModeratorResetPassword)
 	r.Post("/admins/moderators/delete", api.handleAdminModeratorDelete)
-	r.Get("/admins/oauth-clients", api.handleAdminOAuthClients)
-	r.Post("/admins/oauth-clients", api.handleAdminOAuthClientsPost)
+	if cfg.OAuthEnabled {
+		r.Get("/admins/oauth-clients", api.handleAdminOAuthClients)
+		r.Post("/admins/oauth-clients", api.handleAdminOAuthClientsPost)
+	}
 	r.Post("/admins/ban/device", api.handleAdminBanDevice)
 	r.Post("/admins/unban/device", api.handleAdminUnbanDevice)
 	r.Post("/admins/ban/user", api.handleAdminBanUser)

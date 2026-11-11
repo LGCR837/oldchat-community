@@ -180,7 +180,6 @@ const appLandingHTML = `<!doctype html>
         <li><a href="/lua-cip.md">CIP 小程序开发</a></li>
         <li><a href="/bot-api.md">机器人开发手册</a></li>
         <li><a href="/channel-api.md">频道开发手册</a></li>
-        <li><a href="/oauth.md">第三方登录 OAuth</a></li>
       </ul>
     </div>
   </div>

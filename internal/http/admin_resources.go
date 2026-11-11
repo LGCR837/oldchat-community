@@ -251,7 +251,6 @@ const adminResourceHallHTML = `<!DOCTYPE html>
       <a href="/admins?section=reports">举报/法庭</a>
       <a href="/admins?section=notifications">通知</a>
       <a href="/admins?section=bugs">Bug</a>
-      <a href="/admins/oauth-clients">OAuth 应用</a>
     </nav>
   </aside>
   <div class="wrap">

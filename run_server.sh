@@ -15,13 +15,12 @@ else
   echo "OSS environment not loaded: $OSS_ENV_FILE"
 fi
 
-export PORT=${PORT:-8080}
+export PORT=${PORT:-8082}
 export DATABASE_URL=${DATABASE_URL:-"$SERVER_DIR/metrochat.db"}
 export JWT_SECRET=${JWT_SECRET:-"local-dev-secret-change-me-please-32-chars"}
 export JWT_ISSUER=${JWT_ISSUER:-"metrochat"}
 export ACCESS_TOKEN_TTL=${ACCESS_TOKEN_TTL:-3600}  # 1 小时；客户端通过 refresh token 无感续期
-export OAUTH_ISSUER=${OAUTH_ISSUER:-https://oc.mcl0.dpdns.org}
-export OAUTH_SIGNING_KEY_PATH=${OAUTH_SIGNING_KEY_PATH:-oauth_ed25519.key}
+export OAUTH_ENABLED=${OAUTH_ENABLED:-0}  # 第三方登录默认关闭；启用时需设置 OAUTH_ISSUER（绝对 https）
 export REFRESH_TOKEN_TTL=${REFRESH_TOKEN_TTL:-2592000} # 30 days
 
 BIN_PATH=""

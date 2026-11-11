@@ -259,7 +259,7 @@ func (a *API) resolveServerPublicBaseURL() (string, error) {
 	}
 	port := strings.TrimSpace(a.cfg.Port)
 	if port == "" {
-		port = "8080"
+		port = "8082"
 	}
 	return "http://127.0.0.1:" + port, nil
 }

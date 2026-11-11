@@ -6,14 +6,14 @@ Oldchat 提供基于 **OAuth 2.1 Authorization Code + PKCE** 和 **OpenID Connec
 
 ## 1. 服务地址
 
-- Issuer：`https://oc.mcl0.dpdns.org`
-- Discovery：`GET https://oc.mcl0.dpdns.org/.well-known/openid-configuration`
-- 授权端点：`GET https://oc.mcl0.dpdns.org/oauth/authorize`
-- Token 端点：`POST https://oc.mcl0.dpdns.org/oauth/token`
-- UserInfo：`GET https://oc.mcl0.dpdns.org/oauth/userinfo`
-- JWKS：`GET https://oc.mcl0.dpdns.org/oauth/jwks.json`
-- Token 验证：`POST https://oc.mcl0.dpdns.org/oauth/introspect`
-- Token 撤销：`POST https://oc.mcl0.dpdns.org/oauth/revoke`
+- Issuer：`https://你的域名`
+- Discovery：`GET https://你的域名/.well-known/openid-configuration`
+- 授权端点：`GET https://你的域名/oauth/authorize`
+- Token 端点：`POST https://你的域名/oauth/token`
+- UserInfo：`GET https://你的域名/oauth/userinfo`
+- JWKS：`GET https://你的域名/oauth/jwks.json`
+- Token 验证：`POST https://你的域名/oauth/introspect`
+- Token 撤销：`POST https://你的域名/oauth/revoke`
 
 所有端点必须使用 HTTPS。OAuth 标准端点没有 `/v1` 或 `/v1/v1` 兼容前缀。
 
@@ -147,7 +147,7 @@ ID Token 使用 Ed25519 / `EdDSA` 签名。验证方应通过 Discovery 获取 `
 
 1. `alg` 必须是 `EdDSA`；
 2. 签名有效；
-3. `iss` 精确等于 `https://oc.mcl0.dpdns.org`；
+3. `iss` 精确等于 `https://你的域名`；
 4. `aud` 包含自己的 `client_id`；
 5. `exp` 尚未过期；
 6. `iat` 在合理时间范围；
@@ -267,16 +267,16 @@ Authorization: Basic BASE64(client_id:client_secret)
 
 ```bash
 # 发现文档
-curl https://oc.mcl0.dpdns.org/.well-known/openid-configuration
+curl https://你的域名/.well-known/openid-configuration
 
 # JWKS
-curl https://oc.mcl0.dpdns.org/oauth/jwks.json
+curl https://你的域名/oauth/jwks.json
 
 # 验证 Access Token
 curl -u 'CLIENT_ID:CLIENT_SECRET' \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   --data-urlencode 'token=ACCESS_TOKEN' \
-  https://oc.mcl0.dpdns.org/oauth/introspect
+  https://你的域名/oauth/introspect
 ```
 
 接入前请先在测试环境完整验证授权拒绝、错误 PKCE、授权码重复兑换、Token 过期、Refresh Token轮换和撤销流程。

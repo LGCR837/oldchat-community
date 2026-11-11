@@ -1755,7 +1755,6 @@ const adminDashboardHTML = `
       <a href="/admins?section=crash" data-tab="crash">崩溃日志</a>
       <a href="/admins?section=server" data-tab="server">服务状态</a>
       <a href="/admins?section=moderators" data-tab="moderators">🛡️ 审核员</a>
-      <a href="/admins/oauth-clients">OAuth 应用</a>
     </nav>
     <div class="side-box">
       <h4>快速操作面板</h4>
@@ -1811,7 +1810,6 @@ const adminDashboardHTML = `
       <a href="/admins?section=crash" data-tab="crash">崩溃日志</a>
       <a href="/admins?section=server" data-tab="server">服务状态</a>
       <a href="/admins?section=moderators" data-tab="moderators">🛡️ 审核员</a>
-      <a href="/admins/oauth-clients">OAuth 应用</a>
     </div>
   </div>
 
@@ -2587,7 +2585,7 @@ const adminDashboardHTML = `
     <h3>数据服同步（A 上传后推送到 B）</h3>
     <form method="post" action="/admins/data-sync" class="actions">
       <span>A对外地址</span>
-      <input name="public_base_url" value="{{.PublicBaseURL}}" placeholder="http://60.205.94.101:8080" style="width:220px;">
+      <input name="public_base_url" value="{{.PublicBaseURL}}" placeholder="http://127.0.0.1:8082" style="width:220px;">
       <span>B地址</span>
       <input name="data_server_base_url" value="{{.DataServerBaseURL}}" placeholder="http://154.8.227.219:9090" style="width:220px;">
       <span>同步令牌(可空)</span>

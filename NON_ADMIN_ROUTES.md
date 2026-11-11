@@ -43,20 +43,7 @@ GET     /in/api.md
 GET     /client-guide.md
 GET     /routes.md
 GET     /internal/message-sync.md
-GET     /oauth.md
-GET     /.well-known/openid-configuration
-GET     /oauth/jwks.json
-GET     /oauth/authorize
-POST    /oauth/authorize
-GET     /oauth/authorize/resume
-GET     /oauth/register
-POST    /oauth/register
-GET     /oauth/reset
-POST    /oauth/reset
-POST    /oauth/token
-POST    /oauth/introspect
-POST    /oauth/revoke
-GET     /oauth/userinfo
+# OAuth 2.1 / OIDC 端点默认关闭，仅在 OAUTH_ENABLED=true 时开放 /oauth/* 与 /.well-known/openid-configuration
 HANDLE  /lua-assets/*
 HANDLE  /landing-assets/*
 HANDLE  /update/*

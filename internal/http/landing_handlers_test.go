@@ -28,7 +28,7 @@ func TestAppLandingShowsDownloadAndServiceEntrances(t *testing.T) {
 		t.Fatalf("主页状态码异常：%d", rec.Code)
 	}
 	body := rec.Body.String()
-	for _, expected := range []string{"Oldchat 旧聊", "当前版本 1.3.47", "/update/", "/shop", "/igotbanned", "开发者平台", "/bot-apply", "/channel-api/apply", "/channel-manage", "开放文档", "/routes.md", "/api.md", "/client-guide.md", "/lua-cip.md", "/bot-api.md", "/channel-api.md", "/oauth.md"} {
+	for _, expected := range []string{"Oldchat 旧聊", "当前版本 1.3.47", "/update/", "/shop", "/igotbanned", "开发者平台", "/bot-apply", "/channel-api/apply", "/channel-manage", "开放文档", "/routes.md", "/api.md", "/client-guide.md", "/lua-cip.md", "/bot-api.md", "/channel-api.md"} {
 		if !strings.Contains(body, expected) {
 			t.Fatalf("主页缺少 %q", expected)
 		}
