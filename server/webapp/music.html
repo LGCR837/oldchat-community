@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOUNDWAVE RESONANCE — 旧聊音乐广场</title>
+  <link rel="stylesheet" href="/app-assets/fonts/fonts.css" />
+  <link rel="stylesheet" href="/app-assets/music.css?v=20260821_8" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+</head>
+<body>
+  <div id="app-root">
+    <div id="ambient-backdrop"></div>
+    <div class="ambient-mask"></div>
+
+    <header id="mobile-header">
+      <span class="brand-serif">Music</span>
+      <div class="mobile-tabs" id="mobileTabs">
+        <button data-tab="explore" title="发现音乐" class="active">◉</button>
+        <button data-tab="ranking" title="热门排行">☰</button>
+        <button data-tab="favorites" title="我的收藏">♥</button>
+        <button data-tab="playlists" title="我的歌单">▤</button>
+        <button data-tab="mine" title="我的发布">✎</button>
+        <button data-tab="upload" title="上传音乐">↑</button>
+      </div>
+    </header>
+
+    <div id="main-layout">
+      <aside id="app-sidebar">
+        <div>
+          <div class="logo-block">
+            <span class="brand-serif">Music</span>
+            <p class="logo-sub">OLDCHAT MUSIC PLAZA</p>
+          </div>
+          <nav id="menuItems">
+            <button class="menu-item active" data-tab="explore">
+              <span class="mi-icon">◉</span><span class="mi-label">Curation / 发现音乐</span>
+            </button>
+            <button class="menu-item" data-tab="ranking">
+              <span class="mi-icon">☰</span><span class="mi-label">Ranking / 热门排行</span>
+            </button>
+            <button class="menu-item" data-tab="favorites">
+              <span class="mi-icon">♥</span><span class="mi-label">Archives / 我的收藏</span>
+              <span class="mi-badge hidden" id="favBadge">0</span>
+            </button>
+            <button class="menu-item" data-tab="playlists">
+              <span class="mi-icon">▤</span><span class="mi-label">Playlists / 我的歌单</span>
+              <span class="mi-badge hidden" id="playlistBadge">0</span>
+            </button>
+            <button class="menu-item" data-tab="mine">
+              <span class="mi-icon">✎</span><span class="mi-label">Mine / 我的发布</span>
+            </button>
+            <button class="menu-item" data-tab="upload">
+              <span class="mi-icon">↑</span><span class="mi-label">Upload / 上传音乐</span>
+            </button>
+          </nav>
+        </div>
+        <div class="info-widget" id="userWidget">
+          <div id="userLoggedOut">
+            <button class="info-btn" id="btnLogin" style="background:var(--accent); color:#fff; font-weight:700;">登录旧聊账号</button>
+          </div>
+          <div id="userLoggedIn" class="hidden">
+            <div style="font-size:12px; color:rgba(255,255,255,0.7); margin-bottom:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" id="userNameDisplay">@用户</div>
+            <button class="info-btn" id="btnLogout">退出登录</button>
+          </div>
+        </div>
+      </aside>
+
+      <div id="main-column">
+        <main id="app-main-content">
+          <header id="content-header" class="hidden">
+            <div>
+              <h1 id="pageTitle" class="page-title">Curations & Resonance</h1>
+              <p id="pageSubtitle" class="page-subtitle">No dependencies. Pure audio purity for the modern browser.</p>
+            </div>
+            <div class="search-box" id="searchBox">
+              <span class="search-icon">⌕</span>
+              <input id="searchInput" type="text" placeholder="SEARCH TRACK OR ARTIST..." />
+            </div>
+          </header>
+
+          <section id="view-explore" class="view">
+            <div class="explore-left">
+              <div class="genre-filters hidden" id="genreFilters"></div>
+              <div class="song-grid" id="songGrid"></div>
+              <div class="load-more-wrap" id="loadMoreWrap">
+                <button class="load-more-btn" id="btnLoadMore">LOAD MORE / 加载更多</button>
+              </div>
+            </div>
+            <div class="explore-right">
+              <div class="vinyl-card" id="vinylCard">
+                <div class="vinyl-disc" id="vinylDisc">
+                  <div class="vinyl-shine"></div>
+                  <img id="vinylCover" alt="cover" />
+                  <div class="vinyl-hole"><div class="vinyl-hole-inner"></div></div>
+                </div>
+                <div class="vinyl-info">
+                  <span class="vinyl-genre" id="vinylGenre">—</span>
+                  <h3 class="vinyl-title" id="vinylTitle">未选择歌曲</h3>
+                  <p class="vinyl-artist" id="vinylArtist">SELECT A TRACK</p>
+                  <p class="vinyl-meta" id="vinylMeta"></p>
+                </div>
+              </div>
+              <div class="lyrics-mini-card">
+                <div class="lyrics-mini-header">
+                  <span class="lyrics-mini-title">☰ Synchronized / 同步歌词</span>
+                </div>
+                <div id="lyricsMini"></div>
+              </div>
+              <div class="comments-card" id="commentsCard">
+                <div class="comments-header">
+                  <span class="lyrics-mini-title">✎ Comments / 评论</span>
+                  <span class="comments-count" id="commentsCount">0</span>
+                </div>
+                <div class="comments-list" id="commentsList"></div>
+                <div class="comments-input-row">
+                  <input id="commentInput" type="text" maxlength="200" placeholder="说点什么…" />
+                  <button id="btnComment">发送</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-ranking" class="view hidden">
+            <div class="rank-list" id="rankList"></div>
+          </section>
+
+          <section id="view-favorites" class="view hidden">
+            <div class="fav-list" id="favList"></div>
+          </section>
+
+          <section id="view-playlists" class="view hidden">
+            <div class="playlists-toolbar">
+              <button class="load-more-btn" id="btnPlaylistRefresh">↻ 刷新</button>
+              <button class="load-more-btn accent" id="btnPlaylistSave">＋ 保存当前列表为歌单</button>
+            </div>
+            <div class="playlist-list" id="playlistList"></div>
+          </section>
+
+          <section id="view-mine" class="view hidden">
+            <div class="mine-toolbar">
+              <button class="load-more-btn" id="btnMineRefresh">↻ 刷新</button>
+            </div>
+            <div class="song-grid mine-grid" id="mineGrid"></div>
+          </section>
+
+          <section id="view-upload" class="view hidden">
+            <div class="upload-wrap">
+              <h2 class="upload-title">Upload A Recording / 上传音乐</h2>
+              <p class="upload-sub">支持 MP3 / M4A / OGG，单曲不超过 20MB；歌词支持 .lrc / .ttml / .xml。</p>
+              <form id="uploadForm" class="upload-form">
+                <label class="field">
+                  <span>歌曲名 *</span>
+                  <input type="text" id="upName" maxlength="64" placeholder="请输入歌曲名" required />
+                </label>
+                <label class="field">
+                  <span>音频文件 *（≤20MB）</span>
+                  <input type="file" id="upSong" accept="audio/*" required />
+                </label>
+                <label class="field">
+                  <span>封面图（可选，≤1MB）</span>
+                  <input type="file" id="upCover" accept="image/*" />
+                </label>
+                <label class="field">
+                  <span>歌词文件（可选，.lrc / .ttml / .xml，≤1MB）</span>
+                  <input type="file" id="upLyrics" accept=".lrc,.ttml,.xml,.txt" />
+                </label>
+                <button type="submit" class="upload-btn" id="btnUpload">上 传</button>
+                <p class="upload-msg" id="uploadMsg"></p>
+              </form>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <footer id="player-controls">
+      <div class="player-left" id="playerLeftArea">
+        <div class="player-cover"><img id="playerCover" alt="cover" /></div>
+        <div class="player-info">
+          <div class="player-title-row">
+            <h4 id="playerTitle">未选择歌曲</h4>
+            <button id="btnPlayerFav" class="fav-btn" title="收藏">♥</button>
+          </div>
+          <p id="playerArtist">—</p>
+        </div>
+      </div>
+      <div class="player-center">
+        <div class="player-btns">
+          <button id="btnShuffle" title="随机播放">⇄</button>
+          <button id="btnPrev" title="上一首">⏮</button>
+          <button id="btnPlay" class="play-btn" title="播放">▶</button>
+          <button id="btnNext" title="下一首">⏭</button>
+          <button id="btnLoop" title="列表循环">↻</button>
+        </div>
+        <div class="progress-row">
+          <span class="time" id="timeCur">00:00</span>
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-thumb" id="progressThumb"></div>
+          </div>
+          <span class="time" id="timeDur">00:00</span>
+        </div>
+      </div>
+      <div class="player-right">
+        <button id="btnMute" title="静音">🔊</button>
+        <div class="volume-bar" id="volumeBar">
+          <div class="volume-fill" id="volumeFill"></div>
+        </div>
+        <button id="btnExpand" class="expand-btn" title="全屏播放">⛶</button>
+      </div>
+    </footer>
+
+    <div id="fullscreen-player" class="hidden">
+      <div class="fs-bg" id="fsBg"></div>
+      <div class="fs-bg-gradient" id="fsBgGradient"></div>
+      <div class="fs-top">
+        <button class="fs-icon-btn" id="fsBack" title="返回">‹</button>
+        <div class="fs-top-info">
+          <span id="fsTopTitle">—</span>
+          <span id="fsTopArtist">—</span>
+        </div>
+        <div class="fs-top-actions">
+          <button class="fs-icon-btn" id="fsLike" title="点赞">♥</button>
+          <button class="fs-icon-btn" id="fsFav" title="收藏">☆</button>
+        </div>
+      </div>
+      <div class="fs-body" id="fsBody">
+        <div class="fs-left" id="fsLeft">
+          <div class="fs-cover-wrap"><img id="fsCover" alt="cover" /></div>
+          <div class="fs-cover-info">
+            <h2 id="fsSongName">未选择歌曲</h2>
+            <p id="fsOwner">—</p>
+            <div class="fs-stats" id="fsStats"></div>
+          </div>
+          <div class="fs-progress-row">
+            <span class="time" id="fsTimeCur">00:00</span>
+            <div class="fs-progress" id="fsProgressBar">
+              <div class="fs-progress-fill" id="fsProgressFill"></div>
+              <div class="fs-progress-thumb" id="fsProgressThumb"></div>
+            </div>
+            <span class="time" id="fsTimeDur">00:00</span>
+          </div>
+          <div class="fs-controls">
+            <button id="fsShuffle" title="随机播放">⇄</button>
+            <button id="fsPrev" title="上一首">⏮</button>
+            <button id="fsPlay" class="fs-play" title="播放">▶</button>
+            <button id="fsNext" title="下一首">⏭</button>
+            <button id="fsLoop" title="列表循环">↻</button>
+          </div>
+        </div>
+        <div class="fs-right" id="fsRight">
+          <div class="fs-lyric-head">
+            <span id="fsLyricSong">—</span>
+            <span id="fsLyricArtist">—</span>
+          </div>
+          <div class="fs-lyric-view" id="fsLyricView"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 登录弹窗 -->
+    <div id="musicLoginModal" class="login-modal-backdrop hidden">
+      <div class="login-modal-dialog">
+        <div class="login-modal-header">
+          <span class="login-modal-title">登录旧聊账号</span>
+          <button class="login-modal-close" id="btnCloseLoginModal">×</button>
+        </div>
+        <form id="musicLoginForm" class="login-modal-form">
+          <div class="login-form-field">
+            <label class="login-form-label">账号 / 邮箱</label>
+            <input class="login-form-input" type="text" id="loginIdentifier" placeholder="请输入用户名或邮箱" required />
+          </div>
+          <div class="login-form-field">
+            <label class="login-form-label">密码</label>
+            <input class="login-form-input" type="password" id="loginPassword" placeholder="请输入密码" required />
+          </div>
+          <button type="submit" class="login-modal-submit" id="btnSubmitLogin">立即登录</button>
+          <p class="login-modal-error" id="loginModalError"></p>
+          <p class="login-modal-footer">
+            没有账号？<a href="/register" target="_blank">注册账号</a>
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <audio id="main-audio-player" preload="metadata"></audio>
+  </div>
+  <script src="/app-assets/music.js?v=20260821_8"></script>
+</body>
+</html>

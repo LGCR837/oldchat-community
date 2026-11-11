@@ -1,0 +1,30 @@
+# 运行时数据与本地配置（含密钥，不入库）
+*.db
+*.db-shm
+*.db-wal
+settings.json
+*.key
+uploads/
+update/
+storage/
+*.log
+
+# 构建产物
+/server
+/server_*
+/data_server
+/data_server_*
+server.exe
+*.exe
+
+# 临时/备份文件
+*.bak_*
+*.tmp
+*.swp
+.build_tmp/
+
+# 编辑器与系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

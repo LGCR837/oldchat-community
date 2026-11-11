@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旧币第三方支付调试页</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --line: #dce2f0;
+      --text: #1f2737;
+      --muted: #64748b;
+      --primary: #3578ff;
+      --primary-hover: #2a63d6;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1080px;
+      margin: 20px auto;
+      padding: 0 14px 24px;
+    }
+    .header {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .sub {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 960px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .card h2 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+    .row {
+      margin-bottom: 10px;
+    }
+    .row label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 38px;
+      padding: 8px 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(53, 120, 255, 0.15);
+    }
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    button {
+      min-height: 36px;
+      border: 0;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 14px;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+    }
+    button:hover { background: var(--primary-hover); }
+    button.secondary {
+      background: #eef2ff;
+      color: #334155;
+      border: 1px solid var(--line);
+    }
+    .result {
+      margin-top: 10px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      background: #fcfdff;
+    }
+    .meta {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .ok { color: #037847; }
+    .err { color: var(--danger); }
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <h1>旧币第三方支付最小调用页</h1>
+      <div class="sub">
+        面向第三方网页联调用：<code>/v1/external/coin/pay</code> 与 <code>/v1/external/coin/verify</code>。<br/>
+        注意：这是调试页，生产环境请改为服务端代调并加签，不要在浏览器长期保存账号密码。
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>1) 发起付款</h2>
+        <div class="row">
+          <label>付款方账号（account / uid / user_id 三选一）</label>
+          <input id="pay-auth" placeholder="例如: payer_account 或 UID" />
+        </div>
+        <div class="row">
+          <label>付款方密码</label>
+          <input id="pay-password" type="password" placeholder="password" />
+        </div>
+        <div class="row">
+          <label>付款方身份字段类型</label>
+          <select id="pay-auth-type">
+            <option value="account">account</option>
+            <option value="uid">uid</option>
+            <option value="user_id">user_id</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>收款方字段类型</label>
+          <select id="pay-target-type">
+            <option value="to_uid">to_uid</option>
+            <option value="to_account">to_account</option>
+            <option value="to_user_id">to_user_id</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>收款方值</label>
+          <input id="pay-target" placeholder="例如: ABC123" />
+        </div>
+        <div class="row">
+          <label>金额（1~1000000）</label>
+          <input id="pay-amount" type="number" min="1" max="1000000" value="100" />
+        </div>
+        <div class="row">
+          <label>第三方订单号 client_order_no（建议必填）</label>
+          <input id="pay-order-no" placeholder="例如: order_20260209_001" />
+        </div>
+        <div class="row">
+          <label>备注 remark（可选）</label>
+          <input id="pay-remark" placeholder="网页支付测试" />
+        </div>
+        <div class="actions">
+          <button id="btn-pay">发起付款</button>
+          <button class="secondary" id="btn-pay-sample">填充示例</button>
+        </div>
+        <div class="result">
+          <div id="pay-meta" class="meta">等待请求</div>
+          <textarea id="pay-result" readonly></textarea>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2) 验证到账</h2>
+        <div class="row">
+          <label>收款方账号（account / uid / user_id 三选一）</label>
+          <input id="verify-auth" placeholder="例如: payee_account 或 UID" />
+        </div>
+        <div class="row">
+          <label>收款方密码</label>
+          <input id="verify-password" type="password" placeholder="password" />
+        </div>
+        <div class="row">
+          <label>收款方身份字段类型</label>
+          <select id="verify-auth-type">
+            <option value="account">account</option>
+            <option value="uid">uid</option>
+            <option value="user_id">user_id</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>查询方式</label>
+          <select id="verify-query-type">
+            <option value="client_order_no">client_order_no</option>
+            <option value="transfer_id">transfer_id</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>查询值</label>
+          <input id="verify-query" placeholder="订单号或transfer_id" />
+        </div>
+        <div class="row">
+          <label>可选：付款方过滤字段类型</label>
+          <select id="verify-from-type">
+            <option value="">不指定</option>
+            <option value="from_uid">from_uid</option>
+            <option value="from_account">from_account</option>
+            <option value="from_user_id">from_user_id</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>可选：付款方过滤值</label>
+          <input id="verify-from" placeholder="例如: PAYER01" />
+        </div>
+        <div class="actions">
+          <button id="btn-verify">查询到账</button>
+          <button class="secondary" id="btn-verify-sample">填充示例</button>
+        </div>
+        <div class="result">
+          <div id="verify-meta" class="meta">等待请求</div>
+          <textarea id="verify-result" readonly></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <h2>接口基础配置</h2>
+      <div class="row">
+        <label>API Base（默认同源下 <code>/v1</code>）</label>
+        <input id="api-base" value="/v1" />
+      </div>
+      <div class="hint">
+        返回码说明：<span class="ok">2xx 成功</span>，<span class="err">4xx/5xx 失败</span>。<br/>
+        幂等建议：第三方系统请始终带上 <code>client_order_no</code>，同付款方+同订单号重复调用会返回 <code>already_paid=true</code>。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function el(id) {
+      return document.getElementById(id);
+    }
+
+    function pretty(obj) {
+      try { return JSON.stringify(obj, null, 2); } catch (e) { return String(obj); }
+    }
+
+    function parseJsonSafe(text) {
+      if (!text) return null;
+      try { return JSON.parse(text); } catch (e) { return null; }
+    }
+
+    function setResult(metaId, outputId, ok, status, body, durationMs) {
+      var meta = el(metaId);
+      var output = el(outputId);
+      if (meta) {
+        meta.className = 'meta ' + (ok ? 'ok' : 'err');
+        meta.textContent = 'HTTP ' + status + ' · ' + durationMs + 'ms';
+      }
+      if (output) {
+        output.value = body;
+      }
+    }
+
+    async function callApi(path, payload, metaId, outputId) {
+      var base = (el('api-base').value || '/v1').trim();
+      if (!base) base = '/v1';
+      var url = base + path;
+      var t0 = Date.now();
+      try {
+        var resp = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        var text = await resp.text();
+        var json = parseJsonSafe(text);
+        setResult(metaId, outputId, resp.ok, resp.status, json ? pretty(json) : text, Date.now() - t0);
+      } catch (err) {
+        setResult(metaId, outputId, false, 0, String(err), Date.now() - t0);
+      }
+    }
+
+    function buildPayPayload() {
+      var authType = el('pay-auth-type').value;
+      var targetType = el('pay-target-type').value;
+      var authVal = (el('pay-auth').value || '').trim();
+      var targetVal = (el('pay-target').value || '').trim();
+      var amount = parseInt(el('pay-amount').value || '0', 10);
+      var password = el('pay-password').value || '';
+      var orderNo = (el('pay-order-no').value || '').trim();
+      var remark = (el('pay-remark').value || '').trim();
+
+      var payload = {
+        password: password,
+        amount: isNaN(amount) ? 0 : amount,
+        client_order_no: orderNo,
+        remark: remark
+      };
+      payload[authType] = authVal;
+      payload[targetType] = targetVal;
+      return payload;
+    }
+
+    function buildVerifyPayload() {
+      var authType = el('verify-auth-type').value;
+      var authVal = (el('verify-auth').value || '').trim();
+      var password = el('verify-password').value || '';
+      var queryType = el('verify-query-type').value;
+      var queryVal = (el('verify-query').value || '').trim();
+      var fromType = el('verify-from-type').value;
+      var fromVal = (el('verify-from').value || '').trim();
+
+      var payload = { password: password };
+      payload[authType] = authVal;
+      payload[queryType] = queryVal;
+      if (fromType && fromVal) {
+        payload[fromType] = fromVal;
+      }
+      return payload;
+    }
+
+    el('btn-pay').addEventListener('click', function () {
+      callApi('/external/coin/pay', buildPayPayload(), 'pay-meta', 'pay-result');
+    });
+
+    el('btn-verify').addEventListener('click', function () {
+      callApi('/external/coin/verify', buildVerifyPayload(), 'verify-meta', 'verify-result');
+    });
+
+    el('btn-pay-sample').addEventListener('click', function () {
+      el('pay-auth-type').value = 'account';
+      el('pay-auth').value = 'payer_account';
+      el('pay-password').value = 'payer_password';
+      el('pay-target-type').value = 'to_uid';
+      el('pay-target').value = 'ABC123';
+      el('pay-amount').value = '100';
+      el('pay-order-no').value = 'order_' + Date.now();
+      el('pay-remark').value = '网页支付测试';
+    });
+
+    el('btn-verify-sample').addEventListener('click', function () {
+      el('verify-auth-type').value = 'account';
+      el('verify-auth').value = 'payee_account';
+      el('verify-password').value = 'payee_password';
+      el('verify-query-type').value = 'client_order_no';
+      el('verify-query').value = el('pay-order-no').value || 'order_20260209_001';
+      el('verify-from-type').value = 'from_uid';
+      el('verify-from').value = 'PAYER01';
+    });
+  </script>
+</body>
+</html>
+

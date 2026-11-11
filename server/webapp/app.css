@@ -1,0 +1,209 @@
+/* ===== 旧聊 OldChat · 登录/注册（简洁方角版） ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --brand: #2f6fed;
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1a2233;
+  --muted: #8a94a6;
+  --border: #d9dee6;
+  --error: #d93025;
+  --ok: #1e8e3e;
+}
+
+html, body { height: 100%; }
+
+body {
+  font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", Roboto, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ===== 页面 ===== */
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 32px 36px 20px;
+}
+
+.auth-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.auth-logo {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  margin: 0 auto 10px;
+  display: block;
+}
+
+.auth-brand h1 { font-size: 20px; font-weight: 700; }
+.auth-subtitle { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+/* ===== 页签 ===== */
+.auth-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 22px;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 10px 0;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.auth-tab.active {
+  color: var(--brand);
+  border-bottom-color: var(--brand);
+}
+
+/* ===== 表单 ===== */
+.field { display: block; margin-bottom: 14px; }
+.field > span { display: block; font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+
+.field input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+}
+
+.field input:focus { border-color: var(--brand); }
+
+.field-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.field-row .field { flex: 1; margin-bottom: 0; }
+
+.captcha-field input { letter-spacing: 2px; text-transform: uppercase; }
+
+.captcha-img {
+  width: 100px;
+  height: 40px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  object-fit: cover;
+  background: #eef1f5;
+  flex-shrink: 0;
+}
+
+.email-code-field input { letter-spacing: 2px; }
+
+/* ===== 按钮 ===== */
+.btn-primary {
+  width: 100%;
+  padding: 11px 0;
+  margin-top: 8px;
+  border: none;
+  background: var(--brand);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  cursor: pointer;
+}
+
+.btn-primary:hover { background: #2457c4; }
+.btn-primary:disabled { opacity: .55; cursor: not-allowed; }
+
+.btn-ghost {
+  flex-shrink: 0;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-ghost:hover { border-color: var(--brand); }
+.btn-ghost:disabled { opacity: .55; cursor: not-allowed; }
+
+/* ===== 提示 ===== */
+.auth-error {
+  min-height: 18px;
+  margin-top: 8px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--error);
+  word-break: break-all;
+}
+
+.auth-footer {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.hidden { display: none !important; }
+
+.auth-switch {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+}
+.auth-switch a {
+  color: var(--accent, #4f7cff);
+  text-decoration: none;
+}
+.auth-switch a:hover { text-decoration: underline; }
+.turnstile-field { margin-bottom: 14px; }
+.turnstile-field .cf-turnstile { margin-top: 6px; }
+
+/* 邮箱已注册弹窗（注册页） */
+.modal-mask {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 999;
+}
+.modal-card {
+  background: #fff; border-radius: 12px;
+  padding: 28px 30px; width: 340px; max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,.25);
+  text-align: center;
+}
+.modal-title { font-size: 18px; font-weight: 700; margin: 0 0 8px; }
+.modal-text { color: #666; font-size: 14px; margin: 0 0 20px; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; }
+.modal-actions a {
+  display: inline-block; padding: 10px 24px;
+  border-radius: 8px; font-size: 14px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+}
+.modal-actions .btn-primary {
+  background: var(--accent, #2563eb); color: #fff; border: none;
+}
+.modal-actions .btn-ghost {
+  background: #fff; color: #333; border: 1px solid #ccc;
+}

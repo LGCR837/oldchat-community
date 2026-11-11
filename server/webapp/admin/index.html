@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OldChat 管理控制台</title>
+  <link rel="stylesheet" href="/admin/admin-base.css">
+  <link rel="stylesheet" href="/admin/admin-components.css">
+  <script src="/admin/icons.js"></script>
+</head>
+<body>
+  <div id="admin-app">
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo" id="appLogo"></div>
+        <span>OldChat Console</span>
+      </div>
+      <ul class="nav-list" id="navList">
+        <li class="nav-item active" data-tab="dashboard">
+          <span class="nav-icon" data-icon="dashboard"></span>
+          <span>概览仪表盘</span>
+        </li>
+        <li class="nav-item" data-tab="users">
+          <span class="nav-icon" data-icon="users"></span>
+          <span>用户与设备操控</span>
+        </li>
+        <li class="nav-item" data-tab="broadcast">
+          <span class="nav-icon" data-icon="activity"></span>
+          <span>全服广播与通知</span>
+        </li>
+        <li class="nav-item" data-tab="appeals">
+          <span class="nav-icon" data-icon="shield"></span>
+          <span>封禁申诉审批</span>
+          <span class="nav-badge" id="badgeAppeals" style="display:none">0</span>
+        </li>
+        <li class="nav-item" data-tab="bugs">
+          <span class="nav-icon" data-icon="sliders"></span>
+          <span>Bug 反馈箱</span>
+        </li>
+        <li class="nav-item" data-tab="groups">
+          <span class="nav-icon" data-icon="messageSquare"></span>
+          <span>群组治理</span>
+        </li>
+        <li class="nav-item" data-tab="market">
+          <span class="nav-icon" data-icon="database"></span>
+          <span>称号与表情商城</span>
+        </li>
+        <li class="nav-item" data-tab="apps">
+          <span class="nav-icon" data-icon="lock"></span>
+          <span>CIP 小程序</span>
+        </li>
+        <li class="nav-item" data-tab="metrics">
+          <span class="nav-icon" data-icon="activity"></span>
+          <span>接口监控与排行</span>
+        </li>
+        <li class="nav-item" data-tab="routes">
+          <span class="nav-icon" data-icon="sliders"></span>
+          <span>路由接口开关</span>
+        </li>
+        <li class="nav-item" data-tab="reports">
+          <span class="nav-icon" data-icon="shield"></span>
+          <span>用户举报工单</span>
+        </li>
+        <li class="nav-item" data-tab="court">
+          <span class="nav-icon" data-icon="scale"></span>
+          <span>公共法庭案件</span>
+        </li>
+        <li class="nav-item" data-tab="settings">
+          <span class="nav-icon" data-icon="sliders"></span>
+          <span>系统全局设置</span>
+        </li>
+        <li class="nav-item" data-tab="resources">
+          <span class="nav-icon" data-icon="database"></span>
+          <span>资源与限速</span>
+        </li>
+        <li class="nav-item" data-tab="logs">
+          <span class="nav-icon" data-icon="terminal"></span>
+          <span>系统日志</span>
+        </li>
+      </ul>
+      <div class="sidebar-footer">
+        <button class="btn btn-sm" id="btnThemeToggle" title="切换主题">
+          <span data-icon="sun" id="themeIcon"></span>
+        </button>
+        <button class="btn btn-sm btn-danger" id="btnLogout" title="退出登录">
+          <span data-icon="logout"></span>
+          <span>退出</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- 主界面 -->
+    <main class="main-wrapper">
+      <header class="top-header">
+        <div class="header-title" id="pageTitle">概览仪表盘</div>
+        <div class="header-actions">
+          <button class="btn btn-sm" id="btnGlobalRefresh">
+            <span data-icon="refresh"></span>
+            <span>刷新数据</span>
+          </button>
+        </div>
+      </header>
+
+      <section class="content-body" id="contentBody">
+        <!-- 动态视图挂载区 -->
+      </section>
+    </main>
+  </div>
+
+  <!-- 全局 Toast 挂载点 -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- 全局 Modal 挂载点 -->
+  <div id="globalModal" class="modal-overlay">
+    <div class="modal-box" id="globalModalContent"></div>
+  </div>
+
+  <script src="/admin/admin-core.js"></script>
+  <script src="/admin/admin-views.js"></script>
+  <script src="/admin/admin-social.js"></script>
+  <script src="/admin/admin-market.js"></script>
+  <script src="/admin/admin-apps.js"></script>
+  <script src="/admin/admin-settings.js"></script>
+  <script src="/admin/admin-ops.js"></script>
+  <script src="/admin/admin-metrics.js"></script>
+  <script src="/admin/admin-routeswitch.js"></script>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>
