@@ -24,75 +24,75 @@ import (
 )
 
 type API struct {
-	cfg                config.Config
-	dataSyncClient     *http.Client
-	ossClient          *oss.Client
-	rainOSSClient      *oss.RainClient
-	db                 *sqlx.DB
-	users              *data.UserStore
-	refresh            *data.RefreshStore
-	oauth              *data.OAuthStore
-	oauthSigningKey    *auth.OAuthSigningKey
-	friendReqs         *data.FriendRequestStore
-	friends            *data.FriendStore
-	direct             *data.DirectStore
-	groups             *data.GroupStore
-	groupJoins         *data.GroupJoinStore
-	groupInvites       *data.GroupInvitationStore
-	groupMsgs          *data.GroupMessageStore
-	groupBans          *data.GroupBanStore
-	channels           *data.ChannelStore
-	moments            *data.MomentStore
-	resources          *data.ResourceStore
-	fileAssets         *data.FileAssetStore
-	emojis             *data.EmojiPlazaStore
-	musicPlaza         *data.MusicPlazaStore
-	playlists          *data.PlaylistStore
-	favorites          *data.FavoriteStore
-	coinTransfers      *data.ExternalCoinTransferStore
-	resourceReports    *data.ResourceReportStore
-	publicCourt        *data.PublicCourtStore
-	banAppeals         *data.BanAppealStore
-	devices            *data.DeviceStore
-	crashReportStore   *data.CrashReportStore
-	reportStore        *data.ReportStore
-	groupReportStore   *data.GroupReportStore
-	bugReportStore     *data.BugReportStore
-	aiQuotas           *data.AIQuotaStore
-	aiProxyClient      *http.Client
-	notifications      *data.NotificationStore
-	titles             *data.TitleCatalogStore
-	pts                *data.PtsStore
-	groupEvents        *data.GroupEventStore
-	events             *eventsService
-	readThrottle       map[string]int64
-	wsHub              *ws.Hub
-	sessions           *secure.SessionStore
-	checkinWall        *data.CheckInWallStore
-	checkinInteract    *data.CheckInWallInteractionStore
-	scratch            *data.ScratchStore
-	cipStore           *data.CipStore
-	emailCodes         *verify.EmailCodeStore
-	sendLimiter        *verify.SendLimiter
-	adminSessions      *adminSessions
-	moderatorStore     *data.ModeratorStore
-	moderatorSessions  *moderatorSessions
-	moderatorLogs      *data.ModeratorLogStore
-	channelWebSessions *channelWebSessions
-	channelMediaKey    []byte
-	ipLimiter          *ratelimit.Limiter
-	actionIPLimiter    *ratelimit.Limiter
-	idLimiter          *ratelimit.Limiter
+	cfg                 config.Config
+	dataSyncClient      *http.Client
+	ossClient           *oss.Client
+	rainOSSClient       *oss.RainClient
+	db                  *sqlx.DB
+	users               *data.UserStore
+	refresh             *data.RefreshStore
+	oauth               *data.OAuthStore
+	oauthSigningKey     *auth.OAuthSigningKey
+	friendReqs          *data.FriendRequestStore
+	friends             *data.FriendStore
+	direct              *data.DirectStore
+	groups              *data.GroupStore
+	groupJoins          *data.GroupJoinStore
+	groupInvites        *data.GroupInvitationStore
+	groupMsgs           *data.GroupMessageStore
+	groupBans           *data.GroupBanStore
+	channels            *data.ChannelStore
+	moments             *data.MomentStore
+	resources           *data.ResourceStore
+	fileAssets          *data.FileAssetStore
+	emojis              *data.EmojiPlazaStore
+	musicPlaza          *data.MusicPlazaStore
+	playlists           *data.PlaylistStore
+	favorites           *data.FavoriteStore
+	coinTransfers       *data.ExternalCoinTransferStore
+	resourceReports     *data.ResourceReportStore
+	publicCourt         *data.PublicCourtStore
+	banAppeals          *data.BanAppealStore
+	devices             *data.DeviceStore
+	crashReportStore    *data.CrashReportStore
+	reportStore         *data.ReportStore
+	groupReportStore    *data.GroupReportStore
+	bugReportStore      *data.BugReportStore
+	aiQuotas            *data.AIQuotaStore
+	aiProxyClient       *http.Client
+	notifications       *data.NotificationStore
+	titles              *data.TitleCatalogStore
+	pts                 *data.PtsStore
+	groupEvents         *data.GroupEventStore
+	events              *eventsService
+	readThrottle        map[string]int64
+	wsHub               *ws.Hub
+	sessions            *secure.SessionStore
+	checkinWall         *data.CheckInWallStore
+	checkinInteract     *data.CheckInWallInteractionStore
+	scratch             *data.ScratchStore
+	cipStore            *data.CipStore
+	emailCodes          *verify.EmailCodeStore
+	sendLimiter         *verify.SendLimiter
+	adminSessions       *adminSessions
+	moderatorStore      *data.ModeratorStore
+	moderatorSessions   *moderatorSessions
+	moderatorLogs       *data.ModeratorLogStore
+	channelWebSessions  *channelWebSessions
+	channelMediaKey     []byte
+	ipLimiter           *ratelimit.Limiter
+	actionIPLimiter     *ratelimit.Limiter
+	idLimiter           *ratelimit.Limiter
 	adminLoginLimiter   *ratelimit.Limiter
 	systemStatusLimiter *ratelimit.Limiter
 	webAppDir           string
-	luaAppDir          string
-	typing             *typingStore
-	buttonSigner       *secure.ButtonSigner
-	tokenVersionMu     sync.Mutex
-	tokenVersionCache  map[string]tokenVersionEntry
-	banStatusMu        sync.Mutex
-	banStatusCache     map[string]banStatusEntry
+	luaAppDir           string
+	typing              *typingStore
+	buttonSigner        *secure.ButtonSigner
+	tokenVersionMu      sync.Mutex
+	tokenVersionCache   map[string]tokenVersionEntry
+	banStatusMu         sync.Mutex
+	banStatusCache      map[string]banStatusEntry
 }
 
 func New(cfg config.Config, db *sqlx.DB) http.Handler {
@@ -102,9 +102,7 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	// 对象存储按配置开关决定是否接入；关闭时全部媒体以本地 uploads/ 为权威存储。
 	var ossClient *oss.Client
 	var rainClient *oss.RainClient
-	if !cfg.OssEnabled {
-		log.Printf("对象存储已关闭，媒体仅保存在本地 uploads/")
-	} else {
+	if cfg.OssEnabled {
 		var ossErr error
 		ossClient, ossErr = oss.NewClient(oss.LoadConfigFromEnv())
 		if ossErr != nil {
@@ -180,16 +178,16 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 		channelMediaKey:    loadOrCreateChannelMediaKey(cfg.UploadDir),
 		ipLimiter:          ratelimit.NewLimiter(1.0, 5),
 		// 加好友、发动态等写操作按 IP 每 5 秒最多一次，不允许突发。
-		actionIPLimiter:   ratelimit.NewLimiter(0.2, 1),
-		idLimiter:         ratelimit.NewLimiter(0.2, 3),
+		actionIPLimiter: ratelimit.NewLimiter(0.2, 1),
+		idLimiter:       ratelimit.NewLimiter(0.2, 3),
 		// 管理后台登录与系统状态查询：同一 IP 每 3 秒最多一次，不允许突发。
 		adminLoginLimiter:   ratelimit.NewLimiter(1.0/3.0, 1),
 		systemStatusLimiter: ratelimit.NewLimiter(1.0/3.0, 1),
 		webAppDir:           resolveWebAppDir(),
-		luaAppDir:         resolveLuaAppDir(),
-		typing:            newTypingStore(),
-		tokenVersionCache: make(map[string]tokenVersionEntry),
-		banStatusCache:    make(map[string]banStatusEntry),
+		luaAppDir:           resolveLuaAppDir(),
+		typing:              newTypingStore(),
+		tokenVersionCache:   make(map[string]tokenVersionEntry),
+		banStatusCache:      make(map[string]banStatusEntry),
 	}
 	api.events = newEventsService(api.pts, api.wsHub)
 	api.readThrottle = make(map[string]int64)
