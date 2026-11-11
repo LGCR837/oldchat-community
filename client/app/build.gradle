@@ -22,11 +22,12 @@ android {
     compileSdk 33
 
     defaultConfig {
-        applicationId "com.im.oldchat"
+        // 社区版独立包名，与官方 com.im.oldchat 共存；namespace 保持源码包不动
+        applicationId "com.im.oldchat.community"
         minSdk 9
         targetSdk 33
-        versionCode 540
-        versionName "1.4.5"
+        versionCode 541
+        versionName "1.4.5.1"
         vectorDrawables.useSupportLibrary = true
         resConfigs "zh"
         buildConfigField "boolean", "V2_ONLY_TEST", "false"
