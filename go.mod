@@ -11,6 +11,7 @@ require (
 	github.com/gorilla/websocket v1.5.1
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/mattn/go-sqlite3 v1.14.22
+	github.com/minio/minio-go/v7 v7.2.1
 	golang.org/x/crypto v0.51.0
 	golang.org/x/time v0.5.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
@@ -27,7 +28,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
-	github.com/minio/minio-go/v7 v7.2.1 // indirect
 	github.com/ncruces/go-strftime v1.0.0 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
