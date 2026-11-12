@@ -133,6 +133,7 @@ public class FriendCache {
         target.friend_added_at = source.friend_added_at;
         target.is_online = source.is_online;
         target.presence_status = source.presence_status;
+        target.migrated = source.migrated;
         return target;
     }
 }

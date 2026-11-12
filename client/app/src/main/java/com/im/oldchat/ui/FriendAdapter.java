@@ -31,6 +31,8 @@ public class FriendAdapter extends BaseAdapter {
     private static final String SEC_RECENT = "recent";
     private static final String SEC_REQUESTS = "requests";
     private static final String SEC_FRIENDS = "friends";
+    private static final String SEC_PENDING_GROUPS = "pending_groups";
+    private static final String SEC_PENDING_USERS = "pending_users";
 
     public static final String SYSTEM_UID = "SYSTEM";
 
@@ -39,11 +41,15 @@ public class FriendAdapter extends BaseAdapter {
     private final List<User> recentFriends = new ArrayList<User>();
     private final List<User> otherFriends = new ArrayList<User>();
     private final List<FriendRequestItem> requests = new ArrayList<FriendRequestItem>();
+    private final List<Group> pendingGroups = new ArrayList<Group>();
+    private final List<User> pendingUsers = new ArrayList<User>();
 
     private boolean groupsExpanded = true;
     private boolean recentExpanded = true;
     private boolean requestsExpanded = true;
     private boolean friendsExpanded = true;
+    private boolean pendingGroupsExpanded = true;
+    private boolean pendingUsersExpanded = true;
     private String query = "";
     private String animExpandSectionKey;
     private final SparseBooleanArray animatedRowPositions = new SparseBooleanArray();
@@ -122,14 +128,23 @@ public class FriendAdapter extends BaseAdapter {
     }
 
     public void setData(List<Group> groups, List<User> recentFriends, List<User> otherFriends, List<FriendRequestItem> requests) {
+        setData(groups, recentFriends, otherFriends, requests, null, null);
+    }
+
+    public void setData(List<Group> groups, List<User> recentFriends, List<User> otherFriends,
+                        List<FriendRequestItem> requests, List<Group> pendingGroups, List<User> pendingUsers) {
         this.groups.clear();
         this.recentFriends.clear();
         this.otherFriends.clear();
         this.requests.clear();
+        this.pendingGroups.clear();
+        this.pendingUsers.clear();
         if (groups != null) this.groups.addAll(groups);
         if (recentFriends != null) this.recentFriends.addAll(recentFriends);
         if (otherFriends != null) this.otherFriends.addAll(otherFriends);
         if (requests != null) this.requests.addAll(requests);
+        if (pendingGroups != null) this.pendingGroups.addAll(pendingGroups);
+        if (pendingUsers != null) this.pendingUsers.addAll(pendingUsers);
         clearExpandAnimationState();
         rebuildItems();
     }
@@ -224,6 +239,16 @@ public class FriendAdapter extends BaseAdapter {
         appendSection(SEC_FRIENDS, "FRIENDS", otherFriends.size(), friendsExpanded);
         if (friendsExpanded) items.addAll(otherFriends);
 
+        // 未迁移的群组与用户统一排在联系人页最下面；没有内容时不显示标题，避免空的噪音分区。
+        if (!pendingGroups.isEmpty()) {
+            appendSection(SEC_PENDING_GROUPS, "\u672A\u8FC1\u79FB\u7684\u7FA4\u7EC4", pendingGroups.size(), pendingGroupsExpanded);
+            if (pendingGroupsExpanded) items.addAll(pendingGroups);
+        }
+        if (!pendingUsers.isEmpty()) {
+            appendSection(SEC_PENDING_USERS, "\u672A\u8FC1\u79FB\u7684\u7528\u6237", pendingUsers.size(), pendingUsersExpanded);
+            if (pendingUsersExpanded) items.addAll(pendingUsers);
+        }
+
         notifyDataSetChanged();
     }
 
@@ -244,6 +269,11 @@ public class FriendAdapter extends BaseAdapter {
         }
         for (int i = 0; i < recentFriends.size(); i++) if (matchesUser(recentFriends.get(i), qLower)) results.add(recentFriends.get(i));
         for (int i = 0; i < otherFriends.size(); i++) if (matchesUser(otherFriends.get(i), qLower)) results.add(otherFriends.get(i));
+        for (int i = 0; i < pendingGroups.size(); i++) {
+            Group g = pendingGroups.get(i);
+            if (g != null && (containsIgnoreCase(g.name, qLower) || containsIgnoreCase(g.id, qLower))) results.add(g);
+        }
+        for (int i = 0; i < pendingUsers.size(); i++) if (matchesUser(pendingUsers.get(i), qLower)) results.add(pendingUsers.get(i));
 
         if (results.isEmpty()) {
             items.add(new SectionHeader(null, "\u65E0\u5339\u914D\u7ED3\u679C", 0, true, false));
@@ -292,6 +322,8 @@ public class FriendAdapter extends BaseAdapter {
         else if (SEC_RECENT.equals(key)) recentExpanded = !recentExpanded;
         else if (SEC_REQUESTS.equals(key)) requestsExpanded = !requestsExpanded;
         else if (SEC_FRIENDS.equals(key)) friendsExpanded = !friendsExpanded;
+        else if (SEC_PENDING_GROUPS.equals(key)) pendingGroupsExpanded = !pendingGroupsExpanded;
+        else if (SEC_PENDING_USERS.equals(key)) pendingUsersExpanded = !pendingUsersExpanded;
         boolean nowExpanded = isSectionExpanded(key);
         if (!wasExpanded && nowExpanded) {
             animExpandSectionKey = key;
@@ -307,6 +339,8 @@ public class FriendAdapter extends BaseAdapter {
         if (SEC_RECENT.equals(key)) return recentExpanded;
         if (SEC_REQUESTS.equals(key)) return requestsExpanded;
         if (SEC_FRIENDS.equals(key)) return friendsExpanded;
+        if (SEC_PENDING_GROUPS.equals(key)) return pendingGroupsExpanded;
+        if (SEC_PENDING_USERS.equals(key)) return pendingUsersExpanded;
         return false;
     }
 

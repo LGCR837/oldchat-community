@@ -27,6 +27,9 @@ public class FriendsApiParser {
             g.member_count = gObj.optInt("member_count", 0);
             g.message_seq = gObj.optLong("message_seq", 0L);
             g.member_version = gObj.optLong("member_version", 0L);
+            if (gObj.has("migrated")) {
+                g.migrated = gObj.optBoolean("migrated", true);
+            }
             groups.add(g);
         }
         return groups;
@@ -48,6 +51,9 @@ public class FriendsApiParser {
             u.friend_added_at = uObj.optLong("friend_added_at", 0);
             u.is_online = uObj.optBoolean("is_online", false);
             u.presence_status = uObj.optString("presence_status", "online");
+            if (uObj.has("migrated")) {
+                u.migrated = uObj.optBoolean("migrated", true);
+            }
             if (u.uid != null && !u.uid.isEmpty()) {
                 friends.add(u);
             }

@@ -43,6 +43,8 @@ abstract class FriendsFragmentSupport extends Fragment {
     protected FriendAdapter adapter;
     protected List<User> recentFriends = new ArrayList<>();
     protected List<User> otherFriends = new ArrayList<>();
+    /** 迁移时建的占位账号（migrated=false），单独分区排在联系人页最下面。 */
+    protected List<User> pendingUsers = new ArrayList<>();
     protected List<Group> groups = new ArrayList<>();
     protected List<FriendAdapter.FriendRequestItem> pendingRequests = new ArrayList<>();
     protected boolean groupsLoaded = false;
@@ -86,8 +88,19 @@ abstract class FriendsFragmentSupport extends Fragment {
     protected void splitFriends(List<User> friends) {
         recentFriends.clear();
         otherFriends.clear();
+        pendingUsers.clear();
+        if (friends == null) {
+            return;
+        }
         long cutoff = System.currentTimeMillis() - 24L * 60L * 60L * 1000L;
         for (User u : friends) {
+            if (u == null) {
+                continue;
+            }
+            if (!u.isMigrated()) {
+                pendingUsers.add(u);
+                continue;
+            }
             long addedMs = u.friend_added_at > 0 ? u.friend_added_at * 1000L : 0;
             if (addedMs > 0 && addedMs >= cutoff) {
                 recentFriends.add(u);
@@ -101,7 +114,19 @@ abstract class FriendsFragmentSupport extends Fragment {
         if (adapter == null) {
             return;
         }
-        adapter.setData(groups, recentFriends, otherFriends, pendingRequests);
+        List<Group> normalGroups = new ArrayList<>();
+        List<Group> pendingGroups = new ArrayList<>();
+        for (Group g : groups) {
+            if (g == null) {
+                continue;
+            }
+            if (g.isMigrated()) {
+                normalGroups.add(g);
+            } else {
+                pendingGroups.add(g);
+            }
+        }
+        adapter.setData(normalGroups, recentFriends, otherFriends, pendingRequests, pendingGroups, pendingUsers);
         showLoading(!(groupsLoaded && friendsLoaded && requestsLoaded));
     }
 

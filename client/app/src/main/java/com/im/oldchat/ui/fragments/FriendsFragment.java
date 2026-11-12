@@ -538,7 +538,8 @@ public class FriendsFragment extends FriendsFragmentSupport {
         if (adapter == null || adapter.getCount() == 0) {
             return true;
         }
-        return groups.isEmpty() && recentFriends.isEmpty() && otherFriends.isEmpty() && pendingRequests.isEmpty();
+        return groups.isEmpty() && recentFriends.isEmpty() && otherFriends.isEmpty()
+                && pendingUsers.isEmpty() && pendingRequests.isEmpty();
     }
 
     @Override

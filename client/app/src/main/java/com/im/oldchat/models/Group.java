@@ -16,4 +16,10 @@ public class Group {
     public long message_seq;
     /** 服务端每群唯一成员版本；变化时分页刷新成员缓存。 */
     public long member_version;
+    /** 服务端标记：群号或本地 ID 以 GRP- 开头即为已迁移的官方群。缺失时按已迁移处理。 */
+    public Boolean migrated;
+
+    public boolean isMigrated() {
+        return migrated == null || migrated.booleanValue();
+    }
 }

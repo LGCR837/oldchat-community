@@ -176,6 +176,9 @@ public class GroupCache {
         target.announcement_updated_at = source.announcement_updated_at;
         target.announcement_read_at = source.announcement_read_at;
         target.member_count = source.member_count;
+        target.message_seq = source.message_seq;
+        target.member_version = source.member_version;
+        target.migrated = source.migrated;
         return target;
     }
 }

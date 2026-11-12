@@ -14,4 +14,10 @@ public class User {
     public long friend_added_at;
     public boolean is_online;
     public String presence_status;
+    /** 服务端标记：为假表示对方还是迁移时建的占位账号。缺失时按已迁移处理。 */
+    public Boolean migrated;
+
+    public boolean isMigrated() {
+        return migrated == null || migrated.booleanValue();
+    }
 }
