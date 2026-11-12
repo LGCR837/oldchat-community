@@ -21,6 +21,8 @@ const appLandingHTML = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Oldchat 旧聊 —— 轻量、可靠、兼容 Android 2.3 及以上版本的即时通讯系统。">
+  <meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
   <title>Oldchat 旧聊</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -132,6 +134,27 @@ const appLandingHTML = `<!doctype html>
       }
       .content { padding: 18px 14px; }
       .ascii-logo { font-size: 8px; }
+    }
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      body { background: #14161a; color: #e6e8eb; color-scheme: dark; }
+      a { color: #7fb2e0; }
+      a:hover { color: #a9cdec; }
+      .sidebar { background: #16181c; border-right-color: #2f353d; }
+      .sidebar-title { color: #a8b0ba; border-bottom-color: #2f353d; }
+      .sidebar-list li::before { color: #6f7883; }
+      .sidebar-list a { color: #7fb2e0; }
+      .sidebar-list a.highlight { color: #ef6b73; }
+      .ascii-logo { color: #6ea8d8; }
+      h1 { color: #e6e8eb; border-bottom-color: #6ea8d8; }
+      .subtitle { color: #a8b0ba; }
+      h2 { color: #d6d9dd; border-bottom-color: #2f353d; }
+      .btn-pill { background: #1d2a36; border-color: #35506b; color: #8dbde5; }
+      .btn-pill:hover { background: #23384a; }
+      .btn-pill.primary { background: #2e6591; border-color: #3a78a8; color: #ffffff; }
+      .btn-pill.primary:hover { background: #3a78a8; }
+      .mobile-nav-bar { background: #16181c; border-bottom-color: #2f353d; }
+      .mobile-toggle-btn { background: #1a1d21; border-color: #2f353d; color: #8dbde5; }
     }
   </style>
 </head>

@@ -18,20 +18,22 @@ const termsHTML = `<!doctype html>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>用户服务协议与免责声明 · 旧聊 (OldChat)</title>
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
   <style>
     :root {
-      --bg: #0d1117;
-      --card-bg: #161b22;
-      --border: #30363d;
-      --text: #c9d1d9;
-      --text-heading: #f0f6fc;
-      --text-muted: #8b949e;
-      --primary: #238636;
-      --accent: #58a6ff;
-      --danger: #f85149;
-      --warning: #d29922;
-      --danger-bg: rgba(248, 81, 73, 0.1);
-      --warning-bg: rgba(210, 153, 34, 0.1);
+      --bg: #f5f6f8;
+      --card-bg: #ffffff;
+      --border: #d9dee6;
+      --text: #1a2233;
+      --text-heading: #111111;
+      --text-muted: #6b7280;
+      --primary: #1a7f37;
+      --accent: #0969da;
+      --danger: #cf222e;
+      --warning: #9a6700;
+      --danger-bg: rgba(207, 34, 46, 0.06);
+      --warning-bg: rgba(154, 103, 0, 0.08);
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
     }
@@ -154,6 +156,24 @@ const termsHTML = `<!doctype html>
     }
     a:hover {
       text-decoration: underline;
+    }
+    /* 深色：沿用原来的深色配色，不支持的浏览器整块忽略并保持浅色 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --card-bg: #161b22;
+        --border: #30363d;
+        --text: #c9d1d9;
+        --text-heading: #f0f6fc;
+        --text-muted: #8b949e;
+        --primary: #238636;
+        --accent: #58a6ff;
+        --danger: #f85149;
+        --warning: #d29922;
+        --danger-bg: rgba(248, 81, 73, 0.1);
+        --warning-bg: rgba(210, 153, 34, 0.1);
+      }
+      body { color-scheme: dark; }
     }
   </style>
 </head>

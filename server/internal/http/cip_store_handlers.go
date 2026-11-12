@@ -60,6 +60,20 @@ const cipUploadHTML = `<!doctype html>
     input[type=text], input[type=password], textarea{width:100%;box-sizing:border-box;padding:8px 10px;margin:6px 0 12px;border:1px solid #999;font-size:14px}
     label{font-weight:bold;font-size:14px}
     .tip{color:#666;font-size:13px;margin-top:-6px;margin-bottom:10px}
+
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      body{color:#e6e8eb;background:#14161a;color-scheme:dark}
+      h2{border-bottom-color:#2f353d}
+      a{color:#7fb2e0}
+      .btn{border-color:#3a78a8;background:#1a1d21;color:#e6e8eb}
+      .btn.primary{background:#2e6591;border-color:#3a78a8;color:#fff}
+      .box{border-color:#2f353d;background:#20242a}
+      .ok{color:#4ac26b}
+      .err{color:#ef6b73}
+      input[type=text],input[type=password],textarea{background:#20242a;border-color:#2f353d;color:#e6e8eb}
+      .tip{color:#8b94a0}
+    }
   </style>
 </head>
 <body>

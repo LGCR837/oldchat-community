@@ -27,6 +27,8 @@ const downloadPageHTML = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>旧聊 客户端下载与版本发布</title>
+  <meta name="theme-color" content="#f0f2f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
   <style>
     * { box-sizing: border-box; border-radius: 0!important; -webkit-tap-highlight-color: transparent; }
     body {
@@ -209,6 +211,33 @@ const downloadPageHTML = `<!doctype html>
     .tech-table a {
       color: #111;
       font-weight: 700;
+    }
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      body { background: #14161a; color: #e6e8eb; color-scheme: dark; }
+      .top-nav { border-bottom-color: #2f353d; }
+      .nav-links a { background: #1a1d21; border-color: #2f353d; color: #c9cdd4; }
+      .nav-links a:active { background: #2f353d; color: #ffffff; }
+      .notice { background: #2a2413; border-color: #6b5518; color: #e8d9a8; }
+      .main-card { background: #1a1d21; border-color: #2f353d; box-shadow: 3px 3px 0 #0b0d10; }
+      .app-title { color: #e6e8eb; }
+      .ver-badge { background: #2f353d; color: #e6e8eb; }
+      .ver-badge-test { background: #a33a37; color: #ffffff; }
+      .ver-badge-empty { background: #3a4048; color: #a8b0ba; }
+      .btn-download-primary { background: #2e6591; border-color: #3a78a8; color: #ffffff; box-shadow: 2px 2px 0 #0b0d10; }
+      .btn-download-primary:active { background: #3a78a8; box-shadow: 1px 1px 0 #0b0d10; }
+      .btn-download-test { background: #3a3f46; border-color: #3a3f46; }
+      .btn-download-disabled { background: #20242a; border-color: #2f353d; color: #6f7883; box-shadow: 2px 2px 0 #14161a; }
+      .info-list { background: #20242a; border-color: #2f353d; }
+      .info-item { color: #a8b0ba; }
+      .info-label { color: #6f7883; }
+      .changelog-box { background: #14161a; border-left-color: #6ea8d8; }
+      .changelog-title { color: #8b94a0; }
+      .details-box { border-top-color: #262b31; }
+      summary { color: #8b94a0; }
+      .tech-table th, .tech-table td { border-color: #2f353d; }
+      .tech-table th { background: #20242a; }
+      .tech-table a { color: #7fb2e0; }
     }
   </style>
 </head>

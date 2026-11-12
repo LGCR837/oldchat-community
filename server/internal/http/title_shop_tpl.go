@@ -20,6 +20,8 @@ const titleShopHTML = `
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>旧聊称号商店</title>
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
   <style>
     *{box-sizing:border-box;border-radius:0!important}
     body{max-width:720px;margin:0 auto;padding:24px;font-family:-apple-system,"Noto Sans SC",sans-serif;line-height:1.7;color:#111;background:#fff}
@@ -31,6 +33,16 @@ const titleShopHTML = `
     .row{margin:8px 0}
     .card{border:1px solid #ccc;padding:16px;margin:10px 0}
     .ok{color:#0a7a0a}.err{color:#c00}
+
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      body{color:#e6e8eb;background:#14161a;color-scheme:dark}
+      a{color:#7fb2e0}
+      input,button{background:#20242a;border-color:#2f353d;color:#e6e8eb}
+      button{background:#2e6591;border-color:#3a78a8;color:#fff}
+      .card{border-color:#2f353d;background:#1a1d21}
+      .ok{color:#4ac26b}.err{color:#ef6b73}
+    }
   </style>
 </head>
 <body>

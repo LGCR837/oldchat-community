@@ -285,6 +285,7 @@ const iGotBannedHTML = `
     :root {
       --bg: #ffffff;
       --card: #ffffff;
+      --bg-sub: #f8f8f8;
       --border: #111111;
       --text: #111111;
       --heading: #000000;
@@ -292,6 +293,7 @@ const iGotBannedHTML = `
       --primary: #111111;
       --danger: #c00000;
       --danger-bg: #fff0f0;
+      --ok: #0a7a0a;
       --ok-bg: #f0fff0;
       --font-mono: "SFMono-Regular", Consolas, Menlo, monospace;
     }
@@ -337,12 +339,12 @@ const iGotBannedHTML = `
       margin-bottom: 20px;
       border: 2px solid var(--border);
     }
-    .alert-ok { background: var(--ok-bg); border-color: #0a7a0a; color: #0a7a0a; font-weight: 700; }
+    .alert-ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); font-weight: 700; }
     .alert-err { background: var(--danger-bg); border-color: var(--danger); color: var(--danger); font-weight: 700; }
     
     .status-panel {
       border: 2px solid var(--border);
-      background: #f8f8f8;
+      background: var(--bg-sub);
       padding: 16px;
       margin-bottom: 20px;
     }
@@ -356,7 +358,7 @@ const iGotBannedHTML = `
       border: 2px solid var(--border);
     }
     .badge-banned { background: var(--danger); color: #ffffff; border-color: var(--danger); }
-    .badge-normal { background: #0a7a0a; color: #ffffff; border-color: #0a7a0a; }
+    .badge-normal { background: var(--ok); color: #ffffff; border-color: var(--ok); }
     
     .info-row {
       display: flex;
@@ -388,7 +390,7 @@ const iGotBannedHTML = `
       border: 2px solid var(--border);
       padding: 14px;
       margin-top: 14px;
-      background: #ffffff;
+      background: var(--card);
       font-size: 13px;
     }
     .appeal-history-title {
@@ -408,7 +410,7 @@ const iGotBannedHTML = `
     }
     input, textarea {
       width: 100%;
-      background: #ffffff;
+      background: var(--card);
       border: 2px solid var(--border);
       color: var(--heading);
       padding: 10px 12px;
@@ -417,7 +419,7 @@ const iGotBannedHTML = `
     }
     input:focus, textarea:focus {
       outline: none;
-      background: #fafafa;
+      background: var(--bg-sub);
     }
     textarea {
       min-height: 110px;
@@ -439,9 +441,9 @@ const iGotBannedHTML = `
       font-family: var(--font-mono);
     }
     .btn-primary { background: var(--primary); color: #ffffff; }
-    .btn-primary:hover { background: #ffffff; color: var(--primary); }
-    .btn-ghost { background: #ffffff; color: var(--border); }
-    .btn-ghost:hover { background: #f0f0f0; }
+    .btn-primary:hover { background: var(--card); color: var(--primary); }
+    .btn-ghost { background: var(--card); color: var(--border); }
+    .btn-ghost:hover { background: var(--bg-sub); }
     .note {
       font-size: 12px;
       color: var(--muted);
@@ -449,6 +451,31 @@ const iGotBannedHTML = `
       line-height: 1.6;
       border-top: 1px solid #ccc;
       padding-top: 14px;
+    }
+    .ok-text { color: var(--ok); font-weight: 700; }
+
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14161a;
+        --card: #1a1d21;
+        --bg-sub: #20242a;
+        --border: #2f353d;
+        --text: #e6e8eb;
+        --heading: #f0f2f5;
+        --muted: #8b94a0;
+        --primary: #2e6591;
+        --danger: #ef6b73;
+        --danger-bg: #2c1a1c;
+        --ok: #4ac26b;
+        --ok-bg: #16281c;
+      }
+      body { color-scheme: dark; }
+      .btn-primary { color: #ffffff; }
+      .btn-primary:hover { color: #8dbde5; }
+      .btn-ghost { color: var(--heading); }
+      .badge-banned, .badge-normal { color: #101317; }
+      .note { border-top-color: #2f353d; }
     }
   </style>
 </head>
@@ -478,7 +505,7 @@ const iGotBannedHTML = `
           {{else}}
             <span class="status-badge badge-normal">[正常] 账号状态正常</span>
             <div class="info-row"><span class="label">账号 UID:</span><span class="val">{{.UID}} ({{.Username}})</span></div>
-            <p style="font-size:13px;color:#0a7a0a;margin-top:6px;font-weight:700;">该账号当前未受到任何封禁限制，无需提交申诉。</p>
+            <p class="ok-text" style="font-size:13px;margin-top:6px;">该账号当前未受到任何封禁限制，无需提交申诉。</p>
           {{end}}
 
           {{if .LatestAppeal}}
@@ -488,7 +515,7 @@ const iGotBannedHTML = `
                 <span class="label">申诉状态:</span>
                 <span class="val">
                   {{if eq .LatestAppeal.Status "pending"}}<span style="color:#b8860b;font-weight:700;">[审核中] 正在审核中</span>
-                  {{else if eq .LatestAppeal.Status "approved"}}<span style="color:#0a7a0a;font-weight:700;">[已通过] 申诉已通过 (已解封)</span>
+                  {{else if eq .LatestAppeal.Status "approved"}}<span class="ok-text">[已通过] 申诉已通过 (已解封)</span>
                   {{else if eq .LatestAppeal.Status "rejected"}}<span style="color:var(--danger);font-weight:700;">[已驳回] 申诉已驳回</span>
                   {{else}}{{.LatestAppeal.Status}}{{end}}
                 </span>

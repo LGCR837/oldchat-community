@@ -21,6 +21,8 @@ const statusHTML = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>服务性能与运行状态 — Oldchat</title>
+  <meta name="theme-color" content="#f4f6f8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -91,6 +93,30 @@ const statusHTML = `<!doctype html>
     .tag-post { background: #e6f4ea; color: #137333; border-color: #ceead6; }
 
     .footer { margin-top: 20px; font-size: 11px; color: #868e96; text-align: center; }
+    .muted { color: #888; }
+    .err { color: #c00; font-weight: bold; }
+
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      body { background: #14161a; color: #e6e8eb; color-scheme: dark; }
+      a { color: #7fb2e0; }
+      .top-bar { border-bottom-color: #6ea8d8; }
+      .top-bar h1 { color: #e6e8eb; }
+      .card { background: #1a1d21; border-color: #2f353d; }
+      .card-label { color: #8b94a0; }
+      .card-val { color: #e6e8eb; }
+      .card-sub { color: #6f7883; }
+      .badge-ok { color: #4ac26b; }
+      .section-title { color: #d6d9dd; border-bottom-color: #2f353d; }
+      table.data-table { background: #1a1d21; border-color: #2f353d; }
+      table.data-table th, table.data-table td { border-color: #2f353d; }
+      table.data-table th { background: #20242a; color: #a8b0ba; }
+      .tag-method { background: #1d2a36; color: #8dbde5; border-color: #35506b; }
+      .tag-post { background: #16281c; color: #4ac26b; border-color: #2c5236; }
+      .footer { color: #6f7883; }
+      .muted { color: #6f7883; }
+      .err { color: #ef6b73; }
+    }
   </style>
 </head>
 <body>
@@ -138,7 +164,7 @@ const statusHTML = `<!doctype html>
       </tr>
     </thead>
     <tbody id="routes-tbody">
-      <tr><td colspan="5" style="text-align:center;color:#888;">加载中...</td></tr>
+      <tr><td colspan="5" class="muted" style="text-align:center;">加载中...</td></tr>
     </tbody>
   </table>
 </div>
@@ -168,7 +194,7 @@ const statusHTML = `<!doctype html>
               '<td>' + item.path + '</td>' +
               '<td style="text-align:right;">' + item.count + '</td>' +
               '<td style="text-align:right;">' + item.avg_time_ms.toFixed(1) + ' ms</td>' +
-              '<td style="text-align:right;' + (item.error_count > 0 ? 'color:#c00;font-weight:bold;' : '') + '">' + item.error_count + '</td>' +
+              '<td' + (item.error_count > 0 ? ' class="err"' : '') + ' style="text-align:right;">' + item.error_count + '</td>' +
               '</tr>';
           }
           document.getElementById('routes-tbody').innerHTML = html;

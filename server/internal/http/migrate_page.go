@@ -13,6 +13,8 @@ const appMigrateHTML = `<!doctype html>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>旧聊 · 数据迁移</title>
+  <meta name="theme-color" content="#f5f6f8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14161a" media="(prefers-color-scheme: dark)">
   <link rel="stylesheet" href="/app-assets/app.css" />
   <style>
     .mig-card { max-width: 720px; }
@@ -38,6 +40,29 @@ const appMigrateHTML = `<!doctype html>
     .mig-done { border: 1px solid #c3e6cb; background: #f3fbf5; padding: 10px 12px; font-size: 13px; margin-bottom: 14px; }
     .mig-failed { border: 1px solid #f5c2c7; background: #fdf3f4; padding: 10px 12px; font-size: 13px; margin-bottom: 14px; color: #b02a37; }
     .mig-summary { font-size: 12px; color: #495057; margin-top: 10px; }
+
+    /* 深色自适应：不支持的浏览器整块忽略，保持上面的浅色 */
+    @media (prefers-color-scheme: dark) {
+      .mig-tab { background: var(--card); color: var(--text); }
+      .mig-tab.active { background: #2e6591; border-color: #3a78a8; color: #fff; }
+      .mig-group-title { color: #a8b0ba; border-bottom-color: #262b31; }
+      .mig-note { color: #8b94a0; }
+      .mig-bar { background: #20242a; border-color: #2f353d; }
+      .mig-bar-fill { background: #6ea8d8; }
+      .mig-stats { color: #a8b0ba; }
+      .mig-stats b { color: #e6e8eb; }
+      .mig-events { border-top-color: #262b31; }
+      .mig-events li { border-bottom-color: #262b31; }
+      .mig-events time { color: #6f7883; }
+      .mig-events .stage { color: #6ea8d8; }
+      .mig-events li.warn .msg { color: #d4a72c; }
+      .mig-events li.error .msg { color: #ef6b73; }
+      .mig-events li.ok .msg { color: #4ac26b; }
+      .mig-hint { color: #6f7883; }
+      .mig-done { border-color: #2c5236; background: #16281c; color: #cfe9d6; }
+      .mig-failed { border-color: #4a2a2d; background: #2c1a1c; color: #ef6b73; }
+      .mig-summary { color: #a8b0ba; }
+    }
   </style>
 </head>
 <body>
