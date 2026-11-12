@@ -26,8 +26,8 @@ android {
         applicationId "com.im.oldchat.community"
         minSdk 9
         targetSdk 33
-        versionCode 543
-        versionName "1.4.5.3"
+        versionCode 544
+        versionName "1.4.5.4"
         vectorDrawables.useSupportLibrary = true
         resConfigs "zh"
         buildConfigField "boolean", "V2_ONLY_TEST", "false"
