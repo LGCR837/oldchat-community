@@ -21,6 +21,8 @@ namespace OldChat.App.Controls
     {
         private static readonly Dictionary<string, ImageSource> Memory = new Dictionary<string, ImageSource>(StringComparer.Ordinal);
         private static readonly HashSet<string> Pending = new HashSet<string>(StringComparer.Ordinal);
+        // 服务端确实丢了不少老文件，失败的地址记下来，避免滚动时反复重试刷日志
+        private static readonly HashSet<string> Failed = new HashSet<string>(StringComparer.Ordinal);
         private static readonly object Gate = new object();
         private static readonly HttpClient Http = CreateClient();
 
@@ -52,6 +54,7 @@ namespace OldChat.App.Controls
             {
                 ImageSource cached;
                 if (Memory.TryGetValue(key, out cached)) return cached;
+                if (Failed.Contains(url)) return null;
                 if (Pending.Contains(key)) return null;
                 Pending.Add(key);
             }
@@ -79,7 +82,8 @@ namespace OldChat.App.Controls
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn("图片加载失败 " + url + " " + ex.GetType().Name);
+                    lock (Gate) { Failed.Add(url); }
+                    Log.Info("图片不可用（已跳过后续重试）" + url + " " + ex.GetType().Name);
                 }
                 finally
                 {

@@ -181,6 +181,7 @@ namespace OldChat.App.ViewModels
                 AppendPage(page, conv, prepend: false);
                 conv.Touch(page.Messages.Count > 0 ? page.Messages[page.Messages.Count - 1] : null);
                 StatusLine = page.HasMore ? "已加载最近 " + page.Messages.Count + " 条" : "已到最早一条";
+                Log.Info("历史加载完成 " + conv.Title + " group=" + conv.IsGroup + " count=" + page.Messages.Count);
             }
             catch (ApiException ex)
             {

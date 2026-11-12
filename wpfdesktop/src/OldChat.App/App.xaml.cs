@@ -10,6 +10,8 @@ namespace OldChat.App
         public static AppSession Session { get; private set; }
         public static AppConfig Config { get; private set; }
 
+        private static int _errorPopups;
+
         public static void SetConfig(AppConfig config)
         {
             Config = config;
@@ -25,7 +27,12 @@ namespace OldChat.App
             DispatcherUnhandledException += delegate (object s, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs args)
             {
                 Log.Error("界面线程未处理异常", args.Exception);
-                MessageBox.Show("出现了一个错误：" + args.Exception.Message, "OldChat", MessageBoxButton.OK, MessageBoxImage.Warning);
+                // 模板渲染异常会逐帧重复抛，弹窗只给前两次，其余只进日志
+                if (System.Threading.Interlocked.Increment(ref _errorPopups) <= 2)
+                {
+                    MessageBox.Show("出现了一个错误：" + args.Exception.Message, "旧聊",
+                        MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
                 args.Handled = true;
             };
             AppDomain.CurrentDomain.UnhandledException += delegate (object s, UnhandledExceptionEventArgs args)
@@ -40,6 +47,7 @@ namespace OldChat.App
 
             Config = AppConfig.Load();
             Theme.ThemeManager.Apply(Config.Theme);
+            Controls.BubbleShape.Apply(Config.BubbleRounded);
 
             if (CommandLine.HasFlag(e.Args, "--reset"))
             {

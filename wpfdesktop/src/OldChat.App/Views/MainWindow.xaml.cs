@@ -190,6 +190,14 @@ namespace OldChat.App.Views
             InvalidateVisual();
         }
 
+        private void BubbleMode_Click(object sender, RoutedEventArgs e)
+        {
+            if (App.Config == null) return;
+            App.Config.BubbleRounded = !App.Config.BubbleRounded;
+            App.Config.Save();
+            Controls.BubbleShape.Apply(App.Config.BubbleRounded);
+        }
+
         // ---------- 导航 ----------
 
         private void TabMessages_Click(object sender, RoutedEventArgs e)

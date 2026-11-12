@@ -7,7 +7,10 @@
     <SolidColorBrush x:Key="RailBg" Color="#1F2937" />
     <SolidColorBrush x:Key="PanelBg" Color="#1F2937" />
     <SolidColorBrush x:Key="PanelBgAlt" Color="#111827" />
-    <SolidColorBrush x:Key="ChatBg" Color="#111827" />
+    <!-- 官方夜间聊天底图：深藏青 + 同款涂鸦 -->
+    <ImageBrush x:Key="ChatBg" ImageSource="/Assets/chat_bg_night.jpg"
+                TileMode="Tile" Viewport="0,0,232,232" ViewportUnits="Absolute"
+                Stretch="UniformToFill" />
     <SolidColorBrush x:Key="InputBg" Color="#1F2937" />
 
     <SolidColorBrush x:Key="TextPrimary" Color="#F9FAFB" />
@@ -40,7 +43,7 @@
     <SolidColorBrush x:Key="TimeChipBg" Color="#374151" />
     <SolidColorBrush x:Key="TimeChipText" Color="#9CA3AF" />
 
-    <SolidColorBrush x:Key="BadgeBg" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="BadgeBg" Color="#F87171" />
     <SolidColorBrush x:Key="BadgeText" Color="#111827" />
 
     <SolidColorBrush x:Key="DangerBrush" Color="#F87171" />

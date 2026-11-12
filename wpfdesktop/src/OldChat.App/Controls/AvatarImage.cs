@@ -2,6 +2,8 @@ using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using OldChat.Core.Logging;
 
 namespace OldChat.App.Controls
 {
@@ -34,6 +36,8 @@ namespace OldChat.App.Controls
         {
             if (string.IsNullOrWhiteSpace(url)) return url;
             string trimmed = url.Trim();
+
+            // 服务端可能返回相对路径，也可能返回 OSS 等外站绝对地址，绝对地址一律原样使用
             if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
                 trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return trimmed;
             if (string.IsNullOrEmpty(Origin)) return trimmed;
@@ -127,9 +131,12 @@ namespace OldChat.App.Controls
             }
             else
             {
-                string letter = string.IsNullOrEmpty(FallbackText) ? "?" : FallbackText.Substring(0, 1).ToUpperInvariant();
-                FormattedText text = MakeText(letter, radius);
-                dc.DrawText(text, new Point(center.X - text.Width / 2, center.Y - text.Height / 2));
+                // 官方占位图就是「圆圈内人形线描」，比首字母干净
+                ImageSource placeholder = PlaceholderSource;
+                if (placeholder != null)
+                {
+                    dc.DrawImage(placeholder, new Rect(0, 0, ActualWidth, ActualHeight));
+                }
             }
 
             dc.Pop();
@@ -158,6 +165,30 @@ namespace OldChat.App.Controls
                 foreground,
                 pixelsPerDip);
             return text;
+        }
+
+        private static ImageSource _placeholder;
+        private static bool _placeholderLoaded;
+
+        /// <summary>官方 ic_avatar_placeholder.png，第一次用到时加载一次。</summary>
+        private static ImageSource PlaceholderSource
+        {
+            get
+            {
+                if (_placeholderLoaded) return _placeholder;
+                _placeholderLoaded = true;
+                try
+                {
+                    var uri = new Uri("pack://application:,,,/Assets/avatar_placeholder.png", UriKind.Absolute);
+                    var decoder = new PngBitmapDecoder(uri, BitmapCreateOptions.DelayCreation, BitmapCacheOption.OnLoad);
+                    if (decoder.Frames.Count > 0) _placeholder = decoder.Frames[0];
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn("占位头像加载失败：" + ex.Message);
+                }
+                return _placeholder;
+            }
         }
 
         private Brush ResolveBrush(string key, Color fallback)

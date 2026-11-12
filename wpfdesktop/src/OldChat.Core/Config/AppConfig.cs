@@ -15,6 +15,17 @@ namespace OldChat.Core.Config
         [JsonProperty("origin")] public string Origin { get; set; }
         [JsonProperty("device_id")] public string DeviceId { get; set; }
         [JsonProperty("theme")] public string Theme { get; set; }
+
+        /// <summary>气泡是否圆角。官方默认圆角，靠己方那个角留尖。</summary>
+        [JsonProperty("bubble_rounded")] private bool? BubbleRoundedRaw { get; set; }
+
+        [JsonIgnore]
+        public bool BubbleRounded
+        {
+            get { return BubbleRoundedRaw ?? true; }
+            set { BubbleRoundedRaw = value; }
+        }
+
         [JsonProperty("last_chat")] public string LastChat { get; set; }
 
         public static string DataDir

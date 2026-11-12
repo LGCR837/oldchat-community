@@ -19,7 +19,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- ================= 标题栏 ================= -->
+            <!-- 标题栏 -->
             <Grid Grid.Row="0" Background="{DynamicResource TitleBarBg}"
                   MouseLeftButtonDown="TitleBar_MouseDown">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
@@ -33,6 +33,8 @@
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Button Style="{StaticResource WindowButton}" FontSize="12"
+                            Content="&#x25FB;" ToolTip="切换气泡圆角" Click="BubbleMode_Click" />
                     <Button Style="{StaticResource WindowButton}" FontFamily="{StaticResource IconFont}"
                             FontSize="13" Content="&#xE793;" ToolTip="切换主题" Click="Theme_Click" />
                     <Button Style="{StaticResource WindowButton}" Content="&#xE921;" ToolTip="最小化" Click="Minimize_Click" />
@@ -41,18 +43,19 @@
                 </StackPanel>
             </Grid>
 
-            <!-- ================= 主体 ================= -->
+            <!-- 主体 -->
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="64" />
-                    <ColumnDefinition Width="304" />
+                    <ColumnDefinition Width="62" />
+                    <ColumnDefinition Width="300" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
                 <!-- 导航栏 -->
-                <Border Grid.Column="0" Background="{DynamicResource RailBg}">
+                <Border Grid.Column="0" Background="{DynamicResource RailBg}"
+                        BorderBrush="{DynamicResource Divider}" BorderThickness="0,0,1,0">
                     <Grid>
-                        <StackPanel VerticalAlignment="Top" Margin="0,10,0,0">
+                        <StackPanel VerticalAlignment="Top" Margin="0,8,0,0">
                             <RadioButton x:Name="TabMessages" Style="{StaticResource RailButton}"
                                          GroupName="Rail" IsChecked="True" Content="&#xE8BD;"
                                          HorizontalAlignment="Center" ToolTip="消息"
@@ -76,8 +79,7 @@
                 </Border>
 
                 <!-- 会话列表 -->
-                <Border Grid.Column="1" Background="{DynamicResource PanelBg}"
-                        BorderBrush="{DynamicResource Divider}" BorderThickness="1,0,1,0">
+                <Border Grid.Column="1" Background="{DynamicResource PanelBg}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -85,7 +87,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <Grid Grid.Row="0" Margin="12,12,12,8">
+                        <Grid Grid.Row="0" Margin="12,12,12,6">
                             <TextBox x:Name="SearchBox" Style="{StaticResource InputBox}"
                                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                      Padding="28,6,10,6" />
@@ -112,14 +114,13 @@
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
-                                        <controls:AvatarImage Grid.Column="0" Width="40" Height="40"
+                                        <controls:AvatarImage Grid.Column="0" Width="46" Height="46"
                                                               Url="{Binding AvatarUrl}"
-                                                              FallbackText="{Binding Title}"
                                                               IsOnline="{Binding IsOnline}"
                                                               ShowOnline="True" />
 
-                                        <StackPanel Grid.Column="1" Margin="11,1,8,0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Title}" FontSize="13"
+                                        <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"
                                                        Foreground="{DynamicResource TextPrimary}"
                                                        TextTrimming="CharacterEllipsis" />
                                             <TextBlock Text="{Binding Preview}" FontSize="12" Margin="0,3,0,0"
@@ -127,11 +128,11 @@
                                                        TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
 
-                                        <StackPanel Grid.Column="2" VerticalAlignment="Center"
+                                        <StackPanel Grid.Column="2" VerticalAlignment="Top" Margin="0,2,0,0"
                                                     HorizontalAlignment="Right">
                                             <TextBlock Text="{Binding TimeText}" FontSize="11"
                                                        HorizontalAlignment="Right"
-                                                       Foreground="{DynamicResource TextMuted}" />
+                                                       Foreground="{DynamicResource TextSecondary}" />
                                             <Border Style="{StaticResource UnreadBadge}" Margin="0,5,0,0"
                                                     Visibility="{Binding HasUnread, Converter={StaticResource BoolToVisibility}}">
                                                 <TextBlock Text="{Binding Unread}" FontSize="10"
@@ -144,16 +145,16 @@
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Border Grid.Row="2" Padding="14,7"
+                        <Border Grid.Row="2" Padding="16,7"
                                 BorderBrush="{DynamicResource Divider}" BorderThickness="0,1,0,0">
                             <TextBlock Text="{Binding StatusLine}" FontSize="11"
                                        TextTrimming="CharacterEllipsis"
-                                       Foreground="{DynamicResource TextMuted}" />
+                                       Foreground="{DynamicResource TextSecondary}" />
                         </Border>
                     </Grid>
                 </Border>
 
-                <!-- 聊天区 -->
+                <!-- 聊天区：官方底图铺满 -->
                 <Grid Grid.Column="2" Background="{DynamicResource ChatBg}">
 
                     <!-- 空状态 -->
@@ -170,27 +171,28 @@
                     </StackPanel>
 
                     <!-- 聊天 -->
-                    <Grid x:Name="ChatPane" Visibility="Collapsed" Opacity="0">
+                    <Grid x:Name="ChatPane" Visibility="Collapsed">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="56" />
+                            <RowDefinition Height="48" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <!-- 头部 -->
+                        <!-- 头部：官方 toolbar 48dp -->
                         <Border Grid.Row="0" Background="{DynamicResource PanelBg}"
                                 BorderBrush="{DynamicResource Divider}" BorderThickness="0,0,0,1">
-                            <Grid Margin="18,0">
+                            <Grid Margin="16,0">
                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                    <controls:AvatarImage Width="32" Height="32"
+                                    <controls:AvatarImage Width="36" Height="36"
                                                           Url="{Binding Selected.AvatarUrl}"
-                                                          FallbackText="{Binding Selected.Title}"
                                                           IsOnline="{Binding Selected.IsOnline}" />
-                                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding HeaderTitle}" FontSize="14" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextPrimary}" />
-                                        <TextBlock Text="{Binding HeaderSubtitle}" FontSize="11" Margin="0,2,0,0"
-                                                   Foreground="{DynamicResource TextMuted}" />
+                                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding HeaderTitle}" FontSize="16" FontWeight="SemiBold"
+                                                   Foreground="{DynamicResource TextPrimary}"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="420" />
+                                        <TextBlock Text="{Binding HeaderSubtitle}" FontSize="11" Margin="0,1,0,0"
+                                                   Foreground="{DynamicResource TextSecondary}"
+                                                   TextTrimming="CharacterEllipsis" MaxWidth="420" />
                                     </StackPanel>
                                 </StackPanel>
                             </Grid>
@@ -203,11 +205,11 @@
                                       Padding="0"
                                       ScrollChanged="MessageScroll_ScrollChanged">
                             <ItemsControl x:Name="MessageList" ItemsSource="{Binding Messages}"
-                                          Margin="22,6,14,12">
+                                          Margin="18,10,10,10">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel>
-                                            <!-- 时间分隔 -->
+                                            <!-- 时间分隔：官方 0dp 直角灰块 -->
                                             <Border>
                                                 <Border.Style>
                                                     <Style TargetType="Border" BasedOn="{StaticResource TimeChip}">
@@ -223,27 +225,23 @@
                                                            Foreground="{DynamicResource TimeChipText}" />
                                             </Border>
 
-                                            <Grid x:Name="MsgRoot" Margin="0,0,0,10" Opacity="0">
-                                                <Grid.RenderTransform>
-                                                    <TranslateTransform x:Name="Trans" Y="6" />
-                                                </Grid.RenderTransform>
+                                            <Grid Margin="0,0,0,10">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="*" />
                                                 </Grid.ColumnDefinitions>
 
+                                                <!-- 群聊才有头像，私聊按官方不显示 -->
                                                 <controls:AvatarImage x:Name="MsgAvatar" Grid.Column="0"
-                                                                      Width="34" Height="34"
-                                                                      VerticalAlignment="Top" Margin="0,1,0,0"
+                                                                      Width="36" Height="36"
+                                                                      VerticalAlignment="Top" Margin="0,1,8,0"
                                                                       Url="{Binding AvatarUrl}"
-                                                                      FallbackText="{Binding AvatarLetter}" />
+                                                                      Visibility="{Binding ShowAvatar, Converter={StaticResource BoolToVisibility}}" />
 
-                                                <StackPanel x:Name="MsgBody" Grid.Column="1" Margin="10,0,0,0"
-                                                            HorizontalAlignment="Left">
-                                                    <!-- 昵称 -->
+                                                <StackPanel x:Name="MsgBody" Grid.Column="1" HorizontalAlignment="Left">
                                                     <TextBlock x:Name="SenderLabel" Text="{Binding SenderName}"
-                                                               FontSize="12" Margin="1,0,0,4"
-                                                               Foreground="{Binding SenderName, Converter={StaticResource Nickname}}">
+                                                               FontSize="12" Margin="1,0,0,3"
+                                                               Foreground="{Binding SenderName, Converter={StaticResource NicknameBrush}}">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock" BasedOn="{StaticResource BaseText}">
                                                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -259,9 +257,9 @@
                                                     <!-- 气泡 -->
                                                     <Border x:Name="Bubble" Style="{StaticResource BubbleInStyle}">
                                                         <StackPanel>
-                                                            <!-- 引用 -->
-                                                            <Border x:Name="QuoteBlock" Margin="0,0,0,7"
+                                                            <Border x:Name="QuoteBlock" Margin="0,0,0,6"
                                                                     Background="{DynamicResource ReplyBg}"
+                                                                    Padding="6"
                                                                     Visibility="{Binding HasQuote, Converter={StaticResource BoolToVisibility}}">
                                                                 <Grid>
                                                                     <Grid.ColumnDefinitions>
@@ -270,15 +268,16 @@
                                                                     </Grid.ColumnDefinitions>
                                                                     <Border Background="{DynamicResource ReplyAccent}" />
                                                                     <TextBlock Grid.Column="1" Text="{Binding QuoteText}"
-                                                                               FontSize="12" Margin="8,5,8,6"
+                                                                               FontSize="12" Margin="7,0,0,0"
+                                                                               TextWrapping="Wrap" MaxHeight="60"
                                                                                TextTrimming="CharacterEllipsis"
                                                                                Foreground="{DynamicResource ReplyText}" />
                                                                 </Grid>
                                                             </Border>
 
                                                             <TextBlock x:Name="BodyText" Text="{Binding DisplayText}"
-                                                                       TextWrapping="Wrap" FontSize="14"
-                                                                       LineHeight="21"
+                                                                       TextWrapping="Wrap" FontSize="16"
+                                                                       LineHeight="23" LineStackingStrategy="BlockLineHeight"
                                                                        Foreground="{DynamicResource BubbleInText}" />
                                                         </StackPanel>
                                                     </Border>
@@ -292,71 +291,68 @@
                                         </StackPanel>
 
                                         <DataTemplate.Triggers>
-                                            <!-- 自己的消息：右对齐、无头像、黑底 -->
+                                            <!-- 自己的消息：右对齐、白字黑底、无描边、无头像 -->
                                             <DataTrigger Binding="{Binding IsMine}" Value="True">
                                                 <Setter TargetName="MsgAvatar" Property="Visibility" Value="Collapsed" />
                                                 <Setter TargetName="MsgBody" Property="HorizontalAlignment" Value="Right" />
-                                                <Setter TargetName="MsgBody" Property="Margin" Value="0" />
                                                 <Setter TargetName="SenderLabel" Property="Visibility" Value="Collapsed" />
-                                                <Setter TargetName="Bubble" Property="Background" Value="{DynamicResource BubbleOutBg}" />
-                                                <Setter TargetName="Bubble" Property="BorderThickness" Value="0" />
+                                                <Setter TargetName="Bubble" Property="Style" Value="{StaticResource BubbleOutStyle}" />
                                                 <Setter TargetName="BodyText" Property="Foreground" Value="{DynamicResource BubbleOutText}" />
-                                                <Setter TargetName="BodyText" Property="TextOptions.TextFormattingMode" Value="Display" />
                                             </DataTrigger>
-
-                                            <!-- 入场：淡入 + 上浮 6px -->
-                                            <EventTrigger RoutedEvent="Loaded">
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation Storyboard.TargetName="MsgRoot"
-                                                                         Storyboard.TargetProperty="Opacity"
-                                                                         From="0" To="1" Duration="0:0:0.12">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                        <DoubleAnimation Storyboard.TargetName="Trans"
-                                                                         Storyboard.TargetProperty="Y"
-                                                                         From="6" To="0" Duration="0:0:0.12">
-                                                            <DoubleAnimation.EasingFunction>
-                                                                <CubicEase EasingMode="EaseOut" />
-                                                            </DoubleAnimation.EasingFunction>
-                                                        </DoubleAnimation>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </EventTrigger>
                                         </DataTemplate.Triggers>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </ScrollViewer>
 
-                        <!-- 输入区 -->
+                        <!-- 输入区：官方为无边框输入 + 裸箭头发送 -->
                         <Border Grid.Row="2" Background="{DynamicResource PanelBg}"
                                 BorderBrush="{DynamicResource Divider}" BorderThickness="0,1,0,0"
-                                Padding="16,12">
+                                Padding="8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <Border Background="{DynamicResource InputBg}"
-                                        BorderBrush="{DynamicResource InputBorder}" BorderThickness="1">
+                                <Button Grid.Column="0" Style="{StaticResource GhostButton}" Width="36" Height="36"
+                                        Content="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="14"
+                                        Foreground="{DynamicResource TextSecondary}" ToolTip="更多" />
+
+                                <Grid Grid.Column="1" Margin="6,0,0,0">
                                     <TextBox x:Name="Composer"
                                              Text="{Binding ComposerText, UpdateSourceTrigger=PropertyChanged}"
                                              AcceptsReturn="True" TextWrapping="Wrap"
-                                             MinHeight="36" MaxHeight="130"
-                                             Padding="11,8" FontSize="14"
+                                             MinHeight="44" MaxHeight="140"
+                                             Padding="8,11" FontSize="15"
                                              Background="Transparent" BorderThickness="0"
                                              Foreground="{DynamicResource TextPrimary}"
                                              CaretBrush="{DynamicResource TextPrimary}"
+                                             VerticalContentAlignment="Top"
                                              VerticalScrollBarVisibility="Auto"
                                              PreviewKeyDown="Composer_PreviewKeyDown" />
-                                </Border>
+                                    <TextBlock x:Name="ComposerHint" Text="输入消息..."
+                                               FontSize="15" Margin="10,12,0,0"
+                                               VerticalAlignment="Top" IsHitTestVisible="False"
+                                               Foreground="{DynamicResource TextSecondary}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding ComposerText}" Value="">
+                                                        <Setter Property="Visibility" Value="Visible" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
 
-                                <Button Grid.Column="1" x:Name="SendButton" Style="{StaticResource PrimaryButton}"
-                                        Content="发送" Width="78" Height="36" Margin="10,0,0,0"
+                                <Button Grid.Column="2" x:Name="SendButton" Style="{StaticResource GhostButton}"
+                                        Content="&#xE724;" FontFamily="{StaticResource IconFont}"
+                                        FontSize="16" Width="40" Height="40"
+                                        Foreground="{DynamicResource AccentBrush}" ToolTip="发送"
                                         Click="Send_Click" />
                             </Grid>
                         </Border>

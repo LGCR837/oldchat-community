@@ -573,9 +573,7 @@
                     <Grid Background="Transparent">
                         <Border x:Name="Hover" Background="{DynamicResource HoverBg}" Opacity="0" />
                         <Border x:Name="Sel" Background="{DynamicResource SelectedBg}" Opacity="0" />
-                        <Border x:Name="Marker" Width="2" Height="0" HorizontalAlignment="Left"
-                                VerticalAlignment="Center" Background="{DynamicResource AccentBrush}" />
-                        <ContentPresenter Margin="12,9" />
+                        <ContentPresenter Margin="16,10" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
@@ -610,12 +608,6 @@
                                                 <CubicEase EasingMode="EaseOut" />
                                             </DoubleAnimation.EasingFunction>
                                         </DoubleAnimation>
-                                        <DoubleAnimation Storyboard.TargetName="Marker" Storyboard.TargetProperty="Height"
-                                                         To="20" Duration="0:0:0.12">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut" />
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
                                     </Storyboard>
                                 </BeginStoryboard>
                             </Trigger.EnterActions>
@@ -623,8 +615,6 @@
                                 <BeginStoryboard>
                                     <Storyboard>
                                         <DoubleAnimation Storyboard.TargetName="Sel" Storyboard.TargetProperty="Opacity"
-                                                         To="0" Duration="0:0:0.12" />
-                                        <DoubleAnimation Storyboard.TargetName="Marker" Storyboard.TargetProperty="Height"
                                                          To="0" Duration="0:0:0.12" />
                                     </Storyboard>
                                 </BeginStoryboard>
@@ -638,21 +628,21 @@
 
     <!-- ============ 气泡 ============ -->
 
-    <!-- 对方：白底 + 1px 描边 + 直角（官方 bg_bubble_in 就是 0dp） -->
+    <!-- 对方：白底 + 1px 描边；圆角由 BubbleInCorner 切换（官方默认圆角，靠己方那角留尖） -->
     <Style x:Key="BubbleInStyle" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource BubbleInBg}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BubbleInBorder}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="0" />
-        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="CornerRadius" Value="{DynamicResource BubbleInCorner}" />
+        <Setter Property="Padding" Value="12,7" />
         <Setter Property="MaxWidth" Value="520" />
         <Setter Property="HorizontalAlignment" Value="Left" />
     </Style>
 
-    <!-- 自己：实心黑底，无描边 -->
     <Style x:Key="BubbleOutStyle" TargetType="Border" BasedOn="{StaticResource BubbleInStyle}">
         <Setter Property="Background" Value="{DynamicResource BubbleOutBg}" />
         <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="{DynamicResource BubbleOutCorner}" />
         <Setter Property="HorizontalAlignment" Value="Right" />
     </Style>
 
@@ -660,18 +650,18 @@
     <Style x:Key="TimeChip" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource TimeChipBg}" />
         <Setter Property="CornerRadius" Value="0" />
-        <Setter Property="Padding" Value="9,3" />
+        <Setter Property="Padding" Value="12,4" />
         <Setter Property="HorizontalAlignment" Value="Center" />
-        <Setter Property="Margin" Value="0,12,0,10" />
+        <Setter Property="Margin" Value="0,6,0,6" />
     </Style>
 
     <!-- 未读角标 -->
     <Style x:Key="UnreadBadge" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource BadgeBg}" />
-        <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Height" Value="16" />
-        <Setter Property="MinWidth" Value="16" />
-        <Setter Property="Padding" Value="5,0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Height" Value="18" />
+        <Setter Property="MinWidth" Value="18" />
+        <Setter Property="Padding" Value="6,0" />
         <Setter Property="HorizontalAlignment" Value="Right" />
     </Style>
 

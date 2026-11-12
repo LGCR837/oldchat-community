@@ -26,6 +26,12 @@ namespace OldChat.App.ViewModels
         public string TimeHeaderText { get; set; }
         public bool ShowSenderName { get; private set; }
 
+        /// <summary>官方布局：私聊不显示消息头像，群聊才显示。</summary>
+        public bool ShowAvatar
+        {
+            get { return IsGroup && !IsMine; }
+        }
+
         public string LocalState
         {
             get { return _localState; }
