@@ -241,11 +241,11 @@ public class FriendAdapter extends BaseAdapter {
 
         // 未迁移的群组与用户统一排在联系人页最下面；没有内容时不显示标题，避免空的噪音分区。
         if (!pendingGroups.isEmpty()) {
-            appendSection(SEC_PENDING_GROUPS, "\u672A\u8FC1\u79FB\u7684\u7FA4\u7EC4", pendingGroups.size(), pendingGroupsExpanded);
+            appendSection(SEC_PENDING_GROUPS, "PENDING GROUPS", pendingGroups.size(), pendingGroupsExpanded);
             if (pendingGroupsExpanded) items.addAll(pendingGroups);
         }
         if (!pendingUsers.isEmpty()) {
-            appendSection(SEC_PENDING_USERS, "\u672A\u8FC1\u79FB\u7684\u7528\u6237", pendingUsers.size(), pendingUsersExpanded);
+            appendSection(SEC_PENDING_USERS, "PENDING USERS", pendingUsers.size(), pendingUsersExpanded);
             if (pendingUsersExpanded) items.addAll(pendingUsers);
         }
 
