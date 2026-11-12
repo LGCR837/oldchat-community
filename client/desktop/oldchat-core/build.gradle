@@ -1,6 +1,0 @@
-plugins {
-    id 'java-library'
-}
-
-// 纯 Java 模块：零 Android、零 JavaFX 依赖。
-// 后续把 app/ 的 api/、models/、data/ 去 Android 依赖后搬入此处。

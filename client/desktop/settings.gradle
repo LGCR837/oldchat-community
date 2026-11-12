@@ -1,2 +1,0 @@
-rootProject.name = 'oldchat-windows'
-include 'oldchat-core', 'oldchat-fx'
