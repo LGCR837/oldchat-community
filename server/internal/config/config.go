@@ -85,6 +85,11 @@ type Config struct {
 	MigrateIncludeGroups bool
 	// MigrateMaxMessagesPerChat 单个会话最多导入多少条，0 表示不限。
 	MigrateMaxMessagesPerChat int
+	// CorsEnabled 对 /v1、/v2、/ws 与安装包下载路径开放跨域，方便第三方网页版。
+	// 接口只用 Bearer 鉴权、不依赖 Cookie，因此不需要 Allow-Credentials。
+	CorsEnabled bool
+	// CorsAllowedOrigins 允许的来源列表，留空表示任意来源（*）。
+	CorsAllowedOrigins []string
 }
 
 // CaptchaModeOff / Pow / Geetest / Turnstile 是 CaptchaMode 的合法取值。
@@ -172,6 +177,9 @@ func Load() (Config, error) {
 	cfg.MigrateAllowClaim = parseBoolEnv("MIGRATE_ALLOW_CLAIM", true)
 	cfg.MigrateIncludeGroups = parseBoolEnv("MIGRATE_INCLUDE_GROUPS", true)
 	cfg.MigrateMaxMessagesPerChat = getIntEnv("MIGRATE_MAX_MESSAGES_PER_CHAT", 0)
+	// 跨域默认开放：第三方网页版只需 Bearer，不存在 Cookie 自动携带的问题。
+	cfg.CorsEnabled = parseBoolEnv("CORS_ENABLED", true)
+	cfg.CorsAllowedOrigins = cleanOrigins(getEnv("CORS_ALLOWED_ORIGINS", ""))
 
 	settingsPath := getEnv("SETTINGS_JSON", "settings.json")
 	settings, settingsOk := loadSettingsFromJSON(settingsPath)
@@ -281,6 +289,12 @@ func Load() (Config, error) {
 		}
 		if settings.MigrateMaxMessagesPerChat > 0 && !envIsSet("MIGRATE_MAX_MESSAGES_PER_CHAT") {
 			cfg.MigrateMaxMessagesPerChat = settings.MigrateMaxMessagesPerChat
+		}
+		if settings.CorsEnabled != nil && !envIsSet("CORS_ENABLED") {
+			cfg.CorsEnabled = *settings.CorsEnabled
+		}
+		if !envIsSet("CORS_ALLOWED_ORIGINS") && len(settings.CorsAllowedOrigins) > 0 {
+			cfg.CorsAllowedOrigins = cleanOrigins(strings.Join(settings.CorsAllowedOrigins, ","))
 		}
 	}
 
@@ -403,6 +417,31 @@ func Load() (Config, error) {
 }
 
 // cleanDownloadSources 过滤空值并统一去掉尾部斜杠；返回 nil 表示未配置（走默认）。
+// cleanOrigins 归一化跨域来源白名单：去空格、去尾部斜杠、去重。
+// 支持逗号分隔的单个字符串（环境变量）与字符串切片（settings.json）。
+// 返回空切片表示不限制来源。
+func cleanOrigins(input string) []string {
+	var out []string
+	for _, raw := range strings.Split(input, ",") {
+		v := strings.TrimSpace(raw)
+		if v == "" {
+			continue
+		}
+		v = strings.TrimRight(v, "/")
+		dup := false
+		for _, existing := range out {
+			if strings.EqualFold(existing, v) {
+				dup = true
+				break
+			}
+		}
+		if !dup {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
 func cleanDownloadSources(input []string) []string {
 	var out []string
 	for _, raw := range input {
@@ -596,6 +635,8 @@ type settingsFile struct {
 	MigrateAllowClaim         *bool    `json:"migrate_allow_claim"`
 	MigrateIncludeGroups      *bool    `json:"migrate_include_groups"`
 	MigrateMaxMessagesPerChat int      `json:"migrate_max_messages_per_chat"`
+	CorsEnabled               *bool    `json:"cors_enabled"`
+	CorsAllowedOrigins        []string `json:"cors_allowed_origins"`
 	Port                      string   `json:"port"`
 	OAuthIssuer               string   `json:"oauth_issuer"`
 	PublicBaseURL             string   `json:"public_base_url"`

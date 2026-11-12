@@ -316,6 +316,9 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	startMediaCleanup(cfg.UploadDir)
 
 	r := chi.NewRouter()
+	// 跨域最先执行：预检请求在此短路返回 204，不进入业务中间件，
+	// 避免接口维护（503）或鉴权失败被浏览器误报成 CORS 错误。
+	r.Use(api.corsMiddleware)
 	r.Use(api.metricsMiddleware)
 	r.Use(api.routeSwitchMiddleware)
 	r.Use(requestLogger)

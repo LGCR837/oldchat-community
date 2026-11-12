@@ -290,7 +290,10 @@ func recoverer(next http.Handler) http.Handler {
 func secureHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
-		w.Header().Set("X-Frame-Options", "DENY")
+		// 网页版自身允许被第三方页面内嵌，其余路径继续拒绝。
+		if !strings.HasPrefix(r.URL.Path, "/app") {
+			w.Header().Set("X-Frame-Options", "DENY")
+		}
 		w.Header().Set("Referrer-Policy", "no-referrer")
 		w.Header().Set("Cache-Control", "no-store")
 		next.ServeHTTP(w, r)
