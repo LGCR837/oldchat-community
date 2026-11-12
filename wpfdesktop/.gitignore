@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+
+# 旧模板骨架，仅本地留档
+_legacy-skeleton/

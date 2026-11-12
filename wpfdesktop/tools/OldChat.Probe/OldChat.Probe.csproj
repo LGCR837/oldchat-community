@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OldChat.Probe</RootNamespace>
+    <AssemblyName>OldChat.Probe</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OldChat.Core\OldChat.Core.csproj" />
+  </ItemGroup>
+
+</Project>

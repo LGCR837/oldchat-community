@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OldChat.App/OldChat.App.csproj" />
+    <Project Path="src/OldChat.Core/OldChat.Core.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/OldChat.Probe/OldChat.Probe.csproj" />
+  </Folder>
+</Solution>

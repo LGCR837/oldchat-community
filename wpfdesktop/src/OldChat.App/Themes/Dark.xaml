@@ -1,0 +1,68 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 深色：逐项对齐官方客户端 values-night/colors.xml -->
+    <SolidColorBrush x:Key="WindowBg" Color="#111827" />
+    <SolidColorBrush x:Key="TitleBarBg" Color="#1F2937" />
+    <SolidColorBrush x:Key="RailBg" Color="#1F2937" />
+    <SolidColorBrush x:Key="PanelBg" Color="#1F2937" />
+    <SolidColorBrush x:Key="PanelBgAlt" Color="#111827" />
+    <SolidColorBrush x:Key="ChatBg" Color="#111827" />
+    <SolidColorBrush x:Key="InputBg" Color="#1F2937" />
+
+    <SolidColorBrush x:Key="TextPrimary" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#9CA3AF" />
+    <SolidColorBrush x:Key="TextMuted" Color="#6B7280" />
+    <SolidColorBrush x:Key="TextOnAccent" Color="#111827" />
+
+    <SolidColorBrush x:Key="Divider" Color="#374151" />
+    <SolidColorBrush x:Key="BorderSoft" Color="#374151" />
+    <SolidColorBrush x:Key="DividerSoft" Color="#273244" />
+    <SolidColorBrush x:Key="InputBorder" Color="#374151" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="AccentHover" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="AccentSoft" Color="#273244" />
+
+    <SolidColorBrush x:Key="HoverBg" Color="#273244" />
+    <SolidColorBrush x:Key="SelectedBg" Color="#273244" />
+
+    <SolidColorBrush x:Key="BubbleInBg" Color="#2A313A" />
+    <SolidColorBrush x:Key="BubbleInText" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="BubbleInBorder" Color="#2A313A" />
+    <SolidColorBrush x:Key="BubbleOutBg" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="BubbleOutText" Color="#111827" />
+
+    <SolidColorBrush x:Key="ReplyBg" Color="#273244" />
+    <SolidColorBrush x:Key="ReplyAccent" Color="#3390EC" />
+    <SolidColorBrush x:Key="ReplyText" Color="#9CA3AF" />
+
+    <SolidColorBrush x:Key="TimeChipBg" Color="#374151" />
+    <SolidColorBrush x:Key="TimeChipText" Color="#9CA3AF" />
+
+    <SolidColorBrush x:Key="BadgeBg" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="BadgeText" Color="#111827" />
+
+    <SolidColorBrush x:Key="DangerBrush" Color="#F87171" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#34D399" />
+    <SolidColorBrush x:Key="OnlineBrush" Color="#34C759" />
+    <SolidColorBrush x:Key="OfflineBrush" Color="#4B5563" />
+
+    <SolidColorBrush x:Key="AvatarPlaceholderBg" Color="#374151" />
+    <SolidColorBrush x:Key="AvatarPlaceholderText" Color="#6B7280" />
+
+    <SolidColorBrush x:Key="ScrollThumb" Color="#4B5563" />
+    <SolidColorBrush x:Key="ScrollThumbHover" Color="#6B7280" />
+
+    <SolidColorBrush x:Key="WindowBorderBrush" Color="#374151" />
+
+    <SolidColorBrush x:Key="Nick1" Color="#F87C77" />
+    <SolidColorBrush x:Key="Nick2" Color="#F9A268" />
+    <SolidColorBrush x:Key="Nick3" Color="#A79BEF" />
+    <SolidColorBrush x:Key="Nick4" Color="#8DCB6C" />
+    <SolidColorBrush x:Key="Nick5" Color="#7DCADC" />
+    <SolidColorBrush x:Key="Nick6" Color="#75AEDF" />
+    <SolidColorBrush x:Key="Nick7" Color="#E68CAF" />
+    <SolidColorBrush x:Key="Nick8" Color="#F7BC55" />
+
+</ResourceDictionary>

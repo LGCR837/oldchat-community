@@ -1,0 +1,69 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 浅色：逐项对齐官方客户端 colors.xml -->
+    <SolidColorBrush x:Key="WindowBg" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="TitleBarBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="RailBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PanelBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="PanelBgAlt" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="ChatBg" Color="#F9FAFB" />
+    <SolidColorBrush x:Key="InputBg" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="TextPrimary" Color="#111827" />
+    <SolidColorBrush x:Key="TextSecondary" Color="#6B7280" />
+    <SolidColorBrush x:Key="TextMuted" Color="#9CA3AF" />
+    <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="Divider" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="BorderSoft" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="DividerSoft" Color="#F3F4F6" />
+    <SolidColorBrush x:Key="InputBorder" Color="#E5E7EB" />
+
+    <SolidColorBrush x:Key="AccentBrush" Color="#111111" />
+    <SolidColorBrush x:Key="AccentHover" Color="#000000" />
+    <SolidColorBrush x:Key="AccentSoft" Color="#F3F4F6" />
+
+    <SolidColorBrush x:Key="HoverBg" Color="#F3F4F6" />
+    <SolidColorBrush x:Key="SelectedBg" Color="#F0F0F0" />
+
+    <SolidColorBrush x:Key="BubbleInBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="BubbleInText" Color="#111827" />
+    <SolidColorBrush x:Key="BubbleInBorder" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="BubbleOutBg" Color="#111111" />
+    <SolidColorBrush x:Key="BubbleOutText" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="ReplyBg" Color="#F3F4F6" />
+    <SolidColorBrush x:Key="ReplyAccent" Color="#3390EC" />
+    <SolidColorBrush x:Key="ReplyText" Color="#6B7280" />
+
+    <SolidColorBrush x:Key="TimeChipBg" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="TimeChipText" Color="#6B7280" />
+
+    <SolidColorBrush x:Key="BadgeBg" Color="#111111" />
+    <SolidColorBrush x:Key="BadgeText" Color="#FFFFFF" />
+
+    <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
+    <SolidColorBrush x:Key="SuccessBrush" Color="#059669" />
+    <SolidColorBrush x:Key="OnlineBrush" Color="#34C759" />
+    <SolidColorBrush x:Key="OfflineBrush" Color="#C9CDD4" />
+
+    <SolidColorBrush x:Key="AvatarPlaceholderBg" Color="#E5E7EB" />
+    <SolidColorBrush x:Key="AvatarPlaceholderText" Color="#9CA3AF" />
+
+    <SolidColorBrush x:Key="ScrollThumb" Color="#D1D5DB" />
+    <SolidColorBrush x:Key="ScrollThumbHover" Color="#9CA3AF" />
+
+    <SolidColorBrush x:Key="WindowBorderBrush" Color="#E5E7EB" />
+
+    <!-- 昵称色板（Aether 记录的官方 8 色） -->
+    <SolidColorBrush x:Key="Nick1" Color="#EF615C" />
+    <SolidColorBrush x:Key="Nick2" Color="#F29154" />
+    <SolidColorBrush x:Key="Nick3" Color="#9388E1" />
+    <SolidColorBrush x:Key="Nick4" Color="#7ABB58" />
+    <SolidColorBrush x:Key="Nick5" Color="#64BACE" />
+    <SolidColorBrush x:Key="Nick6" Color="#5E9CD4" />
+    <SolidColorBrush x:Key="Nick7" Color="#D979A3" />
+    <SolidColorBrush x:Key="Nick8" Color="#F5AD3D" />
+
+</ResourceDictionary>
