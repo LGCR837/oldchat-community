@@ -152,26 +152,26 @@
     var name = u.Username || u.username;
     var coins = u.CoinBalance !== undefined ? u.CoinBalance : (u.coin_balance || 0);
     var title = u.UserTitle || u.user_title || '';
-    var body = '<div style="display:grid;gap:14px;max-height:480px;overflow-y:auto;">' +
-      '<div style="background:var(--bg-sub);padding:10px;border-radius:4px;border:1px solid #ddd;font-size:12px;display:flex;gap:15px;flex-wrap:wrap;">' +
-        '<div>邮箱: <strong>' + escapeHtml(u.Email || u.email || '—') + '</strong></div>' +
-        '<div>金币余额: <strong>' + coins + '</strong></div>' +
-        '<div>当前称号: <strong>' + (title || '无') + '</strong></div>' +
+    var body = '<div style="display:grid;gap:12px;max-height:480px;overflow-y:auto;">' +
+      '<div class="box row" style="gap:18px;font-size:12px;">' +
+        '<div>邮箱 <strong class="strong">' + escapeHtml(u.Email || u.email || '—') + '</strong></div>' +
+        '<div>金币 <strong class="strong mono">' + coins + '</strong></div>' +
+        '<div>称号 <strong class="strong">' + (title || '无') + '</strong></div>' +
       '</div>' +
-      '<div style="border:1px solid #ccc;padding:10px;background:#fff;"><h4 style="margin:0 0 8px 0;font-size:13px;">🔑 强制重置密码</h4>' +
+      '<div class="box"><h4 class="box-title">强制重置密码</h4>' +
         '<div style="display:flex;gap:8px;"><input type="text" id="ctrlNewPwd" class="input" placeholder="输入新密码" value="12345678"><button class="btn btn-primary btn-sm" id="btnCtrlResetPwd">重置密码</button></div></div>' +
-      '<div style="border:1px solid #ccc;padding:10px;background:#fff;"><h4 style="margin:0 0 8px 0;font-size:13px;">💰 增减金币资产</h4>' +
-        '<div style="display:flex;gap:8px;"><input type="number" id="ctrlCoinAmount" class="input" placeholder="增减数量(+500或-100)"><button class="btn btn-primary btn-sm" id="btnCtrlAdjustCoin">更新金币</button></div></div>' +
-      '<div style="border:1px solid #ccc;padding:10px;background:#fff;"><h4 style="margin:0 0 8px 0;font-size:13px;">👑 赋予专属头衔 / 称号</h4>' +
+      '<div class="box"><h4 class="box-title">增减金币资产</h4>' +
+        '<div style="display:flex;gap:8px;"><input type="number" id="ctrlCoinAmount" class="input" placeholder="增减数量，例如 +500 或 -100"><button class="btn btn-primary btn-sm" id="btnCtrlAdjustCoin">更新金币</button></div></div>' +
+      '<div class="box"><h4 class="box-title">赋予专属头衔</h4>' +
         '<div style="display:flex;gap:8px;"><input type="text" id="ctrlNewTitle" class="input" placeholder="输入称号" value="' + escapeHtml(title) + '"><button class="btn btn-primary btn-sm" id="btnCtrlSetTitle">赋予称号</button></div></div>' +
-      '<div style="border:1px solid #ccc;padding:10px;background:#fff;"><h4 style="margin:0 0 8px 0;font-size:13px;">⚡ 会话与硬件安全</h4>' +
+      '<div class="box"><h4 class="box-title">会话与设备安全</h4>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
           '<button class="btn btn-danger btn-sm" id="btnCtrlKick">强制踢下线</button>' +
           '<button class="btn btn-danger btn-sm" id="btnCtrlBanDevice">封禁当前物理设备</button>' +
         '</div></div>' +
     '</div>';
     var footer = '<button class="btn" onclick="AdminCore.hideModal()">关闭</button>';
-    showModal('用户全方位操控 — ' + escapeHtml(name) + ' (' + escapeHtml(uid) + ')', body, footer);
+    showModal('用户操控 — ' + escapeHtml(name) + ' (' + escapeHtml(uid) + ')', body, footer);
 
     $('#btnCtrlResetPwd').onclick = function () {
       var p = $('#ctrlNewPwd').value.trim();

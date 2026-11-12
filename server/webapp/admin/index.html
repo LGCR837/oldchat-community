@@ -11,68 +11,76 @@
 <body>
   <div id="admin-app">
     <!-- 侧边栏 -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="mainSidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo" id="appLogo"></div>
+        <div class="sidebar-logo" id="appLogo">OC</div>
         <span>OldChat Console</span>
+        <span class="brand-sub">ADMIN</span>
       </div>
       <ul class="nav-list" id="navList">
+        <li class="nav-group">概览</li>
         <li class="nav-item active" data-tab="dashboard">
           <span class="nav-icon" data-icon="dashboard"></span>
-          <span>概览仪表盘</span>
+          <span>仪表盘</span>
         </li>
+
+        <li class="nav-group">用户</li>
         <li class="nav-item" data-tab="users">
           <span class="nav-icon" data-icon="users"></span>
-          <span>用户与设备操控</span>
-        </li>
-        <li class="nav-item" data-tab="broadcast">
-          <span class="nav-icon" data-icon="activity"></span>
-          <span>全服广播与通知</span>
+          <span>用户与设备</span>
         </li>
         <li class="nav-item" data-tab="appeals">
           <span class="nav-icon" data-icon="shield"></span>
-          <span>封禁申诉审批</span>
+          <span>封禁申诉</span>
           <span class="nav-badge" id="badgeAppeals" style="display:none">0</span>
         </li>
-        <li class="nav-item" data-tab="bugs">
-          <span class="nav-icon" data-icon="sliders"></span>
-          <span>Bug 反馈箱</span>
+        <li class="nav-item" data-tab="reports">
+          <span class="nav-icon" data-icon="shield"></span>
+          <span>举报工单</span>
         </li>
+        <li class="nav-item" data-tab="court">
+          <span class="nav-icon" data-icon="scale"></span>
+          <span>公共法庭</span>
+        </li>
+
+        <li class="nav-group">内容</li>
         <li class="nav-item" data-tab="groups">
           <span class="nav-icon" data-icon="messageSquare"></span>
           <span>群组治理</span>
         </li>
         <li class="nav-item" data-tab="market">
           <span class="nav-icon" data-icon="database"></span>
-          <span>称号与表情商城</span>
+          <span>称号与表情</span>
         </li>
         <li class="nav-item" data-tab="apps">
           <span class="nav-icon" data-icon="lock"></span>
-          <span>CIP 小程序</span>
+          <span>小程序</span>
         </li>
+        <li class="nav-item" data-tab="broadcast">
+          <span class="nav-icon" data-icon="activity"></span>
+          <span>全服广播</span>
+        </li>
+        <li class="nav-item" data-tab="bugs">
+          <span class="nav-icon" data-icon="sliders"></span>
+          <span>Bug 反馈</span>
+        </li>
+
+        <li class="nav-group">系统</li>
         <li class="nav-item" data-tab="metrics">
           <span class="nav-icon" data-icon="activity"></span>
-          <span>接口监控与排行</span>
+          <span>接口监控</span>
         </li>
         <li class="nav-item" data-tab="routes">
           <span class="nav-icon" data-icon="sliders"></span>
-          <span>路由接口开关</span>
-        </li>
-        <li class="nav-item" data-tab="reports">
-          <span class="nav-icon" data-icon="shield"></span>
-          <span>用户举报工单</span>
-        </li>
-        <li class="nav-item" data-tab="court">
-          <span class="nav-icon" data-icon="scale"></span>
-          <span>公共法庭案件</span>
-        </li>
-        <li class="nav-item" data-tab="settings">
-          <span class="nav-icon" data-icon="sliders"></span>
-          <span>系统全局设置</span>
+          <span>路由开关</span>
         </li>
         <li class="nav-item" data-tab="resources">
           <span class="nav-icon" data-icon="database"></span>
           <span>资源与限速</span>
+        </li>
+        <li class="nav-item" data-tab="settings">
+          <span class="nav-icon" data-icon="sliders"></span>
+          <span>全局设置</span>
         </li>
         <li class="nav-item" data-tab="logs">
           <span class="nav-icon" data-icon="terminal"></span>
@@ -80,24 +88,29 @@
         </li>
       </ul>
       <div class="sidebar-footer">
-        <button class="btn btn-sm" id="btnThemeToggle" title="切换主题">
+        <button class="btn btn-icon" id="btnThemeToggle" title="切换主题">
           <span data-icon="sun" id="themeIcon"></span>
         </button>
-        <button class="btn btn-sm btn-danger" id="btnLogout" title="退出登录">
+        <button class="btn btn-danger" id="btnLogout" title="退出登录">
           <span data-icon="logout"></span>
           <span>退出</span>
         </button>
       </div>
     </aside>
 
+    <div class="sidebar-scrim" id="sidebarScrim"></div>
+
     <!-- 主界面 -->
     <main class="main-wrapper">
       <header class="top-header">
-        <div class="header-title" id="pageTitle">概览仪表盘</div>
+        <button class="btn btn-icon btn-sm sidebar-toggle" id="btnSidebarToggle" title="菜单" aria-label="菜单">
+          <span class="menu-lines"></span>
+        </button>
+        <div class="header-title" id="pageTitle">仪表盘</div>
         <div class="header-actions">
           <button class="btn btn-sm" id="btnGlobalRefresh">
             <span data-icon="refresh"></span>
-            <span>刷新数据</span>
+            <span>刷新</span>
           </button>
         </div>
       </header>

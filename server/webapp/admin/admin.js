@@ -23,20 +23,21 @@
       el.classList.toggle('active', el.getAttribute('data-tab') === tab);
     });
     var titles = {
-      'dashboard': '概览仪表盘',
-      'users': '用户与设备全方位操控',
-      'broadcast': '全服广播与通知发布',
-      'appeals': '用户封禁申诉审批',
-      'bugs': 'Bug 反馈与建议处理',
-      'groups': '群组治理与安全',
-      'market': '称号商城与表情广场',
-      'apps': 'CIP 小程序生态治理',
-      'metrics': '接口监控与调用排行',
-      'routes': '接口路由开关与熔断管控',
-      'court': '公共法庭案件审查',
-      'settings': '系统全站参数热调优',
-      'resources': '资源配额与限速策略',
-      'logs': '服务端实时运行日志'
+      'dashboard': '仪表盘',
+      'users': '用户与设备',
+      'broadcast': '全服广播与通知',
+      'appeals': '封禁申诉审批',
+      'bugs': 'Bug 反馈',
+      'groups': '群组治理',
+      'market': '称号与表情商城',
+      'apps': 'CIP 小程序',
+      'metrics': '接口监控与排行',
+      'routes': '路由接口开关',
+      'court': '公共法庭',
+      'reports': '举报工单',
+      'settings': '全局设置',
+      'resources': '资源与限速',
+      'logs': '系统日志'
     };
     var titleEl = $('#pageTitle');
     if (titleEl) {
@@ -51,7 +52,7 @@
   function loadTabData(tab) {
     var body = $('#contentBody');
     if (!body) return;
-    body.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-muted);">' + AdminIcons.get('refresh', 'rotating', 24) + '<div style="margin-top:12px;">数据加载中...</div></div>';
+    body.innerHTML = '<div class="empty-state">' + AdminIcons.get('refresh', 'rotating', 20) + '<div style="margin-top:10px;">数据加载中</div></div>';
     C.renderAllIcons();
 
     if (tab === 'dashboard') V.renderDashboard();
@@ -97,11 +98,26 @@
 
   function init() {
     C.applyTheme(C.state.theme);
-    var logoEl = $('#appLogo');
-    if (logoEl) logoEl.innerHTML = AdminIcons.get('logo', '', 20);
+
+    var sidebar = $('#mainSidebar');
+    var scrim = $('#sidebarScrim');
+    var toggleBtn = $('#btnSidebarToggle');
+
+    function setSidebarOpen(open) {
+      if (sidebar) sidebar.classList.toggle('open', open);
+      if (scrim) scrim.classList.toggle('open', open);
+    }
+
+    if (toggleBtn) toggleBtn.onclick = function () {
+      setSidebarOpen(!sidebar.classList.contains('open'));
+    };
+    if (scrim) scrim.onclick = function () { setSidebarOpen(false); };
 
     $$('.nav-item').forEach(function (el) {
-      el.onclick = function () { switchTab(el.getAttribute('data-tab')); };
+      el.onclick = function () {
+        switchTab(el.getAttribute('data-tab'));
+        setSidebarOpen(false);
+      };
     });
 
     var themeBtn = $('#btnThemeToggle');

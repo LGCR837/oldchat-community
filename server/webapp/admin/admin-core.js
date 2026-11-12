@@ -6,7 +6,8 @@
 
   var state = {
     currentTab: 'dashboard',
-    theme: localStorage.getItem('admin_theme') || 'dark',
+    // 新版默认亮色，与官网同一套配色；沿用旧键会让历史选择卡在旧主题。
+    theme: localStorage.getItem('admin_theme_v2') || 'light',
     stats: {},
     cloudConfig: {},
     isShowingLogin: false
@@ -135,7 +136,7 @@
   function applyTheme(theme) {
     state.theme = theme;
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('admin_theme', theme);
+    localStorage.setItem('admin_theme_v2', theme);
     var iconEl = $('#themeIcon');
     if (iconEl && global.AdminIcons) {
       iconEl.innerHTML = global.AdminIcons.get(theme === 'dark' ? 'sun' : 'moon', '', 18);
