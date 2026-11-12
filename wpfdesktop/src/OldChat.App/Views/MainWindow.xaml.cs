@@ -22,7 +22,7 @@ namespace OldChat.App.Views
         public MainWindow()
         {
             InitializeComponent();
-            ChromeHelper.Attach(this, 40);
+            ChromeHelper.Attach(this, 0);
 
             AppSession session = App.Session;
             if (session == null)
@@ -91,6 +91,9 @@ namespace OldChat.App.Views
             bool hasChat = _vm.HasSelection && _activeTab == 0;
             bool wasVisible = ChatPane.Visibility == Visibility.Visible;
 
+            BrandPanel.Visibility = hasChat ? Visibility.Collapsed : Visibility.Visible;
+            ChatHeaderPanel.Visibility = hasChat ? Visibility.Visible : Visibility.Collapsed;
+
             if (hasChat)
             {
                 ChatPane.Visibility = Visibility.Visible;
@@ -152,13 +155,61 @@ namespace OldChat.App.Views
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
+                StopSmoothScroll();
                 MessageScroll.ScrollToEnd();
+                _scrollTarget = MessageScroll.VerticalOffset;
             }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        // ---------- 平滑滚动 ----------
+
+        private double _scrollTarget;
+        private bool _smoothScrollOn;
+
+        /// <summary>滚轮改成逐帧缓动，避免 WPF 默认的一格一跳。</summary>
+        private void MessageScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            e.Handled = true;
+
+            if (!_smoothScrollOn) _scrollTarget = MessageScroll.VerticalOffset;
+            _scrollTarget -= e.Delta * 0.55;
+
+            double max = Math.Max(0, MessageScroll.ExtentHeight - MessageScroll.ViewportHeight);
+            if (_scrollTarget < 0) _scrollTarget = 0;
+            if (_scrollTarget > max) _scrollTarget = max;
+
+            if (!_smoothScrollOn)
+            {
+                _smoothScrollOn = true;
+                System.Windows.Media.CompositionTarget.Rendering += OnSmoothScrollTick;
+            }
+        }
+
+        private void OnSmoothScrollTick(object sender, EventArgs e)
+        {
+            double offset = MessageScroll.VerticalOffset;
+            double diff = _scrollTarget - offset;
+
+            if (Math.Abs(diff) < 0.7)
+            {
+                MessageScroll.ScrollToVerticalOffset(_scrollTarget);
+                StopSmoothScroll();
+                return;
+            }
+
+            MessageScroll.ScrollToVerticalOffset(offset + diff * 0.32);
+        }
+
+        private void StopSmoothScroll()
+        {
+            if (!_smoothScrollOn) return;
+            _smoothScrollOn = false;
+            System.Windows.Media.CompositionTarget.Rendering -= OnSmoothScrollTick;
         }
 
         // ---------- 标题栏 ----------
 
-        private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
+        private void TopBar_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ClickCount == 2)
             {
@@ -262,6 +313,7 @@ namespace OldChat.App.Views
 
         private async void MessageScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+            if (!_smoothScrollOn) _scrollTarget = MessageScroll.VerticalOffset;
             if (e.ExtentHeightChange == 0) return;
             if (MessageScroll.VerticalOffset > 4) return;
             if (_loadingOlder || e.ExtentHeight < MessageScroll.ViewportHeight) return;

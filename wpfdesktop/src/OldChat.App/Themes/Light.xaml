@@ -4,7 +4,7 @@
     <!-- 浅色：逐项对齐官方客户端 colors.xml -->
     <SolidColorBrush x:Key="WindowBg" Color="#F9FAFB" />
     <SolidColorBrush x:Key="TitleBarBg" Color="#FFFFFF" />
-    <SolidColorBrush x:Key="RailBg" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="RailBg" Color="#F0F0F0" />
     <SolidColorBrush x:Key="PanelBg" Color="#FFFFFF" />
     <SolidColorBrush x:Key="PanelBgAlt" Color="#F9FAFB" />
     <!-- 官方聊天区底图：浅灰紫 + 白色线描涂鸦，平铺使用 -->
@@ -15,7 +15,7 @@
 
     <SolidColorBrush x:Key="TextPrimary" Color="#111827" />
     <SolidColorBrush x:Key="TextSecondary" Color="#6B7280" />
-    <SolidColorBrush x:Key="TextMuted" Color="#9CA3AF" />
+    <SolidColorBrush x:Key="TextMuted" Color="#9AA0A6" />
     <SolidColorBrush x:Key="TextOnAccent" Color="#FFFFFF" />
 
     <SolidColorBrush x:Key="Divider" Color="#E5E7EB" />

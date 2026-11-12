@@ -4,7 +4,7 @@
     <!-- 深色：逐项对齐官方客户端 values-night/colors.xml -->
     <SolidColorBrush x:Key="WindowBg" Color="#111827" />
     <SolidColorBrush x:Key="TitleBarBg" Color="#1F2937" />
-    <SolidColorBrush x:Key="RailBg" Color="#1F2937" />
+    <SolidColorBrush x:Key="RailBg" Color="#111827" />
     <SolidColorBrush x:Key="PanelBg" Color="#1F2937" />
     <SolidColorBrush x:Key="PanelBgAlt" Color="#111827" />
     <!-- 官方夜间聊天底图：深藏青 + 同款涂鸦 -->
@@ -32,9 +32,9 @@
 
     <SolidColorBrush x:Key="BubbleInBg" Color="#2A313A" />
     <SolidColorBrush x:Key="BubbleInText" Color="#F9FAFB" />
-    <SolidColorBrush x:Key="BubbleInBorder" Color="#2A313A" />
-    <SolidColorBrush x:Key="BubbleOutBg" Color="#E5E7EB" />
-    <SolidColorBrush x:Key="BubbleOutText" Color="#111827" />
+    <SolidColorBrush x:Key="BubbleInBorder" Color="#374151" />
+    <SolidColorBrush x:Key="BubbleOutBg" Color="#3256AA" />
+    <SolidColorBrush x:Key="BubbleOutText" Color="#FFFFFF" />
 
     <SolidColorBrush x:Key="ReplyBg" Color="#273244" />
     <SolidColorBrush x:Key="ReplyAccent" Color="#3390EC" />
@@ -44,7 +44,7 @@
     <SolidColorBrush x:Key="TimeChipText" Color="#9CA3AF" />
 
     <SolidColorBrush x:Key="BadgeBg" Color="#F87171" />
-    <SolidColorBrush x:Key="BadgeText" Color="#111827" />
+    <SolidColorBrush x:Key="BadgeText" Color="#FFFFFF" />
 
     <SolidColorBrush x:Key="DangerBrush" Color="#F87171" />
     <SolidColorBrush x:Key="SuccessBrush" Color="#34D399" />
