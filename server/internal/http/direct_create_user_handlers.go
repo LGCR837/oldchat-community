@@ -149,6 +149,7 @@ func (a *API) createDirectUserForTest(ctx context.Context, req directCreateUserR
 	}
 
 	a.setTokenVersionCache(user.ID, user.TokenVersion)
+	a.joinOfficialGroup(ctx, user.ID)
 	tokens, err := a.issueTokens(ctx, user)
 	if err != nil {
 		return nil, http.StatusInternalServerError, "token_failed", "internal error"

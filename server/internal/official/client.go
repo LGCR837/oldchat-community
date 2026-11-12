@@ -3,6 +3,7 @@ package official
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -96,9 +97,20 @@ type GroupPage struct {
 }
 
 func New(base string) *Client {
+	// 旧站的 HTTP/2 偶尔在响应中途回 RST_STREAM(INTERNAL_ERROR)，表现为
+	// “读取响应失败: stream error”。这里固定走 HTTP/1.1，并在请求层带重试，
+	// 避免一次连接异常就让整个迁移失败。
+	tr := &http.Transport{
+		ForceAttemptHTTP2:     false,
+		TLSNextProto:          map[string]func(string, *tls.Conn) http.RoundTripper{},
+		MaxIdleConns:          8,
+		IdleConnTimeout:       60 * time.Second,
+		TLSHandshakeTimeout:   15 * time.Second,
+		ResponseHeaderTimeout: 90 * time.Second,
+	}
 	return &Client{
 		base: strings.TrimRight(strings.TrimSpace(base), "/"),
-		hc:   &http.Client{Timeout: 30 * time.Second},
+		hc:   &http.Client{Timeout: 120 * time.Second, Transport: tr},
 	}
 }
 
@@ -107,13 +119,48 @@ type apiError struct {
 	Message string `json:"message"`
 }
 
+// transportError 标记可重试的传输层失败（连接被重置、响应中途断开、读超时等）。
+type transportError struct{ err error }
+
+func (e transportError) Error() string { return e.err.Error() }
+func (e transportError) Unwrap() error { return e.err }
+
+// do 发请求，遇到传输层异常时断开连接重试，最多三次。
 func (c *Client) do(ctx context.Context, method, path string, body interface{}, out interface{}) error {
-	var reader io.Reader
+	var raw []byte
 	if body != nil {
-		raw, err := json.Marshal(body)
+		b, err := json.Marshal(body)
 		if err != nil {
 			return err
 		}
+		raw = b
+	}
+	const attempts = 3
+	var lastErr error
+	for attempt := 1; attempt <= attempts; attempt++ {
+		err := c.doOnce(ctx, method, path, raw, out)
+		if err == nil {
+			return nil
+		}
+		lastErr = err
+		var te transportError
+		if !errors.As(err, &te) || attempt == attempts {
+			return err
+		}
+		// 旧连接可能已被对端 abort，丢掉后重新建链。
+		c.hc.CloseIdleConnections()
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(time.Duration(attempt) * 400 * time.Millisecond):
+		}
+	}
+	return lastErr
+}
+
+func (c *Client) doOnce(ctx context.Context, method, path string, raw []byte, out interface{}) error {
+	var reader io.Reader
+	if raw != nil {
 		reader = bytes.NewReader(raw)
 	}
 	req, err := http.NewRequestWithContext(ctx, method, c.base+path, reader)
@@ -121,7 +168,8 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 		return err
 	}
 	req.Header.Set("Accept", "application/json")
-	if body != nil {
+	req.Header.Set("Accept-Encoding", "identity")
+	if raw != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
 	if c.token != "" {
@@ -129,19 +177,23 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 	}
 	resp, err := c.hc.Do(req)
 	if err != nil {
-		return fmt.Errorf("official: 请求失败: %w", err)
+		return transportError{fmt.Errorf("official: 请求失败: %w", err)}
 	}
 	defer resp.Body.Close()
-	raw, err := io.ReadAll(io.LimitReader(resp.Body, 16<<20))
+	payload, err := io.ReadAll(io.LimitReader(resp.Body, 32<<20))
 	if err != nil {
-		return fmt.Errorf("official: 读取响应失败: %w", err)
+		return transportError{fmt.Errorf("official: 读取响应失败: %w", err)}
 	}
 	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
 		return ErrUnauthorized
 	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		switch resp.StatusCode {
+		case http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
+			return transportError{fmt.Errorf("official: HTTP %d", resp.StatusCode)}
+		}
 		var e apiError
-		if json.Unmarshal(raw, &e) == nil && e.Message != "" {
+		if json.Unmarshal(payload, &e) == nil && e.Message != "" {
 			return fmt.Errorf("official: %s", e.Message)
 		}
 		return fmt.Errorf("official: HTTP %d", resp.StatusCode)
@@ -149,7 +201,7 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 	if out == nil {
 		return nil
 	}
-	if err := json.Unmarshal(raw, out); err != nil {
+	if err := json.Unmarshal(payload, out); err != nil {
 		return fmt.Errorf("official: 响应格式异常: %w", err)
 	}
 	return nil

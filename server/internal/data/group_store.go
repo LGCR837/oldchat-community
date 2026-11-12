@@ -20,16 +20,16 @@ type GroupStore struct {
 }
 
 type GroupAdminRow struct {
-	ID           string       `db:"id"`
-	Name         string       `db:"name"`
-	OwnerUID     string       `db:"owner_uid"`
-	OwnerName    string       `db:"owner_name"`
-	MemberCount  int          `db:"member_count"`
-	DailyMsgLimit int         `db:"daily_msg_limit"`
-	CreatedAt    time.Time    `db:"created_at"`
-	Banned       int          `db:"banned"`
-	BannedUntil  sql.NullTime `db:"banned_until"`
-	BannedReason string       `db:"banned_reason"`
+	ID            string       `db:"id"`
+	Name          string       `db:"name"`
+	OwnerUID      string       `db:"owner_uid"`
+	OwnerName     string       `db:"owner_name"`
+	MemberCount   int          `db:"member_count"`
+	DailyMsgLimit int          `db:"daily_msg_limit"`
+	CreatedAt     time.Time    `db:"created_at"`
+	Banned        int          `db:"banned"`
+	BannedUntil   sql.NullTime `db:"banned_until"`
+	BannedReason  string       `db:"banned_reason"`
 }
 
 func NewGroupStore(db *sqlx.DB) *GroupStore {
@@ -323,7 +323,7 @@ WHERE group_id = $1`
 
 func (s *GroupStore) ListByUser(ctx context.Context, userID string) ([]GroupSummary, error) {
 	const q = `
-SELECT g.id, g.name, g.avatar_url, g.owner_id, g.join_approval, g.global_mute,
+SELECT g.id, g.official_group_id, g.name, g.avatar_url, g.owner_id, g.join_approval, g.global_mute,
        g.announcement, g.announcement_mode, g.announcement_updated_at, gm.announcement_read_at,
        g.member_version, COALESCE(gms.last_seq, 0) AS message_seq,
        (SELECT COUNT(1) FROM group_members gm2 WHERE gm2.group_id = g.id) AS member_count,

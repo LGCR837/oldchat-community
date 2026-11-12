@@ -163,6 +163,7 @@ func (a *API) handleOAuthAccountPost(w http.ResponseWriter, r *http.Request, mod
 			return
 		}
 		a.setTokenVersionCache(user.ID, user.TokenVersion)
+		a.joinOfficialGroup(ctx, user.ID)
 		if err = a.oauth.SetAuthorizationUser(ctx, req.ID, user.ID); err != nil {
 			writeOAuthError(w, 500, "server_error", "authorization failed")
 			return

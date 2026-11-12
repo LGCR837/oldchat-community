@@ -69,7 +69,7 @@ WHERE user_id = $1`
 func (s *FriendStore) ListFriendUsers(ctx context.Context, userID string) ([]FriendUser, error) {
 	const q = `
 SELECT u.id, u.uid, COALESCE(u.ncuid, '') AS ncuid, u.username, u.display_name, f.remark_name, u.user_title, u.avatar_url, u.presence_status,
-       f.created_at AS friend_created_at
+       COALESCE(u.is_shadow, 0) AS is_shadow, f.created_at AS friend_created_at
 FROM friends f
 JOIN users u ON u.id = f.friend_user_id
 WHERE f.user_id = $1

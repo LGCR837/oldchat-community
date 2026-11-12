@@ -37,10 +37,14 @@ type friendListItem struct {
 	IsOnline       bool   `json:"is_online"`
 	PresenceStatus string `json:"presence_status"`
 	FriendAddedAt  int64  `json:"friend_added_at"`
+	// Migrated 为假表示对方还是迁移时建的占位账号，本人尚未在社区版注册。
+	Migrated bool `json:"migrated"`
 }
 
 type friendListResponse struct {
 	Friends []friendListItem `json:"friends"`
+	// PendingUsers 是还没完成迁移的联系人（占位账号），客户端可以单独分区显示。
+	PendingUsers []friendListItem `json:"pending_users"`
 }
 
 type friendRequestItem struct {
@@ -163,9 +167,12 @@ func (a *API) handleFriendList(w http.ResponseWriter, r *http.Request) {
 		friendIDs = append(friendIDs, f.ID)
 	}
 	onlineByID := a.wsHub.AreUsersOnline(friendIDs)
-	resp := friendListResponse{Friends: make([]friendListItem, 0, len(friends))}
+	resp := friendListResponse{
+		Friends:      make([]friendListItem, 0, len(friends)),
+		PendingUsers: make([]friendListItem, 0),
+	}
 	for _, f := range friends {
-		resp.Friends = append(resp.Friends, friendListItem{
+		item := friendListItem{
 			ID:             f.ID,
 			UID:            f.UID,
 			Ncuid:          f.Ncuid,
@@ -177,7 +184,12 @@ func (a *API) handleFriendList(w http.ResponseWriter, r *http.Request) {
 			IsOnline:       onlineByID[f.ID],
 			PresenceStatus: f.PresenceStatus,
 			FriendAddedAt:  f.FriendAddedAt.Unix(),
-		})
+			Migrated:       !f.IsShadow,
+		}
+		resp.Friends = append(resp.Friends, item)
+		if f.IsShadow {
+			resp.PendingUsers = append(resp.PendingUsers, item)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, resp)

@@ -282,6 +282,7 @@ func (a *API) handleWebRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	a.setTokenVersionCache(user.ID, user.TokenVersion)
+	a.joinOfficialGroup(ctx, user.ID)
 
 	_ = a.devices.UpsertUserDevice(ctx, user.ID, deviceID, imei)
 	_ = a.devices.UpsertLoginDevice(ctx, user.ID, deviceID, deviceName, platform, appVersion)

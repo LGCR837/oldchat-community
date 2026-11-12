@@ -228,6 +228,7 @@ func (a *API) resolveMigrateAccount(ctx context.Context, req migrateStartRequest
 		return "", "", "db_error", "创建账号失败"
 	}
 	a.setTokenVersionCache(user.ID, user.TokenVersion)
+	a.joinOfficialGroup(ctx, user.ID)
 	if err := store.BindOfficialUID(ctx, user.ID, officialUID); err != nil {
 		return "", "", "db_error", "绑定旧账号失败"
 	}

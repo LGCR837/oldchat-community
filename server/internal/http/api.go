@@ -224,6 +224,13 @@ func New(cfg config.Config, db *sqlx.DB) http.Handler {
 	}
 	api.events = newEventsService(api.pts, api.wsHub)
 	api.readThrottle = make(map[string]int64)
+	// 官方群：启动时建好并把已有账号补进去，之后注册的账号在注册流程里自动加入。
+	// 建群本身很轻，同步执行，失败只记日志不影响启动。
+	func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+		defer cancel()
+		api.bootstrapOfficialGroup(ctx)
+	}()
 	// 账号事件表只保留真正的账号级事件并保留最近 48 小时。
 	// 群消息已改用每群唯一 group_seq，不再进入该表。启动后延迟清理，不阻塞启动。
 	go func() {

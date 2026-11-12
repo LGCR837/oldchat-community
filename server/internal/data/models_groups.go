@@ -38,6 +38,7 @@ type GroupJoinRequest struct {
 
 type GroupSummary struct {
 	ID                    string       `db:"id"`
+	OfficialGroupID       string       `db:"official_group_id"`
 	Name                  string       `db:"name"`
 	AvatarURL             string       `db:"avatar_url"`
 	OwnerID               string       `db:"owner_id"`

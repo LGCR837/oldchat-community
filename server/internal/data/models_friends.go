@@ -21,6 +21,7 @@ type FriendUser struct {
 	UserTitle      string    `db:"user_title"`
 	AvatarURL      string    `db:"avatar_url"`
 	PresenceStatus string    `db:"presence_status"`
+	IsShadow       bool      `db:"is_shadow"`
 	FriendAddedAt  time.Time `db:"friend_created_at"`
 }
 

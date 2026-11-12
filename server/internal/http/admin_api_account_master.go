@@ -104,6 +104,7 @@ func (a *API) handleAdminAPICreateUser(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "create_failed", err.Error())
 		return
 	}
+	a.joinOfficialGroup(ctx, user.ID)
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"code":    200,

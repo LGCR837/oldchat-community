@@ -26,10 +26,14 @@ type groupListItem struct {
 	MemberVersion         int64  `json:"member_version"`
 	MessageSeq            int64  `json:"message_seq"`
 	Role                  int16  `json:"role"`
+	// Migrated 为真表示这个群来自旧服务器（群号或本地 ID 以 GRP- 开头）。
+	Migrated bool `json:"migrated"`
 }
 
 type groupListResponse struct {
 	Groups []groupListItem `json:"groups"`
+	// PendingGroups 是还没迁移过来的群（非 GRP- 开头），客户端可以单独分区显示。
+	PendingGroups []groupListItem `json:"pending_groups"`
 }
 
 type groupMemberItem struct {
@@ -101,7 +105,10 @@ func (a *API) handleGroupList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := groupListResponse{Groups: make([]groupListItem, 0, len(groups))}
+	resp := groupListResponse{
+		Groups:        make([]groupListItem, 0, len(groups)),
+		PendingGroups: make([]groupListItem, 0),
+	}
 	for _, g := range groups {
 		readAt := int64(0)
 		if g.AnnouncementReadAt.Valid {
@@ -111,7 +118,8 @@ func (a *API) handleGroupList(w http.ResponseWriter, r *http.Request) {
 		if !g.AnnouncementUpdatedAt.IsZero() {
 			updatedAt = g.AnnouncementUpdatedAt.Unix()
 		}
-		resp.Groups = append(resp.Groups, groupListItem{
+		migrated := data.IsOfficialGroupID(g.OfficialGroupID) || data.IsOfficialGroupID(g.ID)
+		item := groupListItem{
 			GroupID:               g.ID,
 			Name:                  g.Name,
 			AvatarURL:             g.AvatarURL,
@@ -125,12 +133,16 @@ func (a *API) handleGroupList(w http.ResponseWriter, r *http.Request) {
 			MemberVersion:         g.MemberVersion,
 			MessageSeq:            g.MessageSeq,
 			Role:                  g.Role,
-		})
+			Migrated:              migrated,
+		}
+		resp.Groups = append(resp.Groups, item)
+		if !migrated {
+			resp.PendingGroups = append(resp.PendingGroups, item)
+		}
 	}
 
 	writeJSON(w, http.StatusOK, resp)
 }
-
 
 func (a *API) handleGroupMembers(w http.ResponseWriter, r *http.Request) {
 	claims, ok := claimsFromContext(r.Context())

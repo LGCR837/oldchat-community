@@ -33,6 +33,9 @@ const (
 	jobTimeout = 30 * time.Minute
 )
 
+// friendsRetryDelay 是好友列表失败后的二次重试间隔，测试里会改成 0。
+var friendsRetryDelay = 5 * time.Second
+
 type Options struct {
 	SourceHost         string
 	UploadDir          string
@@ -157,7 +160,21 @@ func (s *Service) Run(ctx context.Context, jobID string, creds Credentials) erro
 	s.store.AddEvent(ctx, jobID, "info", "好友", "正在拉取好友列表")
 	friends, err := client.Friends(ctx)
 	if err != nil {
-		return fail("迁移好友列表", err)
+		// 旧站在返回好友列表时偶发中途断开（stream error），先等一会儿再试一次。
+		s.store.AddEvent(ctx, jobID, "warn", "好友", fmt.Sprintf("好友列表读取失败，5 秒后重试：%v", err))
+		select {
+		case <-ctx.Done():
+			return fail("迁移好友列表", ctx.Err())
+		case <-time.After(friendsRetryDelay):
+		}
+		friends, err = client.Friends(ctx)
+	}
+	if err != nil {
+		// 隐私列表拉不到时不阻断整次迁移：群聊、朋友圈照常进行，
+		// 私聊留待下次重新发起（消息带唯一键，重跑不会重复）。
+		s.store.AddEvent(ctx, jobID, "warn", "好友", fmt.Sprintf("好友列表仍然失败，本次跳过私聊，稍后可重新发起迁移补齐：%v", err))
+		stats["friends_failed"] = 1
+		friends = nil
 	}
 	type peer struct {
 		officialUID string
