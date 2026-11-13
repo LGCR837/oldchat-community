@@ -18,6 +18,8 @@ namespace OldChat.App.Views
         private readonly MainViewModel _vm;
         private int _activeTab;
         private bool _loadingOlder;
+        private bool _noMoreHistory;
+        private bool _olderArmed;
         private bool _initialized;
         private SmoothScroller _msgScroll;
         private SmoothScroller _convScroll;
@@ -44,7 +46,7 @@ namespace OldChat.App.Views
             SelfAvatar.ToolTip = _vm.MyDisplayName + "\n" + session.Origin;
 
             _vm.PropertyChanged += OnViewModelChanged;
-            _vm.MessageAppended += delegate { ScrollToBottom(); };
+            _vm.MessageAppended += delegate { FollowNewMessage(); };
 
             if (session.Ws != null)
             {
@@ -62,8 +64,9 @@ namespace OldChat.App.Views
             _initialized = true;
 
             MessageScroll.ApplyTemplate();
-            _msgView = FindChild<ScrollViewer>(MessageScroll);
-            if (_msgView != null) _msgScroll = new SmoothScroller(_msgView);
+            _msgView = MessageScroll;
+            _msgScroll = new SmoothScroller(_msgView);
+            _msgScroll.UserScrolled += OnMessageWheel;
             ScrollViewer convView = FindChild<ScrollViewer>(ConversationList);
             if (convView != null) _convScroll = new SmoothScroller(convView) { StepPerNotch = 0.42 };
 
@@ -106,7 +109,12 @@ namespace OldChat.App.Views
         private void OnViewModelChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "HasSelection") ShowPane();
-            if (e.PropertyName == "Selected") ScrollToBottom();
+            if (e.PropertyName == "Selected")
+            {
+                _noMoreHistory = false;
+                _olderArmed = false;
+                ScrollToBottom();
+            }
         }
 
         private void ShowPane()
@@ -182,8 +190,37 @@ namespace OldChat.App.Views
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
+                if (_msgView == null) return;
+                _msgView.UpdateLayout();
+                JumpToEnd();
+
+                // 消息还在陆续上屏时贴底会被忽略，等这一轮布局结束再确认一次
+                Dispatcher.BeginInvoke(new Action(delegate
+                {
+                    if (_msgView == null) return;
+                    if (_msgView.ScrollableHeight - _msgView.VerticalOffset > 1) JumpToEnd();
+                }), System.Windows.Threading.DispatcherPriority.ContextIdle);
+            }), System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+
+        private void JumpToEnd()
+        {
+            if (_msgScroll != null) _msgScroll.JumpToEnd();
+            else _msgView.ScrollToEnd();
+        }
+
+        /// <summary>收到新消息时跟随到底，但用户正在往上翻历史就不打扰。</summary>
+        private void FollowNewMessage()
+        {
+            Dispatcher.BeginInvoke(new Action(delegate
+            {
+                if (_msgView == null) return;
+
+                double max = Math.Max(0, _msgView.ScrollableHeight);
+                if (max - _msgView.VerticalOffset > 90) return;
+
                 if (_msgScroll != null) _msgScroll.JumpToEnd();
-                else if (_msgView != null) _msgView.ScrollToEnd();
+                else _msgView.ScrollToEnd();
             }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
@@ -336,29 +373,55 @@ namespace OldChat.App.Views
 
         // ---------- 滚动加载 ----------
 
-        private async void MessageScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
+        /// <summary>只有用户自己往上拨滚轮才算“要翻历史”，其余情况一律不加载。</summary>
+        private void OnMessageWheel(double pixels)
+        {
+            if (pixels < 0) _olderArmed = true;
+            if (_olderArmed && _msgView != null && _msgView.VerticalOffset <= 2) TryLoadOlder();
+        }
+
+        private void MessageScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             ScrollViewer view = sender as ScrollViewer;
-            if (view == null) view = _msgView;
             if (view == null) return;
 
-            if (e.ExtentHeightChange == 0) return;
-            if (view.VerticalOffset > 4) return;
-            if (_loadingOlder || e.ExtentHeight < view.ViewportHeight) return;
+            // 内容变高（切会话、贴底、刚加载完一批）不算用户意图，不触发加载
+            if (e.ExtentHeightChange != 0) return;
+            if (!_olderArmed || view.VerticalOffset > 2) return;
+
+            TryLoadOlder();
+        }
+
+        private async void TryLoadOlder()
+        {
+            ScrollViewer view = _msgView;
+            if (view == null || _loadingOlder || _noMoreHistory) return;
+            if (view.ScrollableHeight <= 0) return;
 
             _loadingOlder = true;
+            _olderArmed = false;
             double before = view.ExtentHeight;
             double offset = view.VerticalOffset;
+            int countBefore = _vm.Messages.Count;
             try
             {
                 await _vm.LoadOlderAsync();
-                if (_msgScroll != null) _msgScroll.Sync();
-                double after = view.ExtentHeight;
-                if (after > before)
+
+                if (_vm.Messages.Count == countBefore)
                 {
-                    view.ScrollToVerticalOffset(offset + (after - before));
-                    if (_msgScroll != null) _msgScroll.Sync();
+                    _noMoreHistory = true;
+                    return;
                 }
+
+                // 等这一轮布局跑完再量高度，否则补的是上一次的尺寸
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Loaded);
+
+                double after = view.ExtentHeight;
+                if (after > before) view.ScrollToVerticalOffset(offset + (after - before));
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("加载更早消息失败：" + ex.Message);
             }
             finally
             {
