@@ -9,7 +9,8 @@
         统一用叠加层做 Opacity 动画，不改共享画刷颜色，避免主题互相污染。
     -->
 
-    <FontFamily x:Key="UiFont">Microsoft YaHei UI, Segoe UI</FontFamily>
+    <!-- 主字体之后必须带 emoji 兜底，否则彩色表情会渲染成方框 -->
+    <FontFamily x:Key="UiFont">Microsoft YaHei UI, Segoe UI, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji</FontFamily>
     <FontFamily x:Key="IconFont">Segoe MDL2 Assets</FontFamily>
 
     <CubicEase x:Key="EaseOut" EasingMode="EaseOut" />
@@ -538,68 +539,22 @@
         </Setter>
     </Style>
 
-    <!-- ============ 会话行 ============ -->
+    <!-- ============ 联系人宫格 ============ -->
 
-    <Style x:Key="ConversationItemStyle" TargetType="ListBoxItem">
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="ListBoxItem">
-                    <Grid Background="Transparent">
-                        <Border x:Name="Hover" Background="{DynamicResource HoverBg}" Opacity="0" />
-                        <Border x:Name="Sel" Background="{DynamicResource SelectedBg}" Opacity="0" />
-                        <ContentPresenter Margin="16,10" />
-                    </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity"
-                                                         To="1" Duration="0:0:0.07">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut" />
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Hover" Storyboard.TargetProperty="Opacity"
-                                                         To="0" Duration="0:0:0.07" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-                        <Trigger Property="IsSelected" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Sel" Storyboard.TargetProperty="Opacity"
-                                                         To="1" Duration="0:0:0.12">
-                                            <DoubleAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut" />
-                                            </DoubleAnimation.EasingFunction>
-                                        </DoubleAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                            <Trigger.ExitActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="Sel" Storyboard.TargetProperty="Opacity"
-                                                         To="0" Duration="0:0:0.12" />
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.ExitActions>
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <Style x:Key="ContactTile" TargetType="Border">
+        <Setter Property="Width" Value="96" />
+        <Setter Property="Height" Value="112" />
+        <Setter Property="Margin" Value="0,0,6,6" />
+        <Setter Property="Padding" Value="6" />
+        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="RenderOptions.EdgeMode" Value="Aliased" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource HoverBg}" />
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- ============ 气泡 ============ -->

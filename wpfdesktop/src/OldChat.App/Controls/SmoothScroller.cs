@@ -18,6 +18,9 @@ namespace OldChat.App.Controls
         private bool _running;
         private long _lastTick;
 
+        /// <summary>离边界多近就算到头。小于一个设备像素，肉眼看不到。</summary>
+        private const double EdgeDeadZone = 0.6;
+
         public SmoothScroller(ScrollViewer view)
         {
             if (view == null) throw new ArgumentNullException("view");
@@ -62,20 +65,25 @@ namespace OldChat.App.Controls
             if (handler != null) handler(-e.Delta * StepPerNotch);
         }
 
-        /// <summary>按像素位移滚动，正数向下。已经到头就不再起动画，免得来回弹。</summary>
+        /// <summary>按像素位移滚动，正数向下。已经到头就不再起动画，免得被夹回来时看着像回弹。</summary>
         public void ScrollBy(double pixels)
         {
             double max = Math.Max(0, _view.ScrollableHeight);
             if (max <= 0) return;
 
-            if (!_running) _target = _view.VerticalOffset;
+            double current = _view.VerticalOffset;
+
+            // 边界外还在推：直接吃掉这次输入，位置一点不动
+            if (pixels < 0 && current <= EdgeDeadZone) return;
+            if (pixels > 0 && current >= max - EdgeDeadZone) return;
+
+            if (!_running) _target = current;
             _target += pixels;
             if (_target < 0) _target = 0;
             if (_target > max) _target = max;
 
             if (!_running)
             {
-                double current = _view.VerticalOffset;
                 if (Math.Abs(_target - current) < 0.6)
                 {
                     _target = current;
@@ -101,11 +109,16 @@ namespace OldChat.App.Controls
             double current = _view.VerticalOffset;
             double max = Math.Max(0, _view.ScrollableHeight);
             if (_target > max) _target = max;
+            if (_target < 0) _target = 0;
 
             double diff = _target - current;
             if (Math.Abs(diff) < 0.6)
             {
-                _view.ScrollToVerticalOffset(_target);
+                // 已经贴在边界就不再多调一次，多余的调用会被 WPF 夹回来，看起来就是抖
+                if (current > EdgeDeadZone && current < max - EdgeDeadZone)
+                {
+                    _view.ScrollToVerticalOffset(_target);
+                }
                 Stop();
                 return;
             }

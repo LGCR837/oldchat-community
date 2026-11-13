@@ -10,7 +10,7 @@ namespace OldChat.Core.Config
     /// <summary>本地设置：服务器源、设备标识、界面偏好。存放在 %APPDATA%\OldChat。</summary>
     public sealed class AppConfig
     {
-        public const string DefaultOrigin = "http://octest.reverie.dpdns.org";
+        public const string DefaultOrigin = "http://oc.mcl0.dpdns.org";
 
         [JsonProperty("origin")] public string Origin { get; set; }
         [JsonProperty("device_id")] public string DeviceId { get; set; }
@@ -27,6 +27,18 @@ namespace OldChat.Core.Config
         }
 
         [JsonProperty("last_chat")] public string LastChat { get; set; }
+
+        /// <summary>本次会话临时指定的服务器，仅内存有效，不写回配置。</summary>
+        [JsonIgnore] public bool EphemeralOrigin { get; set; }
+
+        /// <summary>存盘里只保留 origin 的主机部分，尾巴斜杠和多余空格一律抹掉。</summary>
+        public static string NormalizeOrigin(string origin)
+        {
+            string value = (origin ?? string.Empty).Trim();
+            if (value.Length == 0) return DefaultOrigin;
+            if (!value.StartsWith("http", StringComparison.OrdinalIgnoreCase)) value = "http://" + value;
+            return value.TrimEnd('/');
+        }
 
         public static string DataDir
         {
@@ -61,7 +73,7 @@ namespace OldChat.Core.Config
             }
 
             if (cfg == null) cfg = new AppConfig();
-            if (string.IsNullOrWhiteSpace(cfg.Origin)) cfg.Origin = DefaultOrigin;
+            cfg.Origin = NormalizeOrigin(cfg.Origin);
             if (string.IsNullOrWhiteSpace(cfg.DeviceId)) cfg.DeviceId = "win-" + Guid.NewGuid().ToString("N");
             if (string.IsNullOrWhiteSpace(cfg.Theme)) cfg.Theme = "dark";
             return cfg;

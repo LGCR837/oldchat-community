@@ -18,7 +18,33 @@ namespace OldChat.App.Views
             InitializeComponent();
             ChromeHelper.Attach(this, 36);
             OriginBox.Text = App.Config != null ? App.Config.Origin : AppConfig.DefaultOrigin;
-            Loaded += delegate { AccountBox.Focus(); };
+            OriginBox.LostFocus += delegate { RememberOrigin(); };
+            Loaded += delegate
+            {
+                AccountBox.Focus();
+                // 自检专用：环境变量给出账号时自动登录，且绝不动配置文件里的服务器地址
+                string account = Environment.GetEnvironmentVariable("OLDCHAT_AUTOLOGIN_ACCOUNT");
+                if (string.IsNullOrEmpty(account)) return;
+                if (App.Config != null) App.Config.EphemeralOrigin = true;
+                string envOrigin = Environment.GetEnvironmentVariable("OLDCHAT_AUTOLOGIN_ORIGIN");
+                if (!string.IsNullOrEmpty(envOrigin)) OriginBox.Text = AppConfig.NormalizeOrigin(envOrigin);
+                AccountBox.Text = account;
+                PasswordInput.Password = Environment.GetEnvironmentVariable("OLDCHAT_AUTOLOGIN_PASSWORD") ?? string.Empty;
+                Login_Click(null, null);
+            };
+        }
+
+        /// <summary>手填/改过的服务器立刻落盘，下次打开就是这个地址。</summary>
+        private void RememberOrigin()
+        {
+            AppConfig config = App.Config;
+            if (config == null || config.EphemeralOrigin) return;
+
+            string origin = AppConfig.NormalizeOrigin(OriginBox.Text);
+            if (string.Equals(origin, config.Origin, StringComparison.OrdinalIgnoreCase)) return;
+
+            config.Origin = origin;
+            config.Save();
         }
 
         private void TitleBar_MouseDown(object sender, MouseButtonEventArgs e)
@@ -40,9 +66,11 @@ namespace OldChat.App.Views
         {
             if (_busy) return;
 
-            string origin = (OriginBox.Text ?? string.Empty).Trim();
+            string origin = AppConfig.NormalizeOrigin(OriginBox.Text);
             string account = (AccountBox.Text ?? string.Empty).Trim();
             string password = PasswordInput.Password;
+
+            OriginBox.Text = origin;
 
             if (string.IsNullOrEmpty(origin))
             {
@@ -67,7 +95,8 @@ namespace OldChat.App.Views
             {
                 AppConfig config = App.Config ?? AppConfig.Load();
                 config.Origin = origin;
-                config.Save();
+                // 临时指定的服务器只在本次进程内生效，不覆盖已经记住的那个
+                if (!config.EphemeralOrigin) config.Save();
 
                 AppSession session = AppSession.Create(config);
                 await session.LoginAsync(account, password);

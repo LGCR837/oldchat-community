@@ -11,6 +11,7 @@ namespace OldChat.App.ViewModels
         private int _unread;
         private long _lastAt;
         private bool _isOnline;
+        private bool _isSelected;
 
         public string ChatId { get; private set; }
         public bool IsGroup { get; private set; }
@@ -51,7 +52,10 @@ namespace OldChat.App.ViewModels
         public string Preview
         {
             get { return _preview; }
-            set { Set(ref _preview, value); }
+            set
+            {
+                if (Set(ref _preview, value)) Raise("HasPreview");
+            }
         }
 
         public string TimeText
@@ -83,12 +87,34 @@ namespace OldChat.App.ViewModels
             set { Set(ref _isOnline, value); }
         }
 
-        public void Touch(ChatMessage message)
+        /// <summary>行是否处于打开状态。选中背景由行自己画，不依赖 ListBox。</summary>
+        public bool IsSelected
         {
-            if (message == null) return;
+            get { return _isSelected; }
+            set { Set(ref _isSelected, value); }
+        }
+
+        public bool HasPreview { get { return !string.IsNullOrEmpty(_preview); } }
+
+        /// <summary>可以用缓存里的旧预览先占位，避免没打开过的会话一片空白。</summary>
+        public void ApplyCached(string preview, long lastAt, string timeText)
+        {
+            if (string.IsNullOrEmpty(preview) || lastAt <= 0) return;
+            Preview = preview;
+            LastAt = lastAt;
+            TimeText = timeText ?? string.Empty;
+        }
+
+        /// <summary>记录一条消息作为最新预览。只有比现有更新才覆盖。</summary>
+        public bool Touch(ChatMessage message)
+        {
+            if (message == null) return false;
+            if (message.CreatedAt < _lastAt) return false;
             Preview = PreviewOf(message);
             LastAt = message.CreatedAt;
             TimeText = ChatTime.Friendly(message.LocalTime);
+            Raise("HasPreview");
+            return true;
         }
 
         public static string PreviewOf(ChatMessage message)

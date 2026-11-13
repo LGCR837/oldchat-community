@@ -50,6 +50,7 @@ namespace OldChat.Core.Protocol
         [JsonProperty("avatar_url")] public string AvatarUrl { get; set; }
         [JsonProperty("is_online")] public bool IsOnline { get; set; }
         [JsonProperty("presence_status")] public string PresenceStatus { get; set; }
+        [JsonProperty("friend_added_at")] public long FriendAddedAt { get; set; }
         [JsonProperty("migrated")] public bool Migrated { get; set; }
 
         [JsonIgnore]

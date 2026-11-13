@@ -56,10 +56,8 @@
 
                 <TextBlock Text="旧聊" FontSize="27" FontWeight="SemiBold"
                            Foreground="{DynamicResource TextPrimary}" />
-                <TextBlock Text="社区版桌面客户端" FontSize="12" Margin="0,7,0,0"
-                           Foreground="{DynamicResource TextMuted}" />
 
-                <TextBlock Text="服务器" Style="{StaticResource SectionText}" Margin="0,34,0,7" />
+                <TextBlock Text="服务器" Style="{StaticResource SectionText}" Margin="0,30,0,7" />
                 <TextBox x:Name="OriginBox" Style="{StaticResource InputBox}" Height="36" />
 
                 <TextBlock Text="账号" Style="{StaticResource SectionText}" Margin="0,16,0,7" />

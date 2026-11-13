@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Data;
+using OldChat.App.Services;
 using OldChat.Core.Logging;
 using OldChat.Core.Net;
 using OldChat.Core.Protocol;
@@ -17,6 +17,7 @@ namespace OldChat.App.ViewModels
         private readonly AppSession _session;
         private readonly Dictionary<string, Dictionary<string, GroupMemberItem>> _members =
             new Dictionary<string, Dictionary<string, GroupMemberItem>>(StringComparer.Ordinal);
+        private readonly ConversationCache _cache = new ConversationCache();
         private ConversationItem _selected;
         private string _searchText;
         private string _composerText;
@@ -24,8 +25,9 @@ namespace OldChat.App.ViewModels
         private string _statusLine;
 
         public ObservableCollection<ConversationItem> Conversations { get; private set; }
+        public ObservableCollection<ChatSection> Sections { get; private set; }
+        public ObservableCollection<ContactSection> ContactSections { get; private set; }
         public ObservableCollection<MessageItem> Messages { get; private set; }
-        public ICollectionView ConversationsView { get; private set; }
 
         public event EventHandler<MessageItem> MessageAppended;
 
@@ -33,11 +35,9 @@ namespace OldChat.App.ViewModels
         {
             _session = session;
             Conversations = new ObservableCollection<ConversationItem>();
+            Sections = new ObservableCollection<ChatSection>();
+            ContactSections = new ObservableCollection<ContactSection>();
             Messages = new ObservableCollection<MessageItem>();
-
-            ConversationsView = CollectionViewSource.GetDefaultView(Conversations);
-            ConversationsView.Filter = FilterConversation;
-            ConversationsView.SortDescriptions.Add(new SortDescription("LastAt", ListSortDirection.Descending));
 
             SearchText = string.Empty;
             ComposerText = string.Empty;
@@ -65,7 +65,7 @@ namespace OldChat.App.ViewModels
             get { return _searchText; }
             set
             {
-                if (Set(ref _searchText, value)) ConversationsView.Refresh();
+                if (Set(ref _searchText, value)) RebuildSections();
             }
         }
 
@@ -93,7 +93,11 @@ namespace OldChat.App.ViewModels
             set
             {
                 if (_selected == value) return;
-                if (_selected != null) _selected.Unread = 0;
+                if (_selected != null)
+                {
+                    _selected.Unread = 0;
+                    _selected.IsSelected = false;
+                }
                 Set(ref _selected, value);
                 Raise("HasSelection");
                 Raise("HeaderTitle");
@@ -101,9 +105,19 @@ namespace OldChat.App.ViewModels
                 if (value != null)
                 {
                     value.Unread = 0;
+                    value.IsSelected = true;
                     var ignored = LoadHistoryAsync(value);
                 }
             }
+        }
+
+        /// <summary>列表行被点开。会话可能还没在 Conversations 里注册（联系人页进来的）。</summary>
+        public void SelectConversation(ConversationItem conv)
+        {
+            if (conv == null) return;
+            ConversationItem known = Conversations.FirstOrDefault(
+                c => c.IsGroup == conv.IsGroup && c.ChatId == conv.ChatId);
+            Selected = known ?? conv;
         }
 
         public bool HasSelection { get { return _selected != null; } }
@@ -129,6 +143,7 @@ namespace OldChat.App.ViewModels
             StatusLine = "正在同步会话…";
             try
             {
+                _cache.Load();
                 List<GroupItem> groups = await _session.Chat.GetGroupsAsync().ConfigureAwait(true);
                 List<FriendItem> friends = await _session.Chat.GetFriendsAsync().ConfigureAwait(true);
 
@@ -136,10 +151,24 @@ namespace OldChat.App.ViewModels
                 foreach (GroupItem group in groups) Conversations.Add(ConversationItem.FromGroup(group));
                 foreach (FriendItem friend in friends) Conversations.Add(ConversationItem.FromFriend(friend));
 
+                // 缓存先铺一层，没打开过的会话也有预览与时间，列表排序才有意义
+                foreach (ConversationItem conv in Conversations)
+                {
+                    string preview, timeText;
+                    long lastAt;
+                    if (_cache.TryGet(CacheKey(conv), out preview, out lastAt, out timeText))
+                    {
+                        conv.ApplyCached(preview, lastAt, timeText);
+                    }
+                }
+
+                RebuildSections();
+                BuildContacts(groups, friends);
+
                 StatusLine = "群 " + groups.Count + " 个 · 好友 " + friends.Count + " 个";
                 Log.Info("会话同步完成 groups=" + groups.Count + " friends=" + friends.Count);
 
-                ConversationItem first = Conversations.FirstOrDefault();
+                ConversationItem first = Sections.SelectMany(s => s.Items).FirstOrDefault();
                 if (first != null) Selected = first;
             }
             catch (ApiException ex)
@@ -157,14 +186,148 @@ namespace OldChat.App.ViewModels
             }
         }
 
-        private bool FilterConversation(object item)
+        private static string CacheKey(ConversationItem conv)
         {
-            var conv = item as ConversationItem;
-            if (conv == null) return false;
-            if (string.IsNullOrWhiteSpace(_searchText)) return true;
-            string needle = _searchText.Trim();
-            return (conv.Title ?? string.Empty).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0
-                   || (conv.Preview ?? string.Empty).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0;
+            return (conv.IsGroup ? "g:" : "u:") + conv.ChatId;
+        }
+
+        // ---------- 列表分节 ----------
+
+        /// <summary>
+        /// 参考官方客户端：未读单独一节顶在最上面，其余按群聊/私聊分开，节内按最后消息时间倒序。
+        /// 搜索时不分组，避免一堆只有一个结果的标题。
+        /// </summary>
+        private void RebuildSections()
+        {
+            string needle = (_searchText ?? string.Empty).Trim();
+            IEnumerable<ConversationItem> source = Conversations;
+            if (needle.Length > 0)
+            {
+                source = Conversations.Where(c =>
+                    (c.Title ?? string.Empty).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0
+                    || (c.Preview ?? string.Empty).IndexOf(needle, StringComparison.OrdinalIgnoreCase) >= 0);
+            }
+
+            List<ConversationItem> matched = source.ToList();
+            Sections.Clear();
+
+            if (needle.Length > 0)
+            {
+                ChatSection hit = new ChatSection("搜索结果");
+                foreach (ConversationItem conv in matched.OrderByDescending(c => c.LastAt)) hit.Items.Add(conv);
+                if (hit.Items.Count > 0) Sections.Add(hit);
+                return;
+            }
+
+            AddSection("未读",
+                matched.Where(c => c.Unread > 0).OrderByDescending(c => c.LastAt));
+            AddSection("群聊",
+                matched.Where(c => c.Unread <= 0 && c.IsGroup).OrderByDescending(c => c.LastAt));
+            AddSection("私聊",
+                matched.Where(c => c.Unread <= 0 && !c.IsGroup).OrderByDescending(c => c.LastAt));
+        }
+
+        private void AddSection(string title, IEnumerable<ConversationItem> items)
+        {
+            var section = new ChatSection(title);
+            foreach (ConversationItem item in items) section.Items.Add(item);
+            if (section.Items.Count > 0) Sections.Add(section);
+        }
+
+        // ---------- 联系人 ----------
+
+        private void BuildContacts(List<GroupItem> groups, List<FriendItem> friends)
+        {
+            ContactSections.Clear();
+            StringComparer byName = StringComparer.Create(new System.Globalization.CultureInfo("zh-CN"), true);
+
+            // 服务端会给迁移占位账号打 migrated=false。整批都没这个标记时说明服务端没给，按正常处理。
+            bool hasPendingMark = groups.Any(g => g.Migrated) || friends.Any(f => f.Migrated);
+
+            var groupSection = new ContactSection("群聊", 0);
+            foreach (GroupItem group in groups.Where(g => !hasPendingMark || g.Migrated).OrderBy(g => g.Name ?? string.Empty, byName))
+            {
+                groupSection.Items.Add(new ContactItem
+                {
+                    Id = group.GroupId,
+                    IsGroup = true,
+                    Name = group.Name,
+                    AvatarUrl = MediaUrl.Resolve(_session.Origin, group.AvatarUrl),
+                    Subtitle = group.MemberCount > 0 ? group.MemberCount + " 人" : "群聊"
+                });
+            }
+            if (groupSection.Items.Count > 0) ContactSections.Add(groupSection);
+
+            List<FriendItem> known = friends.Where(f => !hasPendingMark || f.Migrated).ToList();
+
+            var recentSection = new ContactSection("最新添加", 0);
+            foreach (FriendItem friend in known
+                .Where(f => f.FriendAddedAt > 0)
+                .OrderByDescending(f => f.FriendAddedAt)
+                .Take(8))
+            {
+                recentSection.Items.Add(ToContact(friend));
+            }
+            if (recentSection.Items.Count > 0) ContactSections.Add(recentSection);
+
+            var friendSection = new ContactSection("全部好友", 0);
+            foreach (FriendItem friend in known.OrderBy(f => f.ShowName ?? string.Empty, byName))
+            {
+                friendSection.Items.Add(ToContact(friend));
+            }
+            if (friendSection.Items.Count > 0) ContactSections.Add(friendSection);
+
+            var pendingSection = new ContactSection("待迁移", 0);
+            if (hasPendingMark)
+            {
+                foreach (GroupItem group in groups.Where(g => !g.Migrated))
+                {
+                    pendingSection.Items.Add(new ContactItem
+                    {
+                        Id = group.GroupId,
+                        IsGroup = true,
+                        IsPending = true,
+                        Name = group.Name,
+                        AvatarUrl = MediaUrl.Resolve(_session.Origin, group.AvatarUrl),
+                        Subtitle = "未迁移"
+                    });
+                }
+                foreach (FriendItem friend in friends.Where(f => !f.Migrated))
+                {
+                    ContactItem item = ToContact(friend);
+                    item.IsPending = true;
+                    item.Subtitle = "未迁移";
+                    pendingSection.Items.Add(item);
+                }
+            }
+            if (pendingSection.Items.Count > 0) ContactSections.Add(pendingSection);
+        }
+
+        private ContactItem ToContact(FriendItem friend)
+        {
+            return new ContactItem
+            {
+                Id = friend.Uid,
+                IsGroup = false,
+                Name = friend.ShowName,
+                AvatarUrl = MediaUrl.Resolve(_session.Origin, friend.AvatarUrl),
+                Subtitle = friend.IsOnline ? "在线" : "离线",
+                IsOnline = friend.IsOnline
+            };
+        }
+
+        /// <summary>联系人宫格里点一格，直接打开对应会话。</summary>
+        public void OpenContact(ContactItem contact)
+        {
+            if (contact == null) return;
+            ConversationItem conv = FindConversation(contact.IsGroup, contact.Id);
+            if (conv != null) Selected = conv;
+        }
+
+        public ConversationItem FindConversation(bool isGroup, string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            return Conversations.FirstOrDefault(c => c.IsGroup == isGroup && c.ChatId == id);
         }
 
         // ---------- 历史消息 ----------
@@ -186,7 +349,14 @@ namespace OldChat.App.ViewModels
                 MessagePage page = pageTask.Result;
 
                 AppendPage(page, conv, prepend: false);
-                conv.Touch(page.Messages.Count > 0 ? page.Messages[page.Messages.Count - 1] : null);
+
+                // 服务端返回顺序不保证，取集合末尾（已按时间升序整理）才是真正的最后一条
+                MessageItem latest = Messages.Count > 0 ? Messages[Messages.Count - 1] : null;
+                if (latest != null && conv.Touch(latest.Source))
+                {
+                    _cache.Put(CacheKey(conv), conv.Preview, conv.LastAt, conv.TimeText);
+                }
+
                 StatusLine = page.HasMore ? "已加载最近 " + page.Messages.Count + " 条" : "已到最早一条";
                 Log.Info("历史加载完成 " + conv.Title + " group=" + conv.IsGroup + " count=" + page.Messages.Count);
             }
@@ -371,7 +541,10 @@ namespace OldChat.App.ViewModels
                 pending.Source.GroupSeq = sent.GroupSeq;
                 pending.Source.SortSeq = sent.SortSeq;
                 pending.Source.CreatedAt = sent.CreatedAt > 0 ? sent.CreatedAt : pending.Source.CreatedAt;
-                conv.Touch(pending.Source);
+                if (conv.Touch(pending.Source))
+                {
+                    _cache.Put(CacheKey(conv), conv.Preview, conv.LastAt, conv.TimeText);
+                }
                 return true;
             }
             catch (ApiException ex)
@@ -445,9 +618,12 @@ namespace OldChat.App.ViewModels
                 ConversationItem conv = Conversations.FirstOrDefault(c => c.ChatId == chatId);
                 if (conv != null)
                 {
-                    conv.Touch(msg);
-                    conv.Unread = conv.Unread + 1;
-                    ConversationsView.Refresh();
+                    if (conv.Touch(msg))
+                    {
+                        conv.Unread = conv.Unread + 1;
+                        RebuildSections();
+                        _cache.Put(CacheKey(conv), conv.Preview, conv.LastAt, conv.TimeText);
+                    }
                 }
             }
         }

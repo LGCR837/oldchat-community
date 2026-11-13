@@ -27,8 +27,9 @@
     <SolidColorBrush x:Key="AccentHover" Color="#000000" />
     <SolidColorBrush x:Key="AccentSoft" Color="#F3F4F6" />
 
-    <SolidColorBrush x:Key="HoverBg" Color="#F3F4F6" />
-    <SolidColorBrush x:Key="SelectedBg" Color="#F0F0F0" />
+    <!-- 悬停/选中用半透明叠加，叠在任何底色上都不突兀 -->
+    <SolidColorBrush x:Key="HoverBg" Color="#0A000000" />
+    <SolidColorBrush x:Key="SelectedBg" Color="#14000000" />
 
     <SolidColorBrush x:Key="BubbleInBg" Color="#FFFFFF" />
     <SolidColorBrush x:Key="BubbleInText" Color="#111827" />

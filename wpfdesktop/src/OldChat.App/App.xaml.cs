@@ -46,6 +46,15 @@ namespace OldChat.App
             };
 
             Config = AppConfig.Load();
+
+            // --origin=http://... 临时换源，只在本次进程生效，不覆盖配置里记住的服务器
+            string cliOrigin = CommandLine.Value(e.Args, "--origin");
+            if (!string.IsNullOrWhiteSpace(cliOrigin))
+            {
+                Config.Origin = AppConfig.NormalizeOrigin(cliOrigin);
+                Config.EphemeralOrigin = true;
+            }
+
             Theme.ThemeManager.Apply(Config.Theme);
             Controls.BubbleShape.Apply(Config.BubbleRounded);
 
@@ -84,6 +93,21 @@ namespace OldChat.App
                 if (string.Equals(arg, flag, StringComparison.OrdinalIgnoreCase)) return true;
             }
             return false;
+        }
+
+        /// <summary>取 --name=value 形式参数的值，没有就返回 null。</summary>
+        public static string Value(string[] args, string name)
+        {
+            if (args == null) return null;
+            string prefix = name + "=";
+            foreach (string arg in args)
+            {
+                if (arg != null && arg.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return arg.Substring(prefix.Length);
+                }
+            }
+            return null;
         }
     }
 }

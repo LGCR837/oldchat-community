@@ -21,8 +21,10 @@ namespace OldChat.App.Views
         private bool _noMoreHistory;
         private bool _olderArmed;
         private bool _initialized;
+        private bool _userTouched;
         private SmoothScroller _msgScroll;
         private SmoothScroller _convScroll;
+        private SmoothScroller _contactScroll;
         private ScrollViewer _msgView;
 
         public MainWindow()
@@ -67,8 +69,8 @@ namespace OldChat.App.Views
             _msgView = MessageScroll;
             _msgScroll = new SmoothScroller(_msgView);
             _msgScroll.UserScrolled += OnMessageWheel;
-            ScrollViewer convView = FindChild<ScrollViewer>(ConversationList);
-            if (convView != null) _convScroll = new SmoothScroller(convView) { StepPerNotch = 0.42 };
+            _convScroll = new SmoothScroller(ConversationScroll) { StepPerNotch = 0.42 };
+            _contactScroll = new SmoothScroller(ContactScroll) { StepPerNotch = 0.5 };
 
             await _vm.InitializeAsync();
             ShowPane();
@@ -113,17 +115,25 @@ namespace OldChat.App.Views
             {
                 _noMoreHistory = false;
                 _olderArmed = false;
+                _userTouched = false;
                 ScrollToBottom();
             }
         }
 
         private void ShowPane()
         {
-            bool hasChat = _vm.HasSelection && _activeTab == 0;
+            bool contacts = _activeTab == 1;
+            bool hasChat = _activeTab == 0 && _vm.HasSelection;
             bool wasVisible = ChatPane.Visibility == Visibility.Visible;
 
-            BrandPanel.Visibility = hasChat ? Visibility.Collapsed : Visibility.Visible;
+            // 联系人是一整页，不保留会话侧边栏
+            ListColumn.Width = contacts ? new GridLength(0) : new GridLength(300);
+            SidePane.Visibility = contacts ? Visibility.Collapsed : Visibility.Visible;
+
+            BrandPanel.Visibility = (contacts || !hasChat) ? Visibility.Visible : Visibility.Collapsed;
             ChatHeaderPanel.Visibility = hasChat ? Visibility.Visible : Visibility.Collapsed;
+            ContactsPane.Visibility = contacts ? Visibility.Visible : Visibility.Collapsed;
+            BrandTitle.Text = contacts ? "联系人" : "旧聊";
 
             if (hasChat)
             {
@@ -134,21 +144,17 @@ namespace OldChat.App.Views
             else
             {
                 ChatPane.Visibility = Visibility.Collapsed;
-                EmptyPane.Visibility = Visibility.Visible;
-                if (wasVisible || EmptyPane.Opacity < 1) FadeIn(EmptyPane);
+                EmptyPane.Visibility = contacts ? Visibility.Collapsed : Visibility.Visible;
+                if (!contacts && (wasVisible || EmptyPane.Opacity < 1)) FadeIn(EmptyPane);
             }
 
-            if (!hasChat)
+            if (!hasChat && !contacts)
             {
                 switch (_activeTab)
                 {
                     case 0:
                         EmptyTitle.Text = "选择一个会话";
                         EmptyHint.Text = "左侧列表里的群聊与好友都能直接打开";
-                        break;
-                    case 1:
-                        EmptyTitle.Text = "好友";
-                        EmptyHint.Text = "好友都在左侧列表里，点一下就能聊";
                         break;
                     default:
                         EmptyTitle.Text = "发现";
@@ -194,10 +200,11 @@ namespace OldChat.App.Views
                 _msgView.UpdateLayout();
                 JumpToEnd();
 
-                // 消息还在陆续上屏时贴底会被忽略，等这一轮布局结束再确认一次
+                // 消息还在陆续上屏时贴底会被忽略，等这一轮布局结束再确认一次。
+                // 用户已经自己滚过就不要拽回去，那是抢操作。
                 Dispatcher.BeginInvoke(new Action(delegate
                 {
-                    if (_msgView == null) return;
+                    if (_msgView == null || _userTouched) return;
                     if (_msgView.ScrollableHeight - _msgView.VerticalOffset > 1) JumpToEnd();
                 }), System.Windows.Threading.DispatcherPriority.ContextIdle);
             }), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -331,6 +338,37 @@ namespace OldChat.App.Views
             ShowPane();
         }
 
+        private void ConversationRow_Click(object sender, MouseButtonEventArgs e)
+        {
+            var row = sender as FrameworkElement;
+            var conv = row == null ? null : row.DataContext as ConversationItem;
+            if (conv == null) return;
+            OpenConversation(conv);
+        }
+
+        private void ContactTile_Click(object sender, MouseButtonEventArgs e)
+        {
+            var tile = sender as FrameworkElement;
+            var contact = tile == null ? null : tile.DataContext as ContactItem;
+            if (contact == null) return;
+
+            ConversationItem conv = _vm.FindConversation(contact.IsGroup, contact.Id);
+            if (conv == null) return;
+            OpenConversation(conv);
+        }
+
+        /// <summary>点列表或联系人宫格都走这里：选中会话并切回消息页。</summary>
+        private void OpenConversation(ConversationItem conv)
+        {
+            _vm.SelectConversation(conv);
+            if (_activeTab != 0)
+            {
+                _activeTab = 0;
+                TabMessages.IsChecked = true;
+            }
+            ShowPane();
+        }
+
         private void SelfAvatar_Click(object sender, MouseButtonEventArgs e)
         {
             AppSession session = App.Session;
@@ -376,6 +414,7 @@ namespace OldChat.App.Views
         /// <summary>只有用户自己往上拨滚轮才算“要翻历史”，其余情况一律不加载。</summary>
         private void OnMessageWheel(double pixels)
         {
+            _userTouched = true;
             if (pixels < 0) _olderArmed = true;
             if (_olderArmed && _msgView != null && _msgView.VerticalOffset <= 2) TryLoadOlder();
         }
@@ -417,7 +456,16 @@ namespace OldChat.App.Views
                 await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Loaded);
 
                 double after = view.ExtentHeight;
-                if (after > before) view.ScrollToVerticalOffset(offset + (after - before));
+                double restored = offset + (after - before);
+                view.ScrollToVerticalOffset(restored);
+
+                // 图片和头像晚一拍才撑开高度，再对齐一次，避免落点偏一小段看着像回弹
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                double settled = view.ExtentHeight;
+                if (Math.Abs(settled - after) > 0.5)
+                {
+                    view.ScrollToVerticalOffset(restored + (settled - after));
+                }
             }
             catch (Exception ex)
             {

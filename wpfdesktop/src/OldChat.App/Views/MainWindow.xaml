@@ -17,7 +17,7 @@
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="62" />
-                <ColumnDefinition Width="300" />
+                <ColumnDefinition x:Name="ListColumn" Width="300" />
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
@@ -48,7 +48,7 @@
             </Border>
 
             <!-- 会话列表 -->
-            <Border Grid.Column="1" Background="{DynamicResource PanelBg}">
+            <Border x:Name="SidePane" Grid.Column="1" Background="{DynamicResource PanelBg}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -66,57 +66,109 @@
                                    IsHitTestVisible="False" />
                     </Grid>
 
-                    <ListBox x:Name="ConversationList" Grid.Row="1"
-                             ItemsSource="{Binding ConversationsView}"
-                             SelectedItem="{Binding Selected, Mode=TwoWay}"
-                             ItemContainerStyle="{StaticResource ConversationItemStyle}"
-                             Background="Transparent" BorderThickness="0" Padding="0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                             ScrollViewer.CanContentScroll="False"
-                             VirtualizingPanel.IsVirtualizing="True"
-                             VirtualizingPanel.ScrollUnit="Pixel"
-                             VirtualizingPanel.VirtualizationMode="Recycling">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="Auto" />
-                                    </Grid.ColumnDefinitions>
+                    <ScrollViewer x:Name="ConversationScroll" Grid.Row="1"
+                                  Style="{StaticResource ThinScrollViewer}"
+                                  VerticalScrollBarVisibility="Hidden"
+                                  CanContentScroll="False"
+                                  Padding="0"
+                                  ClipToBounds="True">
+                        <ItemsControl ItemsSource="{Binding Sections}" ClipToBounds="True">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Title}" FontSize="11" FontWeight="SemiBold"
+                                                   Margin="18,12,16,4"
+                                                   Foreground="{DynamicResource TextMuted}" />
+                                        <ItemsControl ItemsSource="{Binding Items}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border x:Name="ConvRow"
+                                                            MouseLeftButtonUp="ConversationRow_Click"
+                                                            RenderOptions.EdgeMode="Aliased">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border">
+                                                                <Setter Property="Background" Value="Transparent" />
+                                                                <Setter Property="Cursor" Value="Hand" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                                                        <Setter Property="Background" Value="{DynamicResource SelectedBg}" />
+                                                                    </DataTrigger>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Background" Value="{DynamicResource HoverBg}" />
+                                                                    </Trigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
 
-                                    <controls:AvatarImage Grid.Column="0" Width="46" Height="46"
-                                                          Url="{Binding AvatarUrl}"
-                                                          FallbackText="{Binding Title}"
-                                                          IsOnline="{Binding IsOnline}"
-                                                          ShowOnline="True" />
+                                                        <Grid Margin="16,9">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
 
-                                    <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextPrimary}"
-                                                   TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Preview}" FontSize="12" Margin="0,3,0,0"
-                                                   Foreground="{DynamicResource TextSecondary}"
-                                                   TextTrimming="CharacterEllipsis" />
+                                                            <controls:AvatarImage Grid.Column="0" Width="46" Height="46"
+                                                                                  Url="{Binding AvatarUrl}"
+                                                                                  FallbackText="{Binding Title}"
+                                                                                  IsOnline="{Binding IsOnline}"
+                                                                                  ShowOnline="True" />
+
+                                                            <StackPanel Grid.Column="1" Margin="12,0,8,0" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"
+                                                                           Foreground="{DynamicResource TextPrimary}"
+                                                                           TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Text="{Binding Preview}" FontSize="12" Margin="0,3,0,0"
+                                                                           Foreground="{DynamicResource TextSecondary}"
+                                                                           TextTrimming="CharacterEllipsis">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasPreview}" Value="False">
+                                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                                <TextBlock Text="{Binding Subtitle}" FontSize="12" Margin="0,3,0,0"
+                                                                           Foreground="{DynamicResource TextMuted}"
+                                                                           TextTrimming="CharacterEllipsis">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding HasPreview}" Value="False">
+                                                                                    <Setter Property="Visibility" Value="Visible" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+
+                                                            <StackPanel Grid.Column="2" VerticalAlignment="Top" Margin="0,2,0,0"
+                                                                        HorizontalAlignment="Right">
+                                                                <TextBlock Text="{Binding TimeText}" FontSize="11"
+                                                                           HorizontalAlignment="Right"
+                                                                           Foreground="{DynamicResource TextSecondary}" />
+                                                                <Border Style="{StaticResource UnreadBadge}" Margin="0,5,0,0"
+                                                                        Visibility="{Binding HasUnread, Converter={StaticResource BoolToVisibility}}">
+                                                                    <TextBlock Text="{Binding Unread}" FontSize="10"
+                                                                               Foreground="{DynamicResource BadgeText}"
+                                                                               HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                                </Border>
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
                                     </StackPanel>
-
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Top" Margin="0,2,0,0"
-                                                HorizontalAlignment="Right">
-                                        <TextBlock Text="{Binding TimeText}" FontSize="11"
-                                                   HorizontalAlignment="Right"
-                                                   Foreground="{DynamicResource TextSecondary}" />
-                                        <Border Style="{StaticResource UnreadBadge}" Margin="0,5,0,0"
-                                                Visibility="{Binding HasUnread, Converter={StaticResource BoolToVisibility}}">
-                                            <TextBlock Text="{Binding Unread}" FontSize="10"
-                                                       Foreground="{DynamicResource BadgeText}"
-                                                       HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
 
                     <Border Grid.Row="2" Padding="16,7">
                         <TextBlock Text="{Binding StatusLine}" FontSize="11"
@@ -140,7 +192,7 @@
                         <!-- 未选会话：品牌与连接状态 -->
                         <Grid x:Name="BrandPanel" Margin="16,0,0,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="旧聊" FontSize="14" FontWeight="SemiBold"
+                                <TextBlock x:Name="BrandTitle" Text="旧聊" FontSize="14" FontWeight="SemiBold"
                                            Foreground="{DynamicResource TextPrimary}"
                                            VerticalAlignment="Center" />
                                 <Ellipse x:Name="StatusDot" Width="6" Height="6" Margin="10,0,0,0"
@@ -219,6 +271,66 @@
                                    Margin="0,7,0,0" HorizontalAlignment="Center"
                                    Foreground="{DynamicResource TextMuted}" />
                     </StackPanel>
+
+                    <!-- 联系人：宫格，按官方分区（群聊 / 最新添加 / 全部好友） -->
+                    <Grid x:Name="ContactsPane" Visibility="Collapsed">
+                        <ScrollViewer x:Name="ContactScroll"
+                                      Style="{StaticResource ThinScrollViewer}"
+                                      VerticalScrollBarVisibility="Hidden"
+                                      CanContentScroll="False"
+                                      Padding="0"
+                                      ClipToBounds="True">
+                            <ItemsControl ItemsSource="{Binding ContactSections}" Margin="16,10,10,16">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Margin="0,0,0,14">
+                                            <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                                                       Margin="4,0,0,8"
+                                                       Foreground="{DynamicResource TextPrimary}" />
+                                            <ItemsControl ItemsSource="{Binding Items}">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <WrapPanel />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Border Style="{StaticResource ContactTile}"
+                                                                MouseLeftButtonUp="ContactTile_Click">
+                                                            <StackPanel VerticalAlignment="Center">
+                                                                <controls:AvatarImage Width="52" Height="52"
+                                                                                      HorizontalAlignment="Center"
+                                                                                      Url="{Binding AvatarUrl}"
+                                                                                      FallbackText="{Binding Name}"
+                                                                                      IsOnline="{Binding IsOnline}"
+                                                                                      ShowOnline="True" />
+                                                                <TextBlock Text="{Binding Name}" FontSize="12" Margin="0,8,0,0"
+                                                                           HorizontalAlignment="Center"
+                                                                           TextAlignment="Center"
+                                                                           TextWrapping="Wrap" MaxHeight="32"
+                                                                           TextTrimming="CharacterEllipsis">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimary}" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding IsPending}" Value="True">
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource TextMuted}" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </Border>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
 
                     <!-- 聊天 -->
                     <Grid x:Name="ChatPane" Visibility="Collapsed">
