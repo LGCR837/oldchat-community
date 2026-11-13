@@ -12,6 +12,7 @@
   var Ops = global.AdminOps || {};
   var M = global.AdminMetrics || {};
   var R = global.AdminRouteSwitch || {};
+  var Rel = global.AdminRelease || {};
   var $ = C.$;
   var $$ = C.$$;
   var api = C.api;
@@ -35,6 +36,8 @@
       'routes': '路由接口开关',
       'court': '公共法庭',
       'reports': '举报工单',
+      'clients': '客户端入口',
+      'release': '版本发布',
       'settings': '全局设置',
       'resources': '资源与限速',
       'logs': '系统日志'
@@ -67,6 +70,8 @@
     else if (tab === 'routes' && R.renderRouteSwitch) R.renderRouteSwitch();
     else if (tab === 'reports' && Ops.renderReports) Ops.renderReports();
     else if (tab === 'court' && Ops.renderCourt) Ops.renderCourt();
+    else if (tab === 'clients' && Rel.renderClients) Rel.renderClients();
+    else if (tab === 'release' && Rel.renderRelease) Rel.renderRelease();
     else if (tab === 'settings' && Set.renderSettings) Set.renderSettings();
     else if (tab === 'resources' && Ops.renderResources) Ops.renderResources();
     else if (tab === 'logs' && Ops.renderLogs) Ops.renderLogs();

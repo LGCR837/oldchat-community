@@ -409,3 +409,20 @@ label.field-label {
 .text-xs { font-size: 11px; }
 .nowrap { white-space: nowrap; }
 .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- 表单字段 ---------- */
+.field-label {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+  margin-bottom: 5px;
+}
+
+/* 表格内的行内编辑控件，压到与单元格同高 */
+.table td .input {
+  width: 100%;
+  height: 26px;
+  padding: 0 6px;
+  font-size: 12px;
+}

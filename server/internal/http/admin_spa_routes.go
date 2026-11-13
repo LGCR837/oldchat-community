@@ -208,4 +208,12 @@ func (a *API) registerAdminAPIRoutes(r interface {
 	r.Post("/v1/admin/lua-apps/delete", a.adminAPIMiddleware(a.handleAdminLuaAppDelete))
 	r.Get("/v1/admin/settings", a.adminAPIMiddleware(a.handleAdminAPISettingsGet))
 	r.Post("/v1/admin/settings", a.adminAPIMiddleware(a.handleAdminAPISettingsSave))
+
+	// 安装包发版与客户端清单
+	r.Get("/v1/admin/release", a.adminAPIMiddleware(a.handleAdminAPIReleaseGet))
+	r.Post("/v1/admin/release/save", a.adminAPIMiddleware(a.handleAdminAPIReleaseSave))
+	r.Post("/v1/admin/release/upload", a.adminAPIMiddleware(a.handleAdminAPIReleaseUpload))
+	r.Post("/v1/admin/release/delete", a.adminAPIMiddleware(a.handleAdminAPIReleaseDelete))
+	r.Get("/v1/admin/clients", a.adminAPIMiddleware(a.handleAdminAPIClientsGet))
+	r.Post("/v1/admin/clients", a.adminAPIMiddleware(a.handleAdminAPIClientsSave))
 }

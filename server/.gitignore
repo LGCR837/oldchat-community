@@ -3,6 +3,7 @@
 *.db-shm
 *.db-wal
 settings.json
+clients.json
 *.key
 uploads/
 update/
