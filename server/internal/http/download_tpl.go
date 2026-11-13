@@ -16,9 +16,11 @@ type downloadChannel struct {
 }
 
 type downloadPageData struct {
-	Formal downloadChannel
-	Dev    downloadChannel
-	Notice string
+	Formal        downloadChannel
+	Dev           downloadChannel
+	Desktop       downloadChannel
+	DesktopHidden bool
+	Notice        string
 }
 
 const downloadPageHTML = `<!doctype html>
@@ -304,6 +306,34 @@ const downloadPageHTML = `<!doctype html>
         <div>{{.Dev.Notes}}</div>
       </div>
     </div>
+
+    {{if not .DesktopHidden}}
+    <!-- WPF 桌面端卡片 -->
+    <div class="main-card">
+      <div class="app-header">
+        <h2 class="app-title">{{.Desktop.Title}}</h2>
+        <span class="ver-badge{{.Desktop.BadgeClass}}">{{.Desktop.Version}}</span>
+      </div>
+
+      {{if .Desktop.Available}}
+      <a class="btn-download-primary" href="{{.Desktop.DownloadURL}}">下载 WPF 客户端安装包</a>
+      {{else}}
+      <span class="btn-download-primary btn-download-disabled">桌面端安装包暂未提供</span>
+      {{end}}
+
+      <div class="info-list">
+        <div class="info-item"><span class="info-label">应用类型:</span> Windows 桌面客户端</div>
+        <div class="info-item"><span class="info-label">运行环境:</span> .NET Framework 4.8</div>
+        <div class="info-item"><span class="info-label">系统要求:</span> Windows 7 及以上</div>
+        <div class="info-item"><span class="info-label">平台:</span> {{.Desktop.Channel}}</div>
+      </div>
+
+      <div class="changelog-box">
+        <div class="changelog-title">[客户端说明]</div>
+        <div>{{.Desktop.Notes}}</div>
+      </div>
+    </div>
+    {{end}}
 
     <div class="details-box">
       <details>

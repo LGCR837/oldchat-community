@@ -43,6 +43,7 @@ func (a *API) renderDownloadCenter(w http.ResponseWriter) {
 		Formal: a.downloadChannel("旧聊 正式版", "正式发布", "update.json", "", formalRel),
 		Dev:    a.downloadChannel("旧聊 测试版 (Dev)", "测试通道", "dev_update.json", " ver-badge-test", devRel),
 	}
+	data.Desktop, data.DesktopHidden = a.desktopDownloadChannel()
 	if !data.Formal.Available && !data.Dev.Available {
 		data.Notice = "安装包尚未上传，把 APK 放进服务器 update 目录后刷新本页即可。"
 	}
@@ -106,4 +107,49 @@ func (a *API) releaseArtifactURL(rel landingRelease) (string, bool) {
 		return "", false
 	}
 	return "/update/" + name, true
+}
+
+// desktopDownloadChannel 从客户端清单里取桌面端条目。
+// 后台「客户端入口」填了下载地址就直接上线，留空则显示为暂未提供。
+func (a *API) desktopDownloadChannel() (downloadChannel, bool) {
+	item := downloadChannel{
+		Title:      "旧聊 WPF 客户端",
+		Channel:    "Windows",
+		Version:    "预留",
+		BadgeClass: " ver-badge-empty",
+		Notes:      "桌面端安装包尚未提供，发布后在此处下载。",
+	}
+	entries, err := loadClientRegistry(clientRegistryName)
+	if err != nil {
+		return item, false
+	}
+	for _, entry := range entries {
+		if entry.ID != "wpf" && !strings.EqualFold(entry.Platform, "Windows") {
+			continue
+		}
+		if !entry.Enabled {
+			return item, true
+		}
+		if name := strings.TrimSpace(entry.Name); name != "" {
+			item.Title = name
+		}
+		if version := strings.TrimSpace(entry.Version); version != "" {
+			item.Version = "v" + strings.TrimPrefix(version, "v")
+			item.BadgeClass = ""
+		}
+		if platform := strings.TrimSpace(entry.Platform); platform != "" {
+			item.Channel = platform
+		}
+		desc := strings.TrimSpace(entry.Description)
+		if url := strings.TrimSpace(entry.DownloadURL); url != "" {
+			item.DownloadURL = url
+			item.Available = true
+			// 已发布时用后台填写的说明，占位阶段保留固定文案，避免与信息项重复
+			if desc != "" {
+				item.Notes = desc
+			}
+		}
+		return item, false
+	}
+	return item, false
 }

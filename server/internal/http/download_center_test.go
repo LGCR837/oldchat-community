@@ -118,3 +118,53 @@ func TestLandingDropsLegacyAndroid16Entrance(t *testing.T) {
 		t.Fatalf("主页不应再出现 Android 1.6 入口")
 	}
 }
+
+func TestDownloadCenterShowsDesktopPlaceholder(t *testing.T) {
+	t.Chdir(t.TempDir())
+	api := newDownloadCenterAPI(t, "", "")
+	rec := httptest.NewRecorder()
+	api.handleUpdateCenter(rec, httptest.NewRequest(http.MethodGet, "/update/", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("下载页状态码异常：%d", rec.Code)
+	}
+	body := rec.Body.String()
+	for _, want := range []string{"WPF 客户端", "桌面端安装包暂未提供", ".NET Framework 4.8", "预留"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("下载页缺少桌面端占位内容 %q", want)
+		}
+	}
+}
+
+func TestDownloadCenterDesktopFollowsClientRegistry(t *testing.T) {
+	t.Chdir(t.TempDir())
+	payload := `{"clients":[{"id":"wpf","name":"旧聊桌面端","platform":"Windows","version":"0.1.0","description":"内测版本","download_url":"https://example.com/oldchat-wpf.exe","enabled":true}]}`
+	if err := os.WriteFile("clients.json", []byte(payload), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	api := newDownloadCenterAPI(t, "", "")
+	rec := httptest.NewRecorder()
+	api.handleUpdateCenter(rec, httptest.NewRequest(http.MethodGet, "/update/", nil))
+	body := rec.Body.String()
+	for _, want := range []string{"旧聊桌面端", "v0.1.0", "https://example.com/oldchat-wpf.exe", "内测版本", "下载 WPF 客户端安装包"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("下载页未跟随客户端清单 %q", want)
+		}
+	}
+	if strings.Contains(body, "桌面端安装包暂未提供") {
+		t.Fatalf("已填下载地址时不应再显示占位按钮")
+	}
+}
+
+func TestDownloadCenterHidesDisabledDesktop(t *testing.T) {
+	t.Chdir(t.TempDir())
+	payload := `{"clients":[{"id":"wpf","name":"旧聊桌面端","platform":"Windows","enabled":false}]}`
+	if err := os.WriteFile("clients.json", []byte(payload), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	api := newDownloadCenterAPI(t, "", "")
+	rec := httptest.NewRecorder()
+	api.handleUpdateCenter(rec, httptest.NewRequest(http.MethodGet, "/update/", nil))
+	if strings.Contains(rec.Body.String(), "WPF 客户端") || strings.Contains(rec.Body.String(), "旧聊桌面端") {
+		t.Fatalf("关闭显示后不应渲染桌面端卡片")
+	}
+}
