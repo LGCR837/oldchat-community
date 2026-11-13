@@ -403,8 +403,8 @@ func loadClientRegistry(path string) ([]adminClientEntry, error) {
 func defaultClientEntries() []adminClientEntry {
 	return []adminClientEntry{
 		{ID: "android", Name: "Android 客户端", Platform: "Android", Version: "", Description: "适配 Android 2.3 及以上版本", Enabled: true},
+		{ID: "wpf", Name: "WPF 客户端", Platform: "Windows", Version: "", Description: "桌面端，.NET Framework 4.8，适配 Windows 7 及以上", Enabled: true},
 		{ID: "web", Name: "网页版", Platform: "Web", Version: "", Description: "浏览器直接使用，无需安装", Enabled: true},
-		{ID: "windows", Name: "Windows 客户端", Platform: "Windows", Version: "", Description: "桌面端，适配 Windows 7 及以上", Enabled: true},
 	}
 }
 

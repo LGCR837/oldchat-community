@@ -223,6 +223,31 @@ func TestReleaseDeleteRejectsTraversal(t *testing.T) {
 	}
 }
 
+func TestClientsDefaultEntriesCoverWPF(t *testing.T) {
+	dir := t.TempDir()
+	t.Chdir(dir)
+	api := &API{cfg: config.Config{UpdateDir: "update"}}
+	rec := httptest.NewRecorder()
+	api.handleAdminAPIClientsGet(rec, httptest.NewRequest(http.MethodGet, "/v1/admin/clients", nil))
+	clients, _ := decodeBody(t, rec)["clients"].([]any)
+
+	var ids []string
+	for _, item := range clients {
+		ids = append(ids, item.(map[string]any)["id"].(string))
+	}
+	for _, want := range []string{"android", "wpf", "web"} {
+		found := false
+		for _, id := range ids {
+			if id == want {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("默认客户端清单缺少 %q：%v", want, ids)
+		}
+	}
+}
+
 func TestClientsRegistryRoundTrip(t *testing.T) {
 	dir := t.TempDir()
 	t.Chdir(dir)
@@ -263,8 +288,7 @@ func TestClientsRegistryRoundTrip(t *testing.T) {
 	}
 }
 
-func TestClientsSaveSkipsNameless(t *testing.T) {
-	t.Chdir(t.TempDir())
+func TestClientsSaveSkipsNameless(t *testing.T) {	t.Chdir(t.TempDir())
 	api := &API{cfg: config.Config{UpdateDir: "update"}}
 	rec := httptest.NewRecorder()
 	body := `{"clients":[{"name":"  "},{"name":"Web 版","platform":"Web"}]}`
