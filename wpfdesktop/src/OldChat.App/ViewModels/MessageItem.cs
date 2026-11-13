@@ -13,7 +13,6 @@ namespace OldChat.App.ViewModels
         public bool IsMine { get; private set; }
         public bool IsGroup { get; private set; }
         public string SenderName { get; private set; }
-        public string AvatarUrl { get; set; }
         public string AvatarLetter { get; private set; }
         public string DisplayText { get; private set; }
         public string QuoteText { get; private set; }
@@ -24,12 +23,32 @@ namespace OldChat.App.ViewModels
         public bool IsMediaMessage { get; private set; }
         public bool ShowTimeHeader { get; set; }
         public string TimeHeaderText { get; set; }
-        public bool ShowSenderName { get; private set; }
 
-        /// <summary>官方布局：私聊不显示消息头像，群聊才显示。</summary>
-        public bool ShowAvatar
+        private string _avatarUrl;
+
+        public string AvatarUrl
         {
-            get { return IsGroup && !IsMine; }
+            get { return _avatarUrl; }
+            set { Set(ref _avatarUrl, value); }
+        }
+
+        /// <summary>群聊里每条都带头像和昵称，自己发的头像在右侧。私聊按官方不显示。</summary>
+        public bool ShowPeerAvatar { get { return IsGroup && !IsMine; } }
+
+        public bool ShowMyAvatar { get { return IsGroup && IsMine; } }
+
+        public bool ShowSenderName { get { return IsGroup; } }
+
+        /// <summary>成员表晚到一步，拿到后回填昵称与头像。</summary>
+        public void ApplyMember(string displayName, string avatarUrl)
+        {
+            if (!string.IsNullOrEmpty(displayName) && displayName != SenderName)
+            {
+                SenderName = displayName;
+                AvatarLetter = Initial(displayName);
+                Raise("SenderName");
+            }
+            if (!string.IsNullOrEmpty(avatarUrl)) AvatarUrl = avatarUrl;
         }
 
         public string LocalState
@@ -93,7 +112,6 @@ namespace OldChat.App.ViewModels
                     : body.Quote.FromName + "：" + body.Quote.Text;
             }
 
-            ShowSenderName = IsGroup && !isMine;
             TimeText = message.LocalTime.ToString("HH:mm");
             MediaUrl = message.ThumbUrl ?? message.MediaUrl;
             IsMediaMessage = message.MsgType == "image" && !string.IsNullOrEmpty(MediaUrl);

@@ -122,16 +122,13 @@ namespace OldChat.App.Controls
             var clip = new EllipseGeometry(center, radius, radius);
             dc.PushClip(clip);
 
-            Brush background = ResolveBrush("AvatarPlaceholderBg", Color.FromRgb(0x23, 0x2A, 0x31));
-            dc.DrawEllipse(background, null, center, radius, radius);
-
             if (_image != null)
             {
                 dc.DrawImage(_image, new Rect(0, 0, ActualWidth, ActualHeight));
             }
             else
             {
-                // 官方占位图就是「圆圈内人形线描」，比首字母干净
+                // 官方占位图是透明底的线描，不铺圆底，直接贴在列表底上
                 ImageSource placeholder = PlaceholderSource;
                 if (placeholder != null)
                 {
@@ -167,27 +164,59 @@ namespace OldChat.App.Controls
             return text;
         }
 
-        private static ImageSource _placeholder;
-        private static bool _placeholderLoaded;
+        private static ImageSource _placeholderLight;
+        private static ImageSource _placeholderDark;
 
-        /// <summary>官方 ic_avatar_placeholder.png，第一次用到时加载一次。</summary>
+        /// <summary>官方 ic_avatar_placeholder.png：浅色为深色线描，夜间为浅色线描，都是透明底。</summary>
         private static ImageSource PlaceholderSource
         {
             get
             {
-                if (_placeholderLoaded) return _placeholder;
-                _placeholderLoaded = true;
-                try
+                bool dark = OldChat.App.Theme.ThemeManager.IsDark;
+                if (dark)
                 {
-                    var uri = new Uri("pack://application:,,,/Assets/avatar_placeholder.png", UriKind.Absolute);
-                    var decoder = new PngBitmapDecoder(uri, BitmapCreateOptions.DelayCreation, BitmapCacheOption.OnLoad);
-                    if (decoder.Frames.Count > 0) _placeholder = decoder.Frames[0];
+                    if (_placeholderDark == null) _placeholderDark = LoadPlaceholder("Assets/avatar_placeholder_dark.png");
+                    return _placeholderDark;
                 }
-                catch (Exception ex)
-                {
-                    Log.Warn("占位头像加载失败：" + ex.Message);
-                }
-                return _placeholder;
+                if (_placeholderLight == null) _placeholderLight = LoadPlaceholder("Assets/avatar_placeholder.png");
+                return _placeholderLight;
+            }
+        }
+
+        private static ImageSource LoadPlaceholder(string path)
+        {
+            try
+            {
+                var uri = new Uri("pack://application:,,,/" + path, UriKind.Absolute);
+                var decoder = new PngBitmapDecoder(uri, BitmapCreateOptions.DelayCreation, BitmapCacheOption.OnLoad);
+                if (decoder.Frames.Count > 0) return decoder.Frames[0];
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("占位头像加载失败：" + ex.Message);
+            }
+            return null;
+        }
+
+        /// <summary>主题切换后占位图要跟着换色，遍历两个窗口重绘一遍。</summary>
+        public static void RefreshTheme()
+        {
+            if (Application.Current == null) return;
+            foreach (Window window in Application.Current.Windows)
+            {
+                RefreshTheme(window);
+            }
+        }
+
+        private static void RefreshTheme(DependencyObject root)
+        {
+            var avatar = root as AvatarImage;
+            if (avatar != null) avatar.InvalidateVisual();
+
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                RefreshTheme(VisualTreeHelper.GetChild(root, i));
             }
         }
 

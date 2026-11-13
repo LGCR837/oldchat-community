@@ -15,6 +15,8 @@ namespace OldChat.App.ViewModels
     public sealed class MainViewModel : ObservableObject
     {
         private readonly AppSession _session;
+        private readonly Dictionary<string, Dictionary<string, GroupMemberItem>> _members =
+            new Dictionary<string, Dictionary<string, GroupMemberItem>>(StringComparer.Ordinal);
         private ConversationItem _selected;
         private string _searchText;
         private string _composerText;
@@ -174,9 +176,14 @@ namespace OldChat.App.ViewModels
             IsLoading = true;
             try
             {
-                MessagePage page = conv.IsGroup
-                    ? await _session.Chat.LoadGroupHistoryAsync(conv.ChatId, 0).ConfigureAwait(true)
-                    : await _session.Chat.LoadDirectHistoryAsync(conv.ChatId, 0, null).ConfigureAwait(true);
+                // 成员表与历史并行拉，成员表晚到也能回填头像
+                Task memberTask = EnsureMembersAsync(conv);
+                Task<MessagePage> pageTask = conv.IsGroup
+                    ? _session.Chat.LoadGroupHistoryAsync(conv.ChatId, 0)
+                    : _session.Chat.LoadDirectHistoryAsync(conv.ChatId, 0, null);
+
+                await Task.WhenAll(pageTask, memberTask).ConfigureAwait(true);
+                MessagePage page = pageTask.Result;
 
                 AppendPage(page, conv, prepend: false);
                 conv.Touch(page.Messages.Count > 0 ? page.Messages[page.Messages.Count - 1] : null);
@@ -196,6 +203,43 @@ namespace OldChat.App.ViewModels
             {
                 IsLoading = false;
             }
+        }
+
+        /// <summary>群成员表按群缓存，消息头像与昵称都从这里补。</summary>
+        private async Task EnsureMembersAsync(ConversationItem conv)
+        {
+            if (conv == null || !conv.IsGroup) return;
+            if (_members.ContainsKey(conv.ChatId)) return;
+
+            Dictionary<string, GroupMemberItem> map;
+            try
+            {
+                map = await _session.Chat.GetGroupMembersAsync(conv.ChatId).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("群成员表加载失败 " + conv.Title + " " + ex.Message);
+                return;
+            }
+
+            _members[conv.ChatId] = map;
+            Log.Info("群成员表 " + conv.Title + " " + map.Count + " 人");
+
+            foreach (MessageItem item in Messages)
+            {
+                if (item.IsMine || !item.IsGroup) continue;
+                GroupMemberItem member;
+                if (!map.TryGetValue(item.Source.FromUid, out member)) continue;
+                item.ApplyMember(member.ShowName, MediaUrl.Resolve(_session.Origin, member.AvatarUrl));
+            }
+        }
+
+        private GroupMemberItem FindMember(string groupId, string uid)
+        {
+            Dictionary<string, GroupMemberItem> map;
+            if (string.IsNullOrEmpty(uid) || !_members.TryGetValue(groupId, out map)) return null;
+            GroupMemberItem member;
+            return map.TryGetValue(uid, out member) ? member : null;
         }
 
         public async Task LoadOlderAsync()
@@ -268,12 +312,20 @@ namespace OldChat.App.ViewModels
         private MessageItem BuildItem(ChatMessage msg, ConversationItem conv)
         {
             bool mine = string.Equals(msg.FromUid, _session.MyUid, StringComparison.Ordinal);
-            string name = mine
-                ? MyDisplayName
-                : (!string.IsNullOrEmpty(msg.FromName) ? msg.FromName : (conv.Friend != null ? conv.Friend.ShowName : msg.FromUid));
-            string avatar = null;
+            GroupMemberItem member = conv.IsGroup && !mine ? FindMember(conv.ChatId, msg.FromUid) : null;
+
+            string name;
+            if (mine) name = MyDisplayName;
+            else if (member != null) name = member.ShowName;
+            else if (!string.IsNullOrEmpty(msg.FromName)) name = msg.FromName;
+            else if (conv.Friend != null) name = conv.Friend.ShowName;
+            else name = msg.FromUid;
+
+            string avatar;
             if (mine) avatar = MyAvatarUrl;
-            else if (!conv.IsGroup && conv.Friend != null) avatar = MediaUrl.Resolve(_session.Origin, conv.Friend.AvatarUrl);
+            else if (member != null) avatar = MediaUrl.Resolve(_session.Origin, member.AvatarUrl);
+            else if (conv.Friend != null) avatar = MediaUrl.Resolve(_session.Origin, conv.Friend.AvatarUrl);
+            else avatar = null;
 
             return new MessageItem(msg, mine, name, avatar);
         }

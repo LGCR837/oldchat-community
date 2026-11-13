@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
@@ -18,6 +19,8 @@ namespace OldChat.App.Views
         private int _activeTab;
         private bool _loadingOlder;
         private bool _initialized;
+        private SmoothScroller _msgScroll;
+        private SmoothScroller _convScroll;
 
         public MainWindow()
         {
@@ -56,6 +59,11 @@ namespace OldChat.App.Views
         {
             if (_initialized) return;
             _initialized = true;
+
+            _msgScroll = new SmoothScroller(MessageScroll);
+            ScrollViewer convView = FindChild<ScrollViewer>(ConversationList);
+            if (convView != null) _convScroll = new SmoothScroller(convView) { StepPerNotch = 0.42 };
+
             await _vm.InitializeAsync();
             ShowPane();
         }
@@ -77,13 +85,25 @@ namespace OldChat.App.Views
             Application.Current.Shutdown();
         }
 
+        private static T FindChild<T>(DependencyObject root) where T : DependencyObject
+        {
+            if (root == null) return null;
+            int count = VisualTreeHelper.GetChildrenCount(root);
+            for (int i = 0; i < count; i++)
+            {
+                DependencyObject child = VisualTreeHelper.GetChild(root, i);
+                var match = child as T;
+                if (match != null) return match;
+                T deeper = FindChild<T>(child);
+                if (deeper != null) return deeper;
+            }
+            return null;
+        }
+
         private void OnViewModelChanged(object sender, PropertyChangedEventArgs e)
         {
             if (e.PropertyName == "HasSelection") ShowPane();
-            if (e.PropertyName == "Selected")
-            {
-                ScrollToBottom();
-            }
+            if (e.PropertyName == "Selected") ScrollToBottom();
         }
 
         private void ShowPane()
@@ -148,6 +168,10 @@ namespace OldChat.App.Views
                 StatusDot.Fill = connected
                     ? (Brush)FindResource("OnlineBrush")
                     : (Brush)FindResource("DangerBrush");
+
+                // 标题区平时只占一行，断线时才补第二行
+                ChatConnectionText.Text = connected ? string.Empty : "断开连接，正在重连";
+                ChatConnectionText.Visibility = connected ? Visibility.Collapsed : Visibility.Visible;
             }));
         }
 
@@ -155,56 +179,9 @@ namespace OldChat.App.Views
         {
             Dispatcher.BeginInvoke(new Action(delegate
             {
-                StopSmoothScroll();
-                MessageScroll.ScrollToEnd();
-                _scrollTarget = MessageScroll.VerticalOffset;
+                if (_msgScroll != null) _msgScroll.JumpToEnd();
+                else MessageScroll.ScrollToEnd();
             }), System.Windows.Threading.DispatcherPriority.Background);
-        }
-
-        // ---------- 平滑滚动 ----------
-
-        private double _scrollTarget;
-        private bool _smoothScrollOn;
-
-        /// <summary>滚轮改成逐帧缓动，避免 WPF 默认的一格一跳。</summary>
-        private void MessageScroll_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            e.Handled = true;
-
-            if (!_smoothScrollOn) _scrollTarget = MessageScroll.VerticalOffset;
-            _scrollTarget -= e.Delta * 0.55;
-
-            double max = Math.Max(0, MessageScroll.ExtentHeight - MessageScroll.ViewportHeight);
-            if (_scrollTarget < 0) _scrollTarget = 0;
-            if (_scrollTarget > max) _scrollTarget = max;
-
-            if (!_smoothScrollOn)
-            {
-                _smoothScrollOn = true;
-                System.Windows.Media.CompositionTarget.Rendering += OnSmoothScrollTick;
-            }
-        }
-
-        private void OnSmoothScrollTick(object sender, EventArgs e)
-        {
-            double offset = MessageScroll.VerticalOffset;
-            double diff = _scrollTarget - offset;
-
-            if (Math.Abs(diff) < 0.7)
-            {
-                MessageScroll.ScrollToVerticalOffset(_scrollTarget);
-                StopSmoothScroll();
-                return;
-            }
-
-            MessageScroll.ScrollToVerticalOffset(offset + diff * 0.32);
-        }
-
-        private void StopSmoothScroll()
-        {
-            if (!_smoothScrollOn) return;
-            _smoothScrollOn = false;
-            System.Windows.Media.CompositionTarget.Rendering -= OnSmoothScrollTick;
         }
 
         // ---------- 标题栏 ----------
@@ -234,19 +211,64 @@ namespace OldChat.App.Views
             Close();
         }
 
-        private void Theme_Click(object sender, RoutedEventArgs e)
+        // ---------- 设置菜单 ----------
+
+        private void Menu_Click(object sender, RoutedEventArgs e)
         {
-            OldChat.App.Theme.ThemeManager.Toggle();
-            App.SwitchTheme(OldChat.App.Theme.ThemeManager.Current);
-            InvalidateVisual();
+            var button = sender as Button;
+            if (button == null || button.ContextMenu == null) return;
+            button.ContextMenu.PlacementTarget = button;
+            button.ContextMenu.Placement = PlacementMode.Bottom;
+            button.ContextMenu.IsOpen = true;
         }
 
-        private void BubbleMode_Click(object sender, RoutedEventArgs e)
+        private void Menu_Opened(object sender, RoutedEventArgs e)
+        {
+            bool rounded = App.Config == null || App.Config.BubbleRounded;
+            MenuRound.IsChecked = rounded;
+            MenuSquare.IsChecked = !rounded;
+
+            bool dark = Theme.ThemeManager.IsDark;
+            MenuDark.IsChecked = dark;
+            MenuLight.IsChecked = !dark;
+        }
+
+        private void MenuRound_Click(object sender, RoutedEventArgs e)
+        {
+            SetBubbleRounded(true);
+        }
+
+        private void MenuSquare_Click(object sender, RoutedEventArgs e)
+        {
+            SetBubbleRounded(false);
+        }
+
+        private void SetBubbleRounded(bool rounded)
         {
             if (App.Config == null) return;
-            App.Config.BubbleRounded = !App.Config.BubbleRounded;
+            if (App.Config.BubbleRounded == rounded) return;
+            App.Config.BubbleRounded = rounded;
             App.Config.Save();
-            Controls.BubbleShape.Apply(App.Config.BubbleRounded);
+            BubbleShape.Apply(rounded);
+        }
+
+        private void MenuLight_Click(object sender, RoutedEventArgs e)
+        {
+            SetTheme("light");
+        }
+
+        private void MenuDark_Click(object sender, RoutedEventArgs e)
+        {
+            SetTheme("dark");
+        }
+
+        private void SetTheme(string theme)
+        {
+            if (string.Equals(Theme.ThemeManager.Current, theme, StringComparison.OrdinalIgnoreCase)) return;
+            Theme.ThemeManager.Apply(theme);
+            App.SwitchTheme(theme);
+            AvatarImage.RefreshTheme();
+            InvalidateVisual();
         }
 
         // ---------- 导航 ----------
@@ -313,7 +335,6 @@ namespace OldChat.App.Views
 
         private async void MessageScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
-            if (!_smoothScrollOn) _scrollTarget = MessageScroll.VerticalOffset;
             if (e.ExtentHeightChange == 0) return;
             if (MessageScroll.VerticalOffset > 4) return;
             if (_loadingOlder || e.ExtentHeight < MessageScroll.ViewportHeight) return;

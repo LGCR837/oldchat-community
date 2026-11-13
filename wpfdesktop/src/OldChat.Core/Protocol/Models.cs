@@ -164,4 +164,24 @@ namespace OldChat.Core.Protocol
             }
         }
     }
+
+    /// <summary>群成员。消息本身不带头像，成员表是拿头像和昵称的唯一来源。</summary>
+    public sealed class GroupMemberItem
+    {
+        [JsonProperty("uid")] public string Uid { get; set; }
+        [JsonProperty("display_name")] public string DisplayName { get; set; }
+        [JsonProperty("username")] public string Username { get; set; }
+        [JsonProperty("avatar_url")] public string AvatarUrl { get; set; }
+        [JsonProperty("role")] public short Role { get; set; }
+
+        public string ShowName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(DisplayName)) return DisplayName;
+                if (!string.IsNullOrEmpty(Username)) return Username;
+                return Uid ?? string.Empty;
+            }
+        }
+    }
 }

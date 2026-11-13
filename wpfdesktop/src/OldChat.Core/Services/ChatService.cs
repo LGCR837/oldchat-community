@@ -41,6 +41,43 @@ namespace OldChat.Core.Services
             return list;
         }
 
+        /// <summary>群成员表。消息里没有头像字段，点开群时拉一次，用于补昵称与头像。</summary>
+        public async Task<Dictionary<string, GroupMemberItem>> GetGroupMembersAsync(string groupId, int pageSize = 200)
+        {
+            var map = new Dictionary<string, GroupMemberItem>(StringComparer.Ordinal);
+            int offset = 0;
+
+            while (true)
+            {
+                var query = new Dictionary<string, string>
+                {
+                    ["group_id"] = groupId,
+                    ["limit"] = pageSize.ToString(),
+                    ["offset"] = offset.ToString()
+                };
+
+                JToken resp = await _api.GetAsync("/v1/groups/members", query).ConfigureAwait(false);
+                JToken arr = resp == null ? null : resp["members"];
+                if (arr == null) break;
+
+                int added = 0;
+                foreach (JToken one in arr)
+                {
+                    var member = one.ToObject<GroupMemberItem>();
+                    if (member == null || string.IsNullOrEmpty(member.Uid)) continue;
+                    map[member.Uid] = member;
+                    added++;
+                }
+
+                offset += added;
+                int total = resp["total"] == null ? 0 : resp["total"].Value<int>();
+                if (added == 0 || added < pageSize) break;
+                if (total > 0 && offset >= total) break;
+            }
+
+            return map;
+        }
+
         /// <summary>群历史消息。beforeSeq 为 0 表示取最新一页，往前翻传上一页的 NextGroupSeq。</summary>
         public async Task<MessagePage> LoadGroupHistoryAsync(string groupId, long beforeSeq, int limit = DefaultPageSize)
         {

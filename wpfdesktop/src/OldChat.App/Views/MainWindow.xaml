@@ -58,9 +58,9 @@
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Margin="12,12,12,6">
-                        <TextBox x:Name="SearchBox" Style="{StaticResource InputBox}"
+                        <TextBox x:Name="SearchBox" Style="{StaticResource InputBox}" Height="30"
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                 Padding="28,6,10,6" />
+                                 Padding="28,0,10,0" />
                         <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}" FontSize="12"
                                    Foreground="{DynamicResource TextMuted}"
                                    VerticalAlignment="Center" Margin="10,0,0,0"
@@ -71,8 +71,9 @@
                              ItemsSource="{Binding ConversationsView}"
                              SelectedItem="{Binding Selected, Mode=TwoWay}"
                              ItemContainerStyle="{StaticResource ConversationItemStyle}"
-                             Background="Transparent" BorderThickness="0"
+                             Background="Transparent" BorderThickness="0" Padding="0"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ScrollViewer.VerticalScrollBarVisibility="Hidden"
                              VirtualizingPanel.IsVirtualizing="True"
                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListBox.ItemTemplate>
@@ -86,6 +87,7 @@
 
                                     <controls:AvatarImage Grid.Column="0" Width="46" Height="46"
                                                           Url="{Binding AvatarUrl}"
+                                                          FallbackText="{Binding Title}"
                                                           IsOnline="{Binding IsOnline}"
                                                           ShowOnline="True" />
 
@@ -127,7 +129,7 @@
             <!-- 聊天区 -->
             <Grid Grid.Column="2" Background="{DynamicResource ChatBg}">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="48" />
+                    <RowDefinition Height="52" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
@@ -136,6 +138,7 @@
                         BorderBrush="{DynamicResource Divider}" BorderThickness="0,0,0,1"
                         MouseLeftButtonDown="TopBar_MouseDown">
                     <Grid>
+                        <!-- 未选会话：品牌与连接状态 -->
                         <Grid x:Name="BrandPanel" Margin="16,0,0,0" VerticalAlignment="Center">
                             <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                 <TextBlock Text="旧聊" FontSize="14" FontWeight="SemiBold"
@@ -149,37 +152,57 @@
                             </StackPanel>
                         </Grid>
 
+                        <!-- 已选会话：头像 + 单行标题人数，异常时第二行连接状态 -->
                         <Grid x:Name="ChatHeaderPanel" Margin="16,0,10,0" VerticalAlignment="Center"
                               Visibility="Collapsed">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <controls:AvatarImage Grid.Column="0" Width="32" Height="32"
+                            <controls:AvatarImage Grid.Column="0" Width="32" Height="32" VerticalAlignment="Center"
                                                   Url="{Binding Selected.AvatarUrl}"
                                                   IsOnline="{Binding Selected.IsOnline}" />
                             <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding HeaderTitle}" FontSize="15" FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimary}"
-                                           TextTrimming="CharacterEllipsis" MaxWidth="320" />
-                                <TextBlock Text="{Binding HeaderSubtitle}" FontSize="11" Margin="0,1,0,0"
-                                           Foreground="{DynamicResource TextSecondary}"
-                                           TextTrimming="CharacterEllipsis" MaxWidth="320" />
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding HeaderTitle}" FontSize="15" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource TextPrimary}"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="400"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding HeaderSubtitle}" FontSize="12" Margin="8,0,0,0"
+                                               Foreground="{DynamicResource TextSecondary}"
+                                               TextTrimming="CharacterEllipsis" MaxWidth="160"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock x:Name="ChatConnectionText" Text="重连中" FontSize="11" Margin="0,1,0,0"
+                                           Foreground="{DynamicResource DangerBrush}"
+                                           Visibility="Collapsed" />
                             </StackPanel>
                         </Grid>
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right"
                                     shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                            <Button Style="{StaticResource WindowButton}" Height="48" FontSize="12"
-                                    Content="&#x25FB;" ToolTip="切换气泡圆角" Click="BubbleMode_Click" />
-                            <Button Style="{StaticResource WindowButton}" Height="48"
-                                    FontSize="13" Content="&#xE793;" ToolTip="切换主题" Click="Theme_Click" />
-                            <Button Style="{StaticResource WindowButton}" Height="48" Content="&#xE921;"
-                                    ToolTip="最小化" Click="Minimize_Click" />
-                            <Button Style="{StaticResource WindowButton}" Height="48" Content="&#xE922;"
-                                    ToolTip="最大化" Click="Maximize_Click" />
-                            <Button Style="{StaticResource CloseWindowButton}" Height="48" Content="&#xE8BB;"
-                                    ToolTip="关闭" Click="Close_Click" />
+                            <Button x:Name="MenuButton" Style="{StaticResource WindowButton}" Height="52"
+                                    FontSize="16" Content="&#xE712;" ToolTip="设置" Click="Menu_Click">
+                                <Button.ContextMenu>
+                                    <ContextMenu Style="{StaticResource PopupMenu}" Opened="Menu_Opened">
+                                        <MenuItem x:Name="MenuRound" Style="{StaticResource PopupMenuItem}"
+                                                  Header="圆角气泡" IsCheckable="True" Click="MenuRound_Click" />
+                                        <MenuItem x:Name="MenuSquare" Style="{StaticResource PopupMenuItem}"
+                                                  Header="直角气泡" IsCheckable="True" Click="MenuSquare_Click" />
+                                        <Separator Style="{StaticResource PopupMenuSeparator}" />
+                                        <MenuItem x:Name="MenuLight" Style="{StaticResource PopupMenuItem}"
+                                                  Header="浅色主题" IsCheckable="True" Click="MenuLight_Click" />
+                                        <MenuItem x:Name="MenuDark" Style="{StaticResource PopupMenuItem}"
+                                                  Header="深色主题" IsCheckable="True" Click="MenuDark_Click" />
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+                            <Button Style="{StaticResource WindowButton}" Height="52" FontSize="11"
+                                    Content="&#xE921;" ToolTip="最小化" Click="Minimize_Click" />
+                            <Button Style="{StaticResource WindowButton}" Height="52" FontSize="11"
+                                    Content="&#xE922;" ToolTip="最大化" Click="Maximize_Click" />
+                            <Button Style="{StaticResource CloseWindowButton}" Height="52" FontSize="11"
+                                    Content="&#xE8BB;" ToolTip="关闭" Click="Close_Click" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -210,8 +233,7 @@
                                       Style="{StaticResource ThinScrollViewer}"
                                       VerticalScrollBarVisibility="Auto"
                                       Padding="0"
-                                      ScrollChanged="MessageScroll_ScrollChanged"
-                                      PreviewMouseWheel="MessageScroll_PreviewMouseWheel">
+                                      ScrollChanged="MessageScroll_ScrollChanged">
                             <ItemsControl x:Name="MessageList" ItemsSource="{Binding Messages}"
                                           Margin="18,10,10,10">
                                 <ItemsControl.ItemTemplate>
@@ -233,29 +255,46 @@
                                                            Foreground="{DynamicResource TimeChipText}" />
                                             </Border>
 
-                                            <Grid Margin="0,0,0,10">
+                                            <Grid Margin="0,0,0,12">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
 
-                                                <!-- 群聊才有头像，私聊按官方不显示 -->
-                                                <controls:AvatarImage x:Name="MsgAvatar" Grid.Column="0"
-                                                                      Width="36" Height="36"
+                                                <!-- 对方头像：群聊显示，私聊按官方不显示 -->
+                                                <controls:AvatarImage Grid.Column="0" Width="36" Height="36"
                                                                       VerticalAlignment="Top" Margin="0,1,8,0"
                                                                       Url="{Binding AvatarUrl}"
-                                                                      Visibility="{Binding ShowAvatar, Converter={StaticResource BoolToVisibility}}" />
+                                                                      FallbackText="{Binding SenderName}"
+                                                                      Visibility="{Binding ShowPeerAvatar, Converter={StaticResource BoolToVisibility}}" />
 
-                                                <StackPanel x:Name="MsgBody" Grid.Column="1" HorizontalAlignment="Left">
+                                                <StackPanel x:Name="MsgBody" Grid.Column="1">
+                                                    <StackPanel.Style>
+                                                        <Style TargetType="StackPanel">
+                                                            <Setter Property="HorizontalAlignment" Value="Left" />
+                                                            <Style.Triggers>
+                                                                <DataTrigger Binding="{Binding IsMine}" Value="True">
+                                                                    <Setter Property="HorizontalAlignment" Value="Right" />
+                                                                </DataTrigger>
+                                                            </Style.Triggers>
+                                                        </Style>
+                                                    </StackPanel.Style>
+
                                                     <TextBlock x:Name="SenderLabel" Text="{Binding SenderName}"
-                                                               FontSize="12" Margin="1,0,0,3"
-                                                               Foreground="{Binding SenderName, Converter={StaticResource NicknameBrush}}">
+                                                               FontSize="12" Margin="1,0,0,3">
                                                         <TextBlock.Style>
                                                             <Style TargetType="TextBlock" BasedOn="{StaticResource BaseText}">
                                                                 <Setter Property="Visibility" Value="Collapsed" />
+                                                                <Setter Property="HorizontalAlignment" Value="Left" />
+                                                                <Setter Property="Foreground" Value="{Binding SenderName, Converter={StaticResource NicknameBrush}}" />
                                                                 <Style.Triggers>
                                                                     <DataTrigger Binding="{Binding ShowSenderName}" Value="True">
                                                                         <Setter Property="Visibility" Value="Visible" />
+                                                                    </DataTrigger>
+                                                                    <DataTrigger Binding="{Binding IsMine}" Value="True">
+                                                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondary}" />
                                                                     </DataTrigger>
                                                                 </Style.Triggers>
                                                             </Style>
@@ -263,7 +302,18 @@
                                                     </TextBlock>
 
                                                     <!-- 气泡 -->
-                                                    <Border x:Name="Bubble" Style="{StaticResource BubbleInStyle}">
+                                                    <Border x:Name="Bubble">
+                                                        <Border.Style>
+                                                            <Style TargetType="Border" BasedOn="{StaticResource BubbleInStyle}">
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsMine}" Value="True">
+                                                                        <Setter Property="Background" Value="{DynamicResource BubbleOutBg}" />
+                                                                        <Setter Property="CornerRadius" Value="{DynamicResource BubbleOutCorner}" />
+                                                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Border.Style>
                                                         <StackPanel>
                                                             <Border x:Name="QuoteBlock" Margin="0,0,0,6"
                                                                     Background="{DynamicResource ReplyBg}"
@@ -285,8 +335,18 @@
 
                                                             <TextBlock x:Name="BodyText" Text="{Binding DisplayText}"
                                                                        TextWrapping="Wrap" FontSize="16"
-                                                                       LineHeight="23" LineStackingStrategy="BlockLineHeight"
-                                                                       Foreground="{DynamicResource BubbleInText}" />
+                                                                       LineHeight="23" LineStackingStrategy="BlockLineHeight">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Foreground" Value="{DynamicResource BubbleInText}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding IsMine}" Value="True">
+                                                                                <Setter Property="Foreground" Value="{DynamicResource BubbleOutText}" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
                                                         </StackPanel>
                                                     </Border>
 
@@ -295,19 +355,15 @@
                                                                Foreground="{DynamicResource DangerBrush}"
                                                                Visibility="{Binding HasStatus, Converter={StaticResource BoolToVisibility}}" />
                                                 </StackPanel>
+
+                                                <!-- 自己的头像：群聊显示在右侧 -->
+                                                <controls:AvatarImage Grid.Column="2" Width="36" Height="36"
+                                                                      VerticalAlignment="Top" Margin="8,1,0,0"
+                                                                      Url="{Binding AvatarUrl}"
+                                                                      FallbackText="{Binding SenderName}"
+                                                                      Visibility="{Binding ShowMyAvatar, Converter={StaticResource BoolToVisibility}}" />
                                             </Grid>
                                         </StackPanel>
-
-                                        <DataTemplate.Triggers>
-                                            <!-- 自己的消息：右对齐、无头像 -->
-                                            <DataTrigger Binding="{Binding IsMine}" Value="True">
-                                                <Setter TargetName="MsgAvatar" Property="Visibility" Value="Collapsed" />
-                                                <Setter TargetName="MsgBody" Property="HorizontalAlignment" Value="Right" />
-                                                <Setter TargetName="SenderLabel" Property="Visibility" Value="Collapsed" />
-                                                <Setter TargetName="Bubble" Property="Style" Value="{StaticResource BubbleOutStyle}" />
-                                                <Setter TargetName="BodyText" Property="Foreground" Value="{DynamicResource BubbleOutText}" />
-                                            </DataTrigger>
-                                        </DataTemplate.Triggers>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -316,19 +372,15 @@
                         <!-- 输入区：官方为无边框输入 + 裸箭头发送 -->
                         <Border Grid.Row="1" Background="{DynamicResource PanelBg}"
                                 BorderBrush="{DynamicResource Divider}" BorderThickness="0,1,0,0"
-                                Padding="8">
+                                Padding="10,8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <Button Grid.Column="0" Style="{StaticResource GhostButton}" Width="36" Height="36"
-                                        Content="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="14"
-                                        Foreground="{DynamicResource TextSecondary}" ToolTip="更多" />
-
-                                <Grid Grid.Column="1" Margin="6,0,0,0">
+                                <Grid Grid.Column="0">
                                     <TextBox x:Name="Composer"
                                              Text="{Binding ComposerText, UpdateSourceTrigger=PropertyChanged}"
                                              AcceptsReturn="True" TextWrapping="Wrap"
@@ -356,6 +408,10 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </Grid>
+
+                                <Button Grid.Column="1" Style="{StaticResource GhostButton}" Width="36" Height="40"
+                                        Content="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="14"
+                                        Foreground="{DynamicResource TextSecondary}" ToolTip="更多" />
 
                                 <Button Grid.Column="2" x:Name="SendButton" Style="{StaticResource GhostButton}"
                                         Content="&#xE724;" FontFamily="{StaticResource IconFont}"
