@@ -21,6 +21,7 @@ namespace OldChat.App.Views
         private bool _initialized;
         private SmoothScroller _msgScroll;
         private SmoothScroller _convScroll;
+        private ScrollViewer _msgView;
 
         public MainWindow()
         {
@@ -60,7 +61,9 @@ namespace OldChat.App.Views
             if (_initialized) return;
             _initialized = true;
 
-            _msgScroll = new SmoothScroller(MessageScroll);
+            MessageScroll.ApplyTemplate();
+            _msgView = FindChild<ScrollViewer>(MessageScroll);
+            if (_msgView != null) _msgScroll = new SmoothScroller(_msgView);
             ScrollViewer convView = FindChild<ScrollViewer>(ConversationList);
             if (convView != null) _convScroll = new SmoothScroller(convView) { StepPerNotch = 0.42 };
 
@@ -180,7 +183,7 @@ namespace OldChat.App.Views
             Dispatcher.BeginInvoke(new Action(delegate
             {
                 if (_msgScroll != null) _msgScroll.JumpToEnd();
-                else MessageScroll.ScrollToEnd();
+                else if (_msgView != null) _msgView.ScrollToEnd();
             }), System.Windows.Threading.DispatcherPriority.Background);
         }
 
@@ -335,20 +338,26 @@ namespace OldChat.App.Views
 
         private async void MessageScroll_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+            ScrollViewer view = sender as ScrollViewer;
+            if (view == null) view = _msgView;
+            if (view == null) return;
+
             if (e.ExtentHeightChange == 0) return;
-            if (MessageScroll.VerticalOffset > 4) return;
-            if (_loadingOlder || e.ExtentHeight < MessageScroll.ViewportHeight) return;
+            if (view.VerticalOffset > 4) return;
+            if (_loadingOlder || e.ExtentHeight < view.ViewportHeight) return;
 
             _loadingOlder = true;
-            double before = MessageScroll.ExtentHeight;
-            double offset = MessageScroll.VerticalOffset;
+            double before = view.ExtentHeight;
+            double offset = view.VerticalOffset;
             try
             {
                 await _vm.LoadOlderAsync();
-                double after = MessageScroll.ExtentHeight;
+                if (_msgScroll != null) _msgScroll.Sync();
+                double after = view.ExtentHeight;
                 if (after > before)
                 {
-                    MessageScroll.ScrollToVerticalOffset(offset + (after - before));
+                    view.ScrollToVerticalOffset(offset + (after - before));
+                    if (_msgScroll != null) _msgScroll.Sync();
                 }
             }
             finally

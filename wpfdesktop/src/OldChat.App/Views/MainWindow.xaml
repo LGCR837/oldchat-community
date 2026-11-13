@@ -74,7 +74,9 @@
                              Background="Transparent" BorderThickness="0" Padding="0"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                              ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                             ScrollViewer.CanContentScroll="False"
                              VirtualizingPanel.IsVirtualizing="True"
+                             VirtualizingPanel.ScrollUnit="Pixel"
                              VirtualizingPanel.VirtualizationMode="Recycling">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -229,14 +231,12 @@
                         </Grid.RowDefinitions>
 
                         <!-- 消息 -->
-                        <ScrollViewer x:Name="MessageScroll" Grid.Row="0"
-                                      Style="{StaticResource ThinScrollViewer}"
-                                      VerticalScrollBarVisibility="Auto"
-                                      Padding="0"
-                                      ScrollChanged="MessageScroll_ScrollChanged">
-                            <ItemsControl x:Name="MessageList" ItemsSource="{Binding Messages}"
-                                          Margin="18,10,10,10">
-                                <ItemsControl.ItemTemplate>
+                        <ListBox x:Name="MessageScroll" Grid.Row="0"
+                                 Style="{StaticResource ChatListBox}"
+                                 ItemsSource="{Binding Messages}"
+                                 ItemContainerStyle="{StaticResource ChatItem}"
+                                 ScrollViewer.ScrollChanged="MessageScroll_ScrollChanged">
+                                <ListBox.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel>
                                             <!-- 时间分隔：官方 0dp 直角灰块 -->
@@ -365,9 +365,8 @@
                                             </Grid>
                                         </StackPanel>
                                     </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </ScrollViewer>
+                                </ListBox.ItemTemplate>
+                        </ListBox>
 
                         <!-- 输入区：官方为无边框输入 + 裸箭头发送 -->
                         <Border Grid.Row="1" Background="{DynamicResource PanelBg}"
