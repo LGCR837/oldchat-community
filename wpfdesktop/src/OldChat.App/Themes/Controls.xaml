@@ -60,7 +60,7 @@
         <Setter Property="SelectionBrush" Value="{DynamicResource TextPrimary}" />
         <Setter Property="Background" Value="{DynamicResource InputBg}" />
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}" />
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="10,0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -74,26 +74,6 @@
                                       Margin="{TemplateBinding Padding}"
                                       VerticalAlignment="Center" />
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Trigger.EnterActions>
-                                <BeginStoryboard>
-                                    <Storyboard>
-                                        <ColorAnimation Storyboard.TargetName="Bd"
-                                                        Storyboard.TargetProperty="BorderBrush.Color"
-                                                        To="#C4C9D0" Duration="0:0:0.07">
-                                            <ColorAnimation.EasingFunction>
-                                                <CubicEase EasingMode="EaseOut" />
-                                            </ColorAnimation.EasingFunction>
-                                        </ColorAnimation>
-                                    </Storyboard>
-                                </BeginStoryboard>
-                            </Trigger.EnterActions>
-                        </Trigger>
-                        <Trigger Property="IsFocused" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TextPrimary}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -106,7 +86,7 @@
         <Setter Property="CaretBrush" Value="{DynamicResource TextPrimary}" />
         <Setter Property="Background" Value="{DynamicResource InputBg}" />
         <Setter Property="BorderBrush" Value="{DynamicResource InputBorder}" />
-        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderThickness" Value="0" />
         <Setter Property="Padding" Value="10,0" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -118,11 +98,6 @@
                             BorderThickness="{TemplateBinding BorderThickness}">
                         <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" VerticalAlignment="Center" />
                     </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsFocused" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource TextPrimary}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -228,8 +203,7 @@
                         <Grid.RenderTransform>
                             <ScaleTransform x:Name="Sc" ScaleX="1" ScaleY="1" />
                         </Grid.RenderTransform>
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{DynamicResource BorderSoft}" BorderThickness="1" />
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" />
                         <Border x:Name="Hover" Background="{DynamicResource HoverBg}" Opacity="0" />
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
                                           Margin="{TemplateBinding Padding}" />
@@ -678,7 +652,6 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
                     <Border Background="{TemplateBinding Background}"
-                            BorderBrush="{DynamicResource Divider}" BorderThickness="1"
                             CornerRadius="4" Padding="4" MinWidth="132">
                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
                     </Border>
